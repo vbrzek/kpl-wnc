@@ -8,22 +8,25 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "migrate": "knex migrate:latest --knexfile src/db/knexfile.ts",
-    "migrate:make": "knex migrate:make --knexfile src/db/knexfile.ts"
+    "migrate:make": "knex migrate:make --knexfile src/db/knexfile.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@kpl/shared": "*",
-    "fastify": "^5.0.0",
     "@fastify/cors": "^10.0.0",
+    "@kpl/shared": "*",
+    "dotenv": "^16.0.0",
+    "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
-    "socket.io": "^4.8.0",
     "knex": "^3.0.0",
     "mysql2": "^3.0.0",
-    "dotenv": "^16.0.0",
+    "socket.io": "^4.8.0",
     "zod": "^3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@types/node": "^22.0.0",
     "tsx": "^4.0.0",
-    "@types/node": "^22.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18"
   }
 }
