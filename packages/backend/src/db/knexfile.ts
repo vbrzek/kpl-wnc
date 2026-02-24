@@ -19,6 +19,11 @@ const config: Knex.Config = {
     extension: 'ts',
     loadExtensions: ['.ts'],
   },
+  seeds: {
+    directory: './src/db/seeds',
+    extension: 'ts',
+    loadExtensions: ['.ts'],
+  },
 };
 
 export default config;

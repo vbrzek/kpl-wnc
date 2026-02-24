@@ -209,6 +209,17 @@ describe('RoomManager', () => {
     }
   });
 
+  it('rejects startGame when no card sets selected', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    rm.joinRoom(room.code, 'Charlie');
+    const result = rm.startGame(playerToken);
+    expect('error' in result).toBe(true);
+    if ('error' in result) expect(result.error).toContain('sada');
+  });
+
   // --- getPublicRooms ---
 
   it('lists only public rooms with status LOBBY', () => {

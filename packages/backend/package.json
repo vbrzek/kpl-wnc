@@ -10,6 +10,7 @@
     "migrate": "tsx src/db/migrate.ts latest",
     "migrate:rollback": "tsx src/db/migrate.ts rollback",
     "migrate:status": "tsx src/db/migrate.ts status",
+    "seed": "tsx src/db/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

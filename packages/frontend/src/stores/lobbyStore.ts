@@ -3,9 +3,21 @@ import { ref } from 'vue';
 import { socket } from '../socket';
 import type { PublicRoomSummary, GameRoom } from '@kpl/shared';
 
+export interface CardSetSummary {
+  id: number;
+  name: string;
+  description: string | null;
+  slug: string | null;
+  isPublic: boolean;
+  blackCardCount: number;
+  whiteCardCount: number;
+}
+
 export const useLobbyStore = defineStore('lobby', () => {
   const publicRooms = ref<PublicRoomSummary[]>([]);
   const isSubscribed = ref(false);
+  const cardSets = ref<CardSetSummary[]>([]);
+  const cardSetsLoaded = ref(false);
 
   function subscribe() {
     if (isSubscribed.value) return;
@@ -21,6 +33,15 @@ export const useLobbyStore = defineStore('lobby', () => {
     socket.emit('lobby:unsubscribePublic');
     socket.off('lobby:publicRoomsUpdate');
     isSubscribed.value = false;
+  }
+
+  async function fetchCardSets(): Promise<void> {
+    if (cardSetsLoaded.value) return;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
+    const res = await fetch(`${backendUrl}/api/card-sets`);
+    if (!res.ok) throw new Error(`Failed to fetch card sets: ${res.status}`);
+    cardSets.value = await res.json() as CardSetSummary[];
+    cardSetsLoaded.value = true;
   }
 
   async function createRoom(settings: {
@@ -63,7 +84,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     });
   }
 
-  return { publicRooms, subscribe, unsubscribe, createRoom, joinRoom };
+  return { publicRooms, cardSets, cardSetsLoaded, subscribe, unsubscribe, createRoom, joinRoom, fetchCardSets };
 });
 
 export function savePlayerToken(roomCode: string, token: string) {
