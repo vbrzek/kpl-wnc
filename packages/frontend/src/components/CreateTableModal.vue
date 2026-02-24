@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useLobbyStore } from '../stores/lobbyStore';
 
 const emit = defineEmits<{
   close: [];
@@ -12,21 +13,48 @@ const emit = defineEmits<{
   }];
 }>();
 
+const lobbyStore = useLobbyStore();
+
 const name = ref('');
 const isPublic = ref(true);
 const maxPlayers = ref(8);
 const nickname = ref('');
+const selectedSetIds = ref<number[]>([]);
+const fetchError = ref('');
+
+const canSubmit = computed(() =>
+  name.value.trim() !== '' &&
+  nickname.value.trim() !== '' &&
+  selectedSetIds.value.length > 0
+);
+
+function toggleSet(id: number) {
+  const idx = selectedSetIds.value.indexOf(id);
+  if (idx === -1) {
+    selectedSetIds.value.push(id);
+  } else {
+    selectedSetIds.value.splice(idx, 1);
+  }
+}
 
 function submit() {
-  if (!name.value.trim() || !nickname.value.trim()) return;
+  if (!canSubmit.value) return;
   emit('create', {
     name: name.value.trim(),
     isPublic: isPublic.value,
-    selectedSetIds: [],
+    selectedSetIds: selectedSetIds.value,
     maxPlayers: maxPlayers.value,
     nickname: nickname.value.trim(),
   });
 }
+
+onMounted(async () => {
+  try {
+    await lobbyStore.fetchCardSets();
+  } catch {
+    fetchError.value = 'Nepodařilo se načíst sady karet.';
+  }
+});
 </script>
 
 <template>
@@ -63,19 +91,51 @@ function submit() {
         />
       </label>
 
+      <div>
+        <span class="text-sm text-gray-300">Sady karet</span>
+        <p v-if="fetchError" class="mt-1 text-sm text-red-400">{{ fetchError }}</p>
+        <div
+          v-else-if="lobbyStore.cardSets.length === 0"
+          class="mt-1 text-sm text-gray-500"
+        >
+          Načítání sad...
+        </div>
+        <div v-else class="mt-1 space-y-2">
+          <label
+            v-for="set in lobbyStore.cardSets"
+            :key="set.id"
+            class="flex items-start gap-3 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              :checked="selectedSetIds.includes(set.id)"
+              @change="toggleSet(set.id)"
+              class="w-4 h-4 mt-0.5 shrink-0"
+            />
+            <div>
+              <span class="text-sm font-medium">{{ set.name }}</span>
+              <span class="text-xs text-gray-400 ml-2">
+                {{ set.blackCardCount }} ♠ / {{ set.whiteCardCount }} ♡
+              </span>
+              <p v-if="set.description" class="text-xs text-gray-500">{{ set.description }}</p>
+            </div>
+          </label>
+        </div>
+        <p v-if="!fetchError && lobbyStore.cardSets.length > 0 && selectedSetIds.length === 0" class="text-xs text-yellow-500 mt-1">
+          Vyber alespoň jednu sadu.
+        </p>
+      </div>
+
       <label class="flex items-center gap-2">
         <input v-model="isPublic" type="checkbox" class="w-4 h-4" />
         <span class="text-sm text-gray-300">Veřejný stůl (zobrazí se v seznamu)</span>
       </label>
 
-      <p class="text-xs text-gray-400">
-        Výběr sad karet bude dostupný po implementaci REST API.
-      </p>
-
       <div class="flex gap-3 pt-2">
         <button
           @click="submit"
-          class="bg-green-600 hover:bg-green-500 px-5 py-2 rounded font-semibold flex-1"
+          :disabled="!canSubmit"
+          class="bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2 rounded font-semibold flex-1"
         >
           Vytvořit
         </button>
