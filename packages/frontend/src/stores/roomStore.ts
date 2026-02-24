@@ -19,7 +19,12 @@ export const useRoomStore = defineStore('room', () => {
       : null
   );
 
-  function init(roomCode: string) {
+  let initialised = false;
+
+  function init() {
+    if (initialised) return;
+    initialised = true;
+
     socket.on('lobby:stateUpdate', (updatedRoom) => {
       room.value = updatedRoom;
     });
@@ -38,13 +43,10 @@ export const useRoomStore = defineStore('room', () => {
     myPlayerId.value = id;
   }
 
-  async function leave() {
-    return new Promise<void>((resolve) => {
-      socket.emit('lobby:leave');
-      room.value = null;
-      myPlayerId.value = null;
-      resolve();
-    });
+  function leave() {
+    socket.emit('lobby:leave');
+    room.value = null;
+    myPlayerId.value = null;
   }
 
   async function updateSettings(settings: {
@@ -81,6 +83,7 @@ export const useRoomStore = defineStore('room', () => {
     socket.off('lobby:kicked');
     room.value = null;
     myPlayerId.value = null;
+    initialised = false;
   }
 
   return {
