@@ -84,7 +84,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     });
   }
 
-  return { publicRooms, cardSets, subscribe, unsubscribe, createRoom, joinRoom, fetchCardSets };
+  return { publicRooms, cardSets, cardSetsLoaded, subscribe, unsubscribe, createRoom, joinRoom, fetchCardSets };
 });
 
 export function savePlayerToken(roomCode: string, token: string) {

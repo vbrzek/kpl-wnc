@@ -95,10 +95,16 @@ onMounted(async () => {
         <span class="text-sm text-gray-300">Sady karet</span>
         <p v-if="fetchError" class="mt-1 text-sm text-red-400">{{ fetchError }}</p>
         <div
-          v-else-if="lobbyStore.cardSets.length === 0"
+          v-else-if="!lobbyStore.cardSetsLoaded"
           class="mt-1 text-sm text-gray-500"
         >
           Načítání sad...
+        </div>
+        <div
+          v-else-if="lobbyStore.cardSets.length === 0"
+          class="mt-1 text-sm text-gray-500"
+        >
+          Žádné sady nejsou k dispozici.
         </div>
         <div v-else class="mt-1 space-y-2">
           <label
