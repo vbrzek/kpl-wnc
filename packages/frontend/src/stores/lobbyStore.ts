@@ -7,6 +7,8 @@ export interface CardSetSummary {
   id: number;
   name: string;
   description: string | null;
+  slug: string | null;
+  isPublic: boolean;
   blackCardCount: number;
   whiteCardCount: number;
 }
@@ -37,6 +39,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     if (cardSetsLoaded.value) return;
     const backendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
     const res = await fetch(`${backendUrl}/api/card-sets`);
+    if (!res.ok) throw new Error(`Failed to fetch card sets: ${res.status}`);
     cardSets.value = await res.json() as CardSetSummary[];
     cardSetsLoaded.value = true;
   }
