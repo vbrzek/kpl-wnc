@@ -301,6 +301,10 @@ export class RoomManager {
       return { error: 'Pro spuštění hry jsou potřeba alespoň 3 hráči.' };
     }
 
+    if (room.selectedSetIds.length === 0) {
+      return { error: 'Musí být vybrána alespoň jedna sada karet.' };
+    }
+
     room.status = 'SELECTION';
     return { room };
   }
