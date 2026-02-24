@@ -42,6 +42,7 @@ export interface GameRoom {
 
 // Socket.io eventy - server → klient
 export interface ServerToClientEvents {
+  'server:clientCount': (count: number) => void;
   'game:stateUpdate': (room: GameRoom) => void;
   'game:error': (message: string) => void;
   'game:roundStart': (blackCard: BlackCard) => void;

@@ -1,30 +1,73 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, onMounted, onUnmounted } from 'vue';
+import { socket } from './socket';
+
+const clientCount = ref<number | null>(null);
+const connected = ref(false);
+
+function onConnect() {
+  connected.value = true;
+}
+
+function onDisconnect() {
+  connected.value = false;
+  clientCount.value = null;
+}
+
+function onClientCount(count: number) {
+  clientCount.value = count;
+}
+
+onMounted(() => {
+  socket.on('connect', onConnect);
+  socket.on('disconnect', onDisconnect);
+  socket.on('server:clientCount', onClientCount);
+  socket.connect();
+});
+
+onUnmounted(() => {
+  socket.off('connect', onConnect);
+  socket.off('disconnect', onDisconnect);
+  socket.off('server:clientCount', onClientCount);
+  socket.disconnect();
+});
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <main>
+    <h1>Karty proti lidskosti</h1>
+
+    <section class="status">
+      <p>
+        Status:
+        <span :class="connected ? 'online' : 'offline'">
+          {{ connected ? 'Připojeno' : 'Odpojeno' }}
+        </span>
+      </p>
+      <p v-if="clientCount !== null">
+        Připojených klientů: <strong>{{ clientCount }}</strong>
+      </p>
+    </section>
+  </main>
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+main {
+  padding: 2rem;
+  font-family: sans-serif;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+.status {
+  margin-top: 1rem;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+.online {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.offline {
+  color: #ef4444;
+  font-weight: bold;
 }
 </style>

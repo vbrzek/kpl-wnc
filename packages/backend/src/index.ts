@@ -20,9 +20,11 @@ app.get('/health', async () => ({ status: 'ok' }));
 
 io.on('connection', (socket) => {
   app.log.info(`Client connected: ${socket.id}`);
+  io.emit('server:clientCount', io.engine.clientsCount);
 
   socket.on('disconnect', () => {
     app.log.info(`Client disconnected: ${socket.id}`);
+    io.emit('server:clientCount', io.engine.clientsCount);
   });
 });
 
