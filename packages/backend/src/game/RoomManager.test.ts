@@ -1,0 +1,221 @@
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { RoomManager } from './RoomManager.js';
+
+describe('RoomManager', () => {
+  let rm: RoomManager;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    rm = new RoomManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // --- createRoom ---
+
+  it('creates a room with a 6-char hex code', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    expect(room.code).toMatch(/^[a-f0-9]{6}$/);
+  });
+
+  it('creates a room with the host as first player', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    expect(room.players).toHaveLength(1);
+    expect(room.players[0].nickname).toBe('Alice');
+    expect(room.hostId).toBe(room.players[0].id);
+    expect(typeof playerToken).toBe('string');
+  });
+
+  // --- joinRoom ---
+
+  it('joins an existing room and returns playerToken', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const result = rm.joinRoom(room.code, 'Bob');
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.players).toHaveLength(2);
+      expect(result.playerToken).toBeTruthy();
+    }
+  });
+
+  it('returns error when room not found', () => {
+    const result = rm.joinRoom('000000', 'Bob');
+    expect('error' in result).toBe(true);
+  });
+
+  it('returns error when room is full', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 2, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    const result = rm.joinRoom(room.code, 'Charlie');
+    expect('error' in result).toBe(true);
+    if ('error' in result) expect(result.error).toContain('plný');
+  });
+
+  it('returns error on duplicate nickname', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const result = rm.joinRoom(room.code, 'Alice');
+    expect('error' in result).toBe(true);
+  });
+
+  it('returns error when game already started', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const r = rm.getRoom(room.code)!;
+    r.status = 'SELECTION';
+    const result = rm.joinRoom(room.code, 'Bob');
+    expect('error' in result).toBe(true);
+  });
+
+  it('reconnects player by playerToken, restores socketId', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.handleDisconnect(playerToken);
+    const reconnected = rm.reconnect(playerToken, 'socket-new-123');
+    expect(reconnected).not.toBeNull();
+    expect(reconnected!.players[0].socketId).toBe('socket-new-123');
+    expect(reconnected!.players[0].isAfk).toBe(false);
+  });
+
+  // --- AFK ---
+
+  it('marks player AFK after 30s of disconnect', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.handleDisconnect(playerToken);
+    expect(room.players[0].isAfk).toBe(false);
+    vi.advanceTimersByTime(30_000);
+    expect(room.players[0].isAfk).toBe(true);
+  });
+
+  it('does not mark AFK if player reconnects before 30s', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.handleDisconnect(playerToken);
+    vi.advanceTimersByTime(10_000);
+    rm.reconnect(playerToken, 'new-socket');
+    vi.advanceTimersByTime(25_000);
+    expect(room.players[0].isAfk).toBe(false);
+  });
+
+  // --- kickPlayer ---
+
+  it('host can kick another player', () => {
+    const { room, playerToken: hostToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    const bobId = rm.getRoom(room.code)!.players.find(p => p.nickname === 'Bob')!.id;
+    const result = rm.kickPlayer(hostToken, bobId);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.players).toHaveLength(1);
+      expect(result.kickedPlayerToken).toBeTruthy();
+    }
+  });
+
+  it('non-host cannot kick', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const { playerToken: bobToken } = rm.joinRoom(room.code, 'Bob') as { room: any; playerToken: string };
+    const aliceId = room.players[0].id;
+    const result = rm.kickPlayer(bobToken, aliceId);
+    expect('error' in result).toBe(true);
+  });
+
+  // --- host transfer ---
+
+  it('transfers host to next non-AFK player when host leaves', () => {
+    const { room, playerToken: hostToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    rm.leaveRoom(hostToken);
+    const updated = rm.getRoom(room.code)!;
+    expect(updated.players).toHaveLength(1);
+    expect(updated.players[0].nickname).toBe('Bob');
+    expect(updated.hostId).toBe(updated.players[0].id);
+  });
+
+  it('deletes room when last player leaves', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.leaveRoom(playerToken);
+    expect(rm.getRoom(room.code)).toBeNull();
+  });
+
+  // --- updateSettings ---
+
+  it('host can update settings', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const result = rm.updateSettings(playerToken, { name: 'Nova', maxPlayers: 8 });
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.name).toBe('Nova');
+      expect(result.room.maxPlayers).toBe(8);
+    }
+  });
+
+  it('rejects maxPlayers below current player count', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    rm.joinRoom(room.code, 'Charlie');
+    const result = rm.updateSettings(playerToken, { maxPlayers: 2 });
+    expect('error' in result).toBe(true);
+  });
+
+  // --- startGame ---
+
+  it('rejects startGame with fewer than 3 players', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    const result = rm.startGame(playerToken);
+    expect('error' in result).toBe(true);
+  });
+
+  it('starts game with 3+ players', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    rm.joinRoom(room.code, 'Charlie');
+    const result = rm.startGame(playerToken);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.status).toBe('SELECTION');
+    }
+  });
+
+  // --- getPublicRooms ---
+
+  it('lists only public rooms with status LOBBY', () => {
+    rm.createRoom({ name: 'Public', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'A' });
+    rm.createRoom({ name: 'Private', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'B' });
+    const list = rm.getPublicRooms();
+    expect(list).toHaveLength(1);
+    expect(list[0].name).toBe('Public');
+  });
+});
