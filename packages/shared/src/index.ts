@@ -24,12 +24,18 @@ export interface WhiteCard {
   text: string;
 }
 
+// Fix 5: Named type for card submission (extracted from inline anonymous type)
+export interface CardSubmission {
+  playerId: string;
+  cards: WhiteCard[];
+}
+
 // Sada karet
 export interface CardSet {
   id: number;
   name: string;
   description: string | null;
-  slug: string;
+  slug: string | null;  // Fix 1: nullable — DB column has no NOT NULL constraint
   isPublic: boolean;
 }
 
@@ -64,8 +70,10 @@ export interface ServerToClientEvents {
   'game:stateUpdate': (room: GameRoom) => void;
   'game:error': (message: string) => void;
   'game:roundStart': (blackCard: BlackCard) => void;
-  'game:judging': (submissions: Array<{ playerId: string; cards: WhiteCard[] }>) => void;
-  'game:roundEnd': (winnerId: string, winnerCards: WhiteCard[]) => void;
+  // Fix 5: use named CardSubmission type
+  'game:judging': (submissions: CardSubmission[]) => void;
+  // Fix 4: single data object instead of two positional args
+  'game:roundEnd': (result: { winnerId: string; winnerCards: WhiteCard[] }) => void;
 }
 
 // Socket.io eventy — klient → server
@@ -98,9 +106,9 @@ export interface ClientToServerEvents {
   'lobby:startGame': (
     callback: (result: { ok: true } | { error: string }) => void
   ) => void;
-  'game:join': (code: string, nickname: string, callback: (success: boolean, error?: string) => void) => void;
+  // Fix 2: removed 'game:join' — duplicates 'lobby:join' with weaker signature and no reconnection support
+  // Fix 3: removed 'game:startGame' — duplicates 'lobby:startGame' with no callback and conflicting semantics
   'game:leave': () => void;
-  'game:startGame': (selectedSetIds: number[]) => void;
   'game:playCards': (cardIds: number[]) => void;
   'game:judgeSelect': (playerId: string) => void;
 }
