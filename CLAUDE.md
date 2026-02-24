@@ -1,26 +1,57 @@
-# 🃏 Project: Cards Against Humanity Clone (Technical Blueprint)
+# 🃏 Project: Cards Against Humanity Clone
 
-Tento dokument slouží jako hlavní specifikace pro vývoj vlastní online verze hry Karty proti lidskosti.
+Vlastní online verze hry Karty proti lidskosti.
 
-## 🏗️ 1. Architektura systému
+## 🏗️ Architektura
 
-Projekt je postaven na odděleném Frontendu a Backend u s důrazem na real-time komunikaci a snadný budoucí export do mobilní aplikace.
+**Monorepo** (npm workspaces) se třemi balíčky:
 
-* **Frontend:** Vue.js 3 (Composition API) + Tailwind CSS + Pinia.
-* **Backend:** Node.js (Express nebo Fastify) + Socket.io.
-* **Databáze:** MySQL (MariaDB).
-* **Infrastruktura:** Linux VPS + Apache (Reverse Proxy s WebSocket tunelováním) + PM2 (správa procesů).
+| Balíček | Tech | Port |
+|---|---|---|
+| `@kpl/shared` | TypeScript typy (game state, Socket events) | — |
+| `@kpl/backend` | Node.js + Fastify + Socket.io + Knex + MySQL2 + Zod | 3000 |
+| `@kpl/frontend` | Vue 3 (Composition API) + Vite + Tailwind v4 + Pinia + Vue Router | 5173 |
 
----
+**Infrastruktura:** Linux VPS + Apache (reverse proxy + WebSocket tunel na `/socket.io/`) + PM2.
+**Migrace:** Knex.js CLI (`npm run migrate --workspace=packages/backend`).
+**Env:** databázové údaje v `.env` (viz `.env.example`).
+**Mobilní export (budoucnost):** Capacitor.js nad hotovým Vue SPA.
 
-## 🛠️ 2. Databázové Schéma (SQL)
+## 📁 Struktura projektu
 
-Využíváme přístup "duplikace přiřazení", kde každá karta patří právě jedné sadě pro maximální jednoduchost správy a nezávislost uživatelských setů.
+```
+kpl-wnc/
+├── packages/
+│   ├── shared/src/index.ts     # Sdílené typy: GameStatus, Player, GameRoom, ServerToClientEvents, ClientToServerEvents
+│   ├── backend/src/
+│   │   ├── index.ts            # Fastify server + Socket.io
+│   │   ├── routes/             # REST API (CRUD karet a sad)
+│   │   ├── game/               # Stavový stroj hry
+│   │   ├── socket/             # Socket.io handlery
+│   │   └── db/                 # Knex config + migrace
+│   └── frontend/src/
+│       ├── views/              # Stránky (Lobby, Hra, Správa karet)
+│       ├── components/
+│       ├── stores/             # Pinia stores
+│       └── socket/             # Socket.io client wrapper
+├── package.json                # npm workspaces root
+├── tsconfig.json               # Base TS config (NodeNext, strict)
+└── .env.example
+```
 
+## 🛠️ Příkazy
 
+```bash
+npm run dev:backend     # Fastify dev server (tsx watch)
+npm run dev:frontend    # Vite dev server
+npm run build           # Build všech balíčků
+```
+
+## 🗄️ Databázové schéma
+
+Každá karta patří právě jedné sadě (přístup duplikace přiřazení).
 
 ```sql
--- Tabulka sad (balíčků)
 CREATE TABLE card_sets (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -30,16 +61,14 @@ CREATE TABLE card_sets (
     slug VARCHAR(50) UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Černé karty (Otázky / Zadání)
 CREATE TABLE black_cards (
     id INT AUTO_INCREMENT PRIMARY KEY,
     card_set_id INT NOT NULL,
-    text TEXT NOT NULL, -- Obsahuje placeholder "____"
-    pick TINYINT DEFAULT 1, -- Počet bílých karet k doložení
+    text TEXT NOT NULL,       -- Obsahuje placeholder "____"
+    pick TINYINT DEFAULT 1,   -- Počet bílých karet k doložení
     FOREIGN KEY (card_set_id) REFERENCES card_sets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Bílé karty (Odpovědi)
 CREATE TABLE white_cards (
     id INT AUTO_INCREMENT PRIMARY KEY,
     card_set_id INT NOT NULL,
@@ -48,37 +77,21 @@ CREATE TABLE white_cards (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-## 🔄 3. Synchronizace dat (Migrations)
-Pro udržení shodné struktury mezi vývojem a produkcí se používá Knex.js nebo db-migrate.
+## 🎮 Herní logika (server-side state)
 
- 1. Změna v DB: Vytvoříš migrační soubor přes CLI.
- 2. Aplikace: Spustíš migraci na VPS po každém git pull.
- 3. Environment: Databázové údaje uloženy v .env (mimo Git).
+Server drží stav her v paměti (`rooms` objekt) — bez latence DB.
 
-## 🌐 4. Infrastruktura & Proxy (Apache)
-Node.js aplikace běží interně na portu 3000. Apache zajišťuje veřejný přístup a SSL.
+| Stav | Popis |
+|---|---|
+| `LOBBY` | Čekání na hráče, výběr sad karet |
+| `SELECTION` | Hráči vybírají bílé karty z ruky |
+| `JUDGING` | Card Czar anonymně vybírá vítěze kola |
+| `RESULTS` | Zobrazení vítěze, přičtení bodů, přechod na nové kolo |
 
-**Konfigurační požadavek pro Apache:**
-Musí být povoleny moduly proxy, proxy_http, proxy_wstunnel a rewrite. WebSocket provoz na /socket.io/ musí být směrován na ws://localhost:3000/.
+## 🚀 Roadmap
 
-## 🎮 5. Herní Logika (Server-side State)
-Server si drží stav běžících her v operační paměti (objekt rooms). To umožňuje real-time interakci bez latence databáze.
-
-Herní stavy (Statusy):
- * LOBBY: Čekání na hráče, výběr balíčků karet.
- * SELECTION: Hráči vybírají bílé karty z ruky.
- * JUDGING: Card Czar (car) anonymně vybírá vítěze kola.
- * RESULTS: Zobrazení vítěze, přičtení bodů, automatický přechod na nové kolo.
-
-## 📱 6. Mobilní Appka (Budoucnost)
-Export do mobilní aplikace bude realizován pomocí Capacitor.js.
- * Frontend se sestaví jako SPA (Single Page Application).
- * Capacitor vytvoří nativní bridge pro Android a iOS.
- * Komunikace se serverem zůstává přes WebSockets.
-
-## 🚀 7. První kroky (Roadmap)
-Infrastruktura: Nastavení Apache Proxy a PM2 na VPS.
-
- 1. Karty: Implementace REST API pro CRUD operace nad balíčky (vkládání/editace karet).
- 2. Lobby: Socket.io místnosti a správa připojených uživatelů.
- 3. Hra: Implementace stavového stroje (rozdávání, hraní, vyhodnocení).
+- [x] Monorepo setup — npm workspaces, TypeScript, Fastify server, Vue 3 + Tailwind v4
+- [ ] REST API — CRUD pro sady a karty
+- [ ] Lobby — Socket.io místnosti, správa hráčů
+- [ ] Hra — stavový stroj (rozdávání, hraní, vyhodnocení)
+- [ ] VPS deploy — Apache proxy + PM2
