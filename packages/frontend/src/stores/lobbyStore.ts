@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { socket } from '../socket';
-import type { PublicRoomSummary } from '@kpl/shared';
+import type { PublicRoomSummary, GameRoom } from '@kpl/shared';
 
 export const useLobbyStore = defineStore('lobby', () => {
   const publicRooms = ref<PublicRoomSummary[]>([]);
@@ -29,14 +29,14 @@ export const useLobbyStore = defineStore('lobby', () => {
     selectedSetIds: number[];
     maxPlayers: number;
     nickname: string;
-  }): Promise<{ code: string; playerToken: string; playerId: string } | { error: string }> {
+  }): Promise<{ room: GameRoom; code: string; playerToken: string; playerId: string } | { error: string }> {
     return new Promise((resolve) => {
       socket.emit('lobby:create', settings, (result) => {
         if ('error' in result) {
           resolve(result);
         } else {
           savePlayerToken(result.room.code, result.playerToken);
-          resolve({ code: result.room.code, playerToken: result.playerToken, playerId: result.playerId });
+          resolve({ room: result.room, code: result.room.code, playerToken: result.playerToken, playerId: result.playerId });
         }
       });
     });
@@ -45,7 +45,7 @@ export const useLobbyStore = defineStore('lobby', () => {
   async function joinRoom(
     code: string,
     nickname: string
-  ): Promise<{ code: string; playerToken: string; playerId: string } | { error: string }> {
+  ): Promise<{ room: GameRoom; code: string; playerToken: string; playerId: string } | { error: string }> {
     const playerToken = loadPlayerToken(code) ?? undefined;
     return new Promise((resolve) => {
       socket.emit(
@@ -56,7 +56,7 @@ export const useLobbyStore = defineStore('lobby', () => {
             resolve(result);
           } else {
             savePlayerToken(result.room.code, result.playerToken);
-            resolve({ code: result.room.code, playerToken: result.playerToken, playerId: result.playerId });
+            resolve({ room: result.room, code: result.room.code, playerToken: result.playerToken, playerId: result.playerId });
           }
         }
       );

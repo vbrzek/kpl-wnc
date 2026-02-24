@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useLobbyStore, loadPlayerToken } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
@@ -15,6 +15,16 @@ const roomCode = route.params.token as string;
 const needsNickname = ref(false);
 const errorMsg = ref('');
 
+// Watch for being kicked (roomStore clears room on lobby:kicked)
+const stopKickedWatch = watch(
+  () => roomStore.room,
+  (newRoom, oldRoom) => {
+    if (oldRoom !== null && newRoom === null && !errorMsg.value) {
+      router.push('/');
+    }
+  }
+);
+
 onMounted(async () => {
   roomStore.init();
 
@@ -28,6 +38,7 @@ onMounted(async () => {
       setTimeout(() => router.push('/'), 2000);
       return;
     }
+    roomStore.setRoom(result.room);
     roomStore.setMyPlayerId(result.playerId);
   } else {
     needsNickname.value = true;
@@ -40,11 +51,13 @@ async function onNicknameSubmit(nickname: string) {
     errorMsg.value = result.error;
     return;
   }
+  roomStore.setRoom(result.room);
   roomStore.setMyPlayerId(result.playerId);
   needsNickname.value = false;
 }
 
 onUnmounted(() => {
+  stopKickedWatch();
   roomStore.cleanup();
 });
 </script>

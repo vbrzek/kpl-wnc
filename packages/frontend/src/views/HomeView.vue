@@ -30,6 +30,7 @@ async function onCreateRoom(settings: {
     errorMsg.value = result.error;
     return;
   }
+  roomStore.setRoom(result.room);
   roomStore.setMyPlayerId(result.playerId);
   router.push(`/room/${result.code}`);
 }
@@ -40,6 +41,7 @@ async function onJoinPublic(code: string, nickname: string) {
     errorMsg.value = result.error;
     return;
   }
+  roomStore.setRoom(result.room);
   roomStore.setMyPlayerId(result.playerId);
   router.push(`/room/${result.code}`);
 }
