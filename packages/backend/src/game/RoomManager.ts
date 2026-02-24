@@ -116,7 +116,7 @@ export class RoomManager {
     }
 
     if (room.players.length >= room.maxPlayers) {
-      return { error: 'Místnost je plný.' };
+      return { error: 'Místnost je plná.' };
     }
 
     const duplicate = room.players.some(

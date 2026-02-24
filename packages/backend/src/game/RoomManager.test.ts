@@ -58,7 +58,7 @@ describe('RoomManager', () => {
     rm.joinRoom(room.code, 'Bob');
     const result = rm.joinRoom(room.code, 'Charlie');
     expect('error' in result).toBe(true);
-    if ('error' in result) expect(result.error).toContain('plný');
+    if ('error' in result) expect(result.error).toContain('plná');
   });
 
   it('returns error on duplicate nickname', () => {
