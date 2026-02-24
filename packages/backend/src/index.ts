@@ -7,6 +7,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
+import { registerLobbyHandlers } from './socket/lobbyHandlers.js';
 
 const app = Fastify({ logger: true });
 
@@ -25,6 +26,8 @@ app.get('/health', async () => ({ status: 'ok' }));
 io.on('connection', (socket) => {
   app.log.info(`Client connected: ${socket.id}`);
   io.emit('server:clientCount', io.engine.clientsCount);
+
+  registerLobbyHandlers(io, socket);
 
   socket.on('disconnect', () => {
     app.log.info(`Client disconnected: ${socket.id}`);
