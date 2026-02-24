@@ -8,6 +8,7 @@ import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { registerLobbyHandlers } from './socket/lobbyHandlers.js';
+import cardSetsRoutes from './routes/cardSets.js';
 
 const app = Fastify({ logger: true });
 
@@ -22,6 +23,8 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>(app.server, {
 });
 
 app.get('/health', async () => ({ status: 'ok' }));
+
+await app.register(cardSetsRoutes, { prefix: '/api' });
 
 io.on('connection', (socket) => {
   app.log.info(`Client connected: ${socket.id}`);
