@@ -72,17 +72,18 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) return;
 
-    const roomBefore = roomManager.getRoomByPlayerToken(playerToken);
-    const roomCode = roomBefore?.code;
-
+    const roomCode = roomManager.getRoomByPlayerToken(playerToken)?.code;
     roomManager.leaveRoom(playerToken);
     socketToToken.delete(socket.id);
-    if (roomCode) socket.leave(`room:${roomCode}`);
 
-    const roomAfter = roomManager.getRoom(roomCode ?? '');
-    if (roomAfter) {
-      io.to(`room:${roomCode}`).emit('lobby:stateUpdate', roomAfter);
+    if (roomCode) {
+      socket.leave(`room:${roomCode}`);
+      const roomAfter = roomManager.getRoom(roomCode);
+      if (roomAfter) {
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', roomAfter);
+      }
     }
+
     broadcastPublicRooms(io);
   });
 
@@ -112,6 +113,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
       if (token === result.kickedPlayerToken) {
         io.to(sid).emit('lobby:kicked');
         socketToToken.delete(sid);
+        // Remove kicked player's socket from the room channel
+        const kickedSocket = io.sockets.sockets.get(sid);
+        if (kickedSocket) kickedSocket.leave(`room:${result.room.code}`);
         break;
       }
     }
