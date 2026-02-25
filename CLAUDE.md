@@ -14,7 +14,8 @@ Vlastní online verze hry Karty proti lidskosti.
 
 **Infrastruktura:** Linux VPS + Apache (reverse proxy + WebSocket tunel na `/socket.io/`) + PM2.
 **Migrace:** Knex.js CLI (`npm run migrate --workspace=packages/backend`).
-**Env:** databázové údaje v `.env` (viz `.env.example`).
+**Seed dat:** `npm run seed --workspace=packages/backend` — načte českou sadu karet (destruktivní, jen pro dev).
+**Env:** databázové údaje a URL v `.env` (viz `.env.example`). Vite čte `.env` z kořene monorepa (`envDir: '../../'` v `vite.config.ts`).
 **Mobilní export (budoucnost):** Capacitor.js nad hotovým Vue SPA.
 
 ## 📁 Struktura projektu
@@ -25,13 +26,21 @@ kpl-wnc/
 │   ├── shared/src/index.ts         # Sdílené typy: GameStatus, Player, GameRoom, CardSubmission,
 │   │                               #   PublicRoomSummary, ServerToClientEvents, ClientToServerEvents
 │   ├── backend/src/
-│   │   ├── index.ts                # Fastify server + Socket.io
+│   │   ├── index.ts                # Fastify server + Socket.io + registrace routes
 │   │   ├── game/
 │   │   │   └── RoomManager.ts      # In-memory správa místností (create/join/leave/kick/AFK/reconnect)
 │   │   ├── socket/
 │   │   │   └── lobbyHandlers.ts    # Socket.io lobby handlery (create/join/leave/kick/settings/startGame)
-│   │   ├── routes/                 # REST API (CRUD karet a sad) — zatím prázdné
-│   │   └── db/                     # Knex config + migrace
+│   │   ├── routes/
+│   │   │   └── cardSets.ts         # GET /api/card-sets — seznam sad s počty karet
+│   │   └── db/
+│   │       ├── db.ts               # Knex singleton (sdílený napříč routami)
+│   │       ├── knexfile.ts         # Knex config (migrations + seeds)
+│   │       ├── migrate.ts          # CLI runner pro migrace
+│   │       ├── seed.ts             # CLI runner pro seed data
+│   │       ├── migrations/         # Knex migrace
+│   │       └── seeds/
+│   │           └── 01_czech_set.ts # Základní česká sada (15 černých + 35 bílých karet)
 │   └── frontend/src/
 │       ├── router/index.ts         # Vue Router: / a /room/:token
 │       ├── views/
@@ -42,13 +51,13 @@ kpl-wnc/
 │       │   ├── PlayerList.vue      # Seznam hráčů s AFK/offline/host/self badges
 │       │   ├── InviteLink.vue      # Kopírování URL stolu
 │       │   ├── NicknameModal.vue   # Zadání přezdívky při prvním vstupu
-│       │   ├── CreateTableModal.vue # Formulář pro vytvoření stolu
+│       │   ├── CreateTableModal.vue # Formulář pro vytvoření stolu + výběr sad karet
 │       │   ├── JoinPrivateModal.vue # Vstup přes 6-znakový kód
 │       │   └── PublicRoomsList.vue # Živý seznam veřejných stolů
 │       ├── stores/
-│       │   ├── lobbyStore.ts       # Veřejné stoly, create/join, localStorage token
+│       │   ├── lobbyStore.ts       # Veřejné stoly, create/join, fetchCardSets, localStorage token
 │       │   └── roomStore.ts        # Stav aktuálního stolu, isHost, kick, startGame
-│       └── socket/index.ts         # Socket.io client wrapper
+│       └── socket/index.ts         # Socket.io client wrapper (URL z VITE_BACKEND_URL)
 ├── docs/plans/                     # Design a implementační plány
 ├── package.json                    # npm workspaces root
 ├── tsconfig.json                   # Base TS config (NodeNext, strict)
@@ -61,7 +70,9 @@ kpl-wnc/
 npm run dev:backend     # Fastify dev server (tsx watch)
 npm run dev:frontend    # Vite dev server
 npm run build           # Build všech balíčků
-npm test --workspace=packages/backend   # Vitest unit testy (RoomManager)
+npm run migrate --workspace=packages/backend   # Spustí DB migrace
+npm run seed --workspace=packages/backend      # Naplní DB seed daty (destruktivní!)
+npm test --workspace=packages/backend          # Vitest unit testy (RoomManager) — 20 testů
 ```
 
 ## 🗄️ Databázové schéma
@@ -106,6 +117,26 @@ Server používá Socket.io **rooms** pro izolaci:
 
 **Host:** zakládá stůl, může vyhazovat hráče a měnit nastavení. Při odchodu hosta přechází role na dalšího non-AFK hráče.
 
+## 🌐 REST API
+
+| Metoda | Endpoint | Popis |
+|---|---|---|
+| GET | `/api/card-sets` | Seznam sad s počty karet (`blackCardCount`, `whiteCardCount`) |
+| GET | `/health` | Health check |
+
+`CardSetSummary` typ je definován v `lobbyStore.ts` (frontend) — obsahuje `id, name, description, slug, isPublic, blackCardCount, whiteCardCount`.
+
+## ⚙️ Env proměnné
+
+| Proměnná | Kde se používá | Příklad |
+|---|---|---|
+| `DB_HOST/PORT/USER/PASSWORD/NAME` | Backend (Knex) | `localhost` / `3306` / … |
+| `PORT` | Backend (Fastify) | `3000` |
+| `FRONTEND_URL` | Backend CORS + Socket.io CORS | `http://10.5.10.150:5173` |
+| `VITE_BACKEND_URL` | Frontend (socket + fetch) | `http://10.5.10.150:3000` |
+
+> **Pozor:** Vite načítá `.env` z kořene monorepa díky `envDir: '../../'` v `vite.config.ts`. Pro LAN/mobilní dev nastav obě URL na IP adresy (ne localhost).
+
 ## 🎮 Herní logika (server-side state)
 
 Server drží stav her v paměti (`RoomManager`) — bez latence DB.
@@ -117,11 +148,14 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 | `JUDGING` | Card Czar anonymně vybírá vítěze kola |
 | `RESULTS` | Zobrazení vítěze, přičtení bodů, přechod na nové kolo |
 
+`startGame` validuje: ≥3 aktivní hráči AND `selectedSetIds.length > 0`.
+
 ## 🚀 Roadmap
 
 - [x] Monorepo setup — npm workspaces, TypeScript, Fastify server, Vue 3 + Tailwind v4
-- [ ] REST API — CRUD pro sady a karty
 - [x] Lobby — Socket.io místnosti, správa hráčů, AFK, reconnect, host přenos
-- [ ] Výběr sad karet v lobby (závisí na REST API)
+- [x] REST API — GET /api/card-sets + seed data (česká sada)
+- [x] Výběr sad karet při vytváření stolu (CreateTableModal)
+- [ ] REST API — CRUD pro správu sad a karet (admin)
 - [ ] Hra — stavový stroj (rozdávání, hraní, vyhodnocení)
 - [ ] VPS deploy — Apache proxy + PM2
