@@ -108,9 +108,11 @@ describe('GameEngine', () => {
   it('returns error when player submits twice in one round', () => {
     engine.startRound();
     const nonCzar = players.find(p => !p.isCardCzar)!;
-    const hand = engine.getPlayerHand(nonCzar.id);
-    engine.submitCards(nonCzar.id, [hand[0].id]);
-    const result = engine.submitCards(nonCzar.id, [hand[1].id]);
+    const firstCard = engine.getPlayerHand(nonCzar.id)[0].id;
+    engine.submitCards(nonCzar.id, [firstCard]);
+    // Re-fetch hand after first submission to avoid relying on internal mutability
+    const secondCard = engine.getPlayerHand(nonCzar.id)[0].id;
+    const result = engine.submitCards(nonCzar.id, [secondCard]);
     expect(result).toHaveProperty('error');
   });
 
