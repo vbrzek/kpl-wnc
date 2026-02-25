@@ -206,8 +206,23 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
       const roomCode = room.code;
       setTimeout(() => {
         const updated = roomManager.getRoom(roomCode);
-        if (updated) {
-          io.to(`room:${roomCode}`).emit('lobby:stateUpdate', updated);
+        if (!updated) return;
+
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', updated);
+
+        // If in SELECTION, check if remaining active players have all submitted
+        // (triggered when a non-submitted player goes AFK)
+        if (updated.status === 'SELECTION') {
+          const engine = roomManager.getGameEngine(roomCode);
+          if (engine) {
+            const nonCzarActive = updated.players.filter(p => !p.isAfk && !p.isCardCzar);
+            const allSubmitted = nonCzarActive.length > 0 && nonCzarActive.every(p => p.hasPlayed);
+            if (allSubmitted) {
+              updated.status = 'JUDGING';
+              io.to(`room:${roomCode}`).emit('lobby:stateUpdate', updated);
+              io.to(`room:${roomCode}`).emit('game:judging', engine.getAnonymousSubmissions());
+            }
+          }
         }
       }, 31_000);
     }

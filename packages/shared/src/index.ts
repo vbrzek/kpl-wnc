@@ -24,12 +24,6 @@ export interface WhiteCard {
   text: string;
 }
 
-// Fix 5: Named type for card submission (extracted from inline anonymous type)
-export interface CardSubmission {
-  playerId: string;
-  cards: WhiteCard[];
-}
-
 export interface GameRoundStart {
   blackCard: BlackCard;
   hand: WhiteCard[];
@@ -86,7 +80,6 @@ export interface ServerToClientEvents {
   'lobby:stateUpdate': (room: GameRoom) => void;
   'lobby:kicked': () => void;
   'lobby:publicRoomsUpdate': (rooms: PublicRoomSummary[]) => void;
-  'game:stateUpdate': (room: GameRoom) => void;
   'game:error': (message: string) => void;
   'game:roundStart': (data: GameRoundStart) => void;
   'game:judging': (submissions: AnonymousSubmission[]) => void;

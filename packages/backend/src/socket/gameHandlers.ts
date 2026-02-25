@@ -70,23 +70,27 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       const currentEngine = roomManager.getGameEngine(roomCode);
       if (!currentRoom || !currentEngine) return;
 
-      const { czarId: newCzarId } = currentEngine.startRound();
-      currentRoom.status = 'SELECTION';
-      currentRoom.currentBlackCard = currentEngine.currentBlackCard;
-      currentRoom.roundNumber = currentEngine.roundNumber;
-      io.to(`room:${roomCode}`).emit('lobby:stateUpdate', currentRoom);
+      try {
+        const { czarId: newCzarId } = currentEngine.startRound();
+        currentRoom.status = 'SELECTION';
+        currentRoom.currentBlackCard = currentEngine.currentBlackCard;
+        currentRoom.roundNumber = currentEngine.roundNumber;
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', currentRoom);
 
-      for (const player of currentRoom.players) {
-        if (!player.socketId) continue;
-        const playerSocket = io.sockets.sockets.get(player.socketId);
-        if (playerSocket) {
-          playerSocket.emit('game:roundStart', {
-            blackCard: currentEngine.currentBlackCard!,
-            hand: currentEngine.getPlayerHand(player.id),
-            czarId: newCzarId,
-            roundNumber: currentEngine.roundNumber,
-          });
+        for (const player of currentRoom.players) {
+          if (!player.socketId) continue;
+          const playerSocket = io.sockets.sockets.get(player.socketId);
+          if (playerSocket) {
+            playerSocket.emit('game:roundStart', {
+              blackCard: currentEngine.currentBlackCard!,
+              hand: currentEngine.getPlayerHand(player.id),
+              czarId: newCzarId,
+              roundNumber: currentEngine.roundNumber,
+            });
+          }
         }
+      } catch (err) {
+        io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
       }
     }, 5_000);
   });
