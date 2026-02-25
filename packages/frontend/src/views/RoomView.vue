@@ -5,6 +5,9 @@ import { useLobbyStore, loadPlayerToken } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
 import NicknameModal from '../components/NicknameModal.vue';
 import LobbyPanel from '../components/LobbyPanel.vue';
+import SelectionPhase from '../components/SelectionPhase.vue';
+import JudgingPhase from '../components/JudgingPhase.vue';
+import ResultsPhase from '../components/ResultsPhase.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -77,9 +80,9 @@ onUnmounted(() => {
         v-if="roomStore.room.status === 'LOBBY'"
         :room="roomStore.room"
       />
-      <div v-else class="text-center text-2xl mt-20 text-gray-300">
-        Hra probíhá... (herní UI bude implementováno)
-      </div>
+      <SelectionPhase v-else-if="roomStore.room.status === 'SELECTION'" />
+      <JudgingPhase v-else-if="roomStore.room.status === 'JUDGING'" />
+      <ResultsPhase v-else-if="roomStore.room.status === 'RESULTS'" />
     </template>
 
     <div v-else-if="!errorMsg" class="text-gray-400 mt-20 text-center">
