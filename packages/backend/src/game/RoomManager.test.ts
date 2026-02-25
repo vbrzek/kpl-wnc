@@ -263,4 +263,126 @@ describe('RoomManager', () => {
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe('Public');
   });
+
+  // --- endGame ---
+
+  it('endGame returns error for non-host', () => {
+    const { room } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const bobResult = rm.joinRoom(room.code, 'Bob');
+    if ('error' in bobResult) throw new Error('join failed');
+    // startGame requires 3 active players but we just need to test error path
+    const result = rm.endGame(bobResult.playerToken);
+    expect('error' in result).toBe(true);
+  });
+
+  it('endGame returns error when game is in LOBBY', () => {
+    const { playerToken } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const result = rm.endGame(playerToken);
+    expect('error' in result).toBe(true);
+  });
+
+  it('endGame sets status to FINISHED and clears engine', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    rm.joinRoom(room.code, 'Charlie');
+    rm.startGame(playerToken);
+    // Simulate engine
+    rm.setGameEngine(room.code, {} as any);
+
+    const result = rm.endGame(playerToken);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.status).toBe('FINISHED');
+      expect(result.room.roundDeadline).toBeNull();
+      expect(rm.getGameEngine(room.code)).toBeNull();
+    }
+  });
+
+  // --- returnToLobby ---
+
+  it('returnToLobby returns error when not FINISHED', () => {
+    const { playerToken } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const result = rm.returnToLobby(playerToken);
+    expect('error' in result).toBe(true);
+  });
+
+  it('returnToLobby resets room state', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.joinRoom(room.code, 'Bob');
+    rm.joinRoom(room.code, 'Charlie');
+    rm.startGame(playerToken);
+    rm.endGame(playerToken);
+
+    // Give players some score to verify reset
+    room.players[0].score = 5;
+    room.players[1].score = 3;
+
+    const result = rm.returnToLobby(playerToken);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.status).toBe('LOBBY');
+      expect(result.room.roundNumber).toBe(0);
+      expect(result.room.currentBlackCard).toBeNull();
+      expect(result.room.players.every(p => p.score === 0)).toBe(true);
+    }
+  });
+
+  // --- timer methods ---
+
+  it('setRoundTimer fires callback after delay', () => {
+    const cb = vi.fn();
+    const { room } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.setRoundTimer(room.code, cb, 45_000);
+    vi.advanceTimersByTime(44_999);
+    expect(cb).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(cb).toHaveBeenCalledOnce();
+  });
+
+  it('clearRoundTimer cancels callback', () => {
+    const cb = vi.fn();
+    const { room } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.setRoundTimer(room.code, cb, 45_000);
+    rm.clearRoundTimer(room.code);
+    vi.advanceTimersByTime(60_000);
+    expect(cb).not.toHaveBeenCalled();
+  });
+
+  it('setJudgingTimer fires callback after delay', () => {
+    const cb = vi.fn();
+    const { room } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.setJudgingTimer(room.code, cb, 60_000);
+    vi.advanceTimersByTime(60_000);
+    expect(cb).toHaveBeenCalledOnce();
+  });
+
+  it('clearAllGameTimers cancels both timers', () => {
+    const cbR = vi.fn();
+    const cbJ = vi.fn();
+    const { room } = rm.createRoom(
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.setRoundTimer(room.code, cbR, 45_000);
+    rm.setJudgingTimer(room.code, cbJ, 60_000);
+    rm.clearAllGameTimers(room.code);
+    vi.advanceTimersByTime(120_000);
+    expect(cbR).not.toHaveBeenCalled();
+    expect(cbJ).not.toHaveBeenCalled();
+  });
 });
