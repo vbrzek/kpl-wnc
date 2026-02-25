@@ -90,4 +90,22 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       }
     }, 5_000);
   });
+
+  // Player explicitly leaves during game — same cleanup as lobby:leave
+  socket.on('game:leave', () => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const roomCode = roomManager.getRoomByPlayerToken(playerToken)?.code;
+    roomManager.leaveRoom(playerToken);
+    socketToToken.delete(socket.id);
+
+    if (roomCode) {
+      socket.leave(`room:${roomCode}`);
+      const roomAfter = roomManager.getRoom(roomCode);
+      if (roomAfter) {
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', roomAfter);
+      }
+    }
+  });
 }
