@@ -13,6 +13,7 @@ export const useRoomStore = defineStore('room', () => {
   const submissions = ref<AnonymousSubmission[]>([]);
   const roundResult = ref<RoundResult | null>(null);
   const selectedCards = ref<WhiteCard[]>([]);
+  const lastPlayedCards = ref<WhiteCard[]>([]);
 
   const isHost = computed(() =>
     room.value !== null && myPlayerId.value !== null
@@ -52,6 +53,7 @@ export const useRoomStore = defineStore('room', () => {
       submissions.value = [];
       roundResult.value = null;
       selectedCards.value = [];
+      lastPlayedCards.value = [];
     });
 
     socket.on('game:judging', (subs) => {
@@ -64,6 +66,8 @@ export const useRoomStore = defineStore('room', () => {
 
     socket.on('game:handUpdate', (newHand) => {
       hand.value = newHand;
+      selectedCards.value = lastPlayedCards.value.filter(c => newHand.some(h => h.id === c.id));
+      lastPlayedCards.value = [];
     });
   }
 
@@ -110,6 +114,7 @@ export const useRoomStore = defineStore('room', () => {
   }
 
   function playCards(cardIds: number[]) {
+    lastPlayedCards.value = [...selectedCards.value];
     socket.emit('game:playCards', cardIds);
     selectedCards.value = [];
   }
@@ -126,6 +131,8 @@ export const useRoomStore = defineStore('room', () => {
   function toggleCardSelection(card: WhiteCard) {
     const idx = selectedCards.value.findIndex(c => c.id === card.id);
     if (idx === -1) {
+      const limit = currentBlackCard.value?.pick ?? 1;
+      if (selectedCards.value.length >= limit) return;
       selectedCards.value.push(card);
     } else {
       selectedCards.value.splice(idx, 1);
@@ -147,6 +154,7 @@ export const useRoomStore = defineStore('room', () => {
     submissions.value = [];
     roundResult.value = null;
     selectedCards.value = [];
+    lastPlayedCards.value = [];
     initialised = false;
   }
 
