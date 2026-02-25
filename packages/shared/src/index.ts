@@ -84,6 +84,7 @@ export interface ServerToClientEvents {
   'game:roundStart': (data: GameRoundStart) => void;
   'game:judging': (submissions: AnonymousSubmission[]) => void;
   'game:roundEnd': (result: RoundResult) => void;
+  'game:handUpdate': (hand: WhiteCard[]) => void;
 }
 
 // Socket.io eventy — klient → server
@@ -121,4 +122,5 @@ export interface ClientToServerEvents {
   'game:leave': () => void;
   'game:playCards': (cardIds: number[]) => void;
   'game:judgeSelect': (submissionId: string) => void;
+  'game:retractCards': () => void;
 }
