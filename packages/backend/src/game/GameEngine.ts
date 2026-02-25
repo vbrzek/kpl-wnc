@@ -111,12 +111,12 @@ export class GameEngine {
     if (!player.hasPlayed) return { error: 'Dosud jsi žádné karty neodeslal.' };
 
     const submission = this.submissions.get(playerId);
-    if (submission) {
-      const hand = this.playerHands.get(playerId) ?? [];
-      hand.push(...submission.cards);
-      this.playerHands.set(playerId, hand);
-      this.submissions.delete(playerId);
-    }
+    if (!submission) return { error: 'Odeslání nebylo nalezeno.' };
+
+    const hand = this.playerHands.get(playerId) ?? [];
+    hand.push(...submission.cards);
+    this.playerHands.set(playerId, hand);
+    this.submissions.delete(playerId);
 
     player.hasPlayed = false;
     return { ok: true };
