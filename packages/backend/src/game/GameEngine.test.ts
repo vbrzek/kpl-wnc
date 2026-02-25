@@ -123,6 +123,58 @@ describe('GameEngine', () => {
     expect(result).toHaveProperty('error');
   });
 
+
+  // --- retractCards ---
+
+  it('returns cards to hand after retract', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    const cardId = engine.getPlayerHand(nonCzar.id)[0].id;
+    engine.submitCards(nonCzar.id, [cardId]);
+    expect(engine.getPlayerHand(nonCzar.id)).toHaveLength(9);
+    engine.retractCards(nonCzar.id);
+    expect(engine.getPlayerHand(nonCzar.id)).toHaveLength(10);
+  });
+
+  it('resets hasPlayed to false after retract', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    const cardId = engine.getPlayerHand(nonCzar.id)[0].id;
+    engine.submitCards(nonCzar.id, [cardId]);
+    expect(nonCzar.hasPlayed).toBe(true);
+    engine.retractCards(nonCzar.id);
+    expect(nonCzar.hasPlayed).toBe(false);
+  });
+
+  it('allows resubmission after retract', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    const originalCardId = engine.getPlayerHand(nonCzar.id)[0].id;
+    engine.submitCards(nonCzar.id, [originalCardId]);
+    engine.retractCards(nonCzar.id);
+    const newCardId = engine.getPlayerHand(nonCzar.id)[0].id;
+    const result = engine.submitCards(nonCzar.id, [newCardId]);
+    expect(result).toEqual(expect.objectContaining({ ok: true }));
+  });
+
+  it('returns error when retracting without having submitted', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    const result = engine.retractCards(nonCzar.id);
+    expect(result).toHaveProperty('error');
+  });
+
+  it('retract preserves submissions of other players', () => {
+    engine.startRound();
+    const nonCzars = players.filter(p => !p.isCardCzar);
+    const p1 = nonCzars[0];
+    engine.submitCards(p1.id, [engine.getPlayerHand(p1.id)[0].id]);
+    const p2 = nonCzars[1];
+    engine.submitCards(p2.id, [engine.getPlayerHand(p2.id)[0].id]);
+    engine.retractCards(p1.id);
+    expect(p2.hasPlayed).toBe(true);
+  });
+
   // --- getAnonymousSubmissions ---
 
   it('returns submissions without playerId, with submissionId', () => {

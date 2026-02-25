@@ -104,6 +104,24 @@ export class GameEngine {
     return { ok: true, allSubmitted };
   }
 
+
+  retractCards(playerId: string): { ok: true } | { error: string } {
+    const player = this.players.find(p => p.id === playerId);
+    if (!player) return { error: 'Hráč nenalezen.' };
+    if (!player.hasPlayed) return { error: 'Dosud jsi žádné karty neodeslal.' };
+
+    const submission = this.submissions.get(playerId);
+    if (submission) {
+      const hand = this.playerHands.get(playerId) ?? [];
+      hand.push(...submission.cards);
+      this.playerHands.set(playerId, hand);
+      this.submissions.delete(playerId);
+    }
+
+    player.hasPlayed = false;
+    return { ok: true };
+  }
+
   getAnonymousSubmissions(): AnonymousSubmission[] {
     const result = Array.from(this.submissions.values()).map(
       ({ submissionId, cards }) => ({ submissionId, cards }),
