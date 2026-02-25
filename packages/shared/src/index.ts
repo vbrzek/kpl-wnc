@@ -43,6 +43,14 @@ export interface RoundResult {
   scores: Record<string, number>;
 }
 
+export interface GameStateSync {
+  blackCard: BlackCard;
+  czarId: string;
+  roundNumber: number;
+  hand: WhiteCard[];               // prázdné pro czara
+  submissions: AnonymousSubmission[]; // neprázdné jen pro czara ve fázi JUDGING
+}
+
 // Sada karet
 export interface CardSet {
   id: number;
@@ -85,6 +93,7 @@ export interface ServerToClientEvents {
   'game:judging': (submissions: AnonymousSubmission[]) => void;
   'game:roundEnd': (result: RoundResult) => void;
   'game:handUpdate': (hand: WhiteCard[]) => void;
+  'game:stateSync': (data: GameStateSync) => void;
 }
 
 // Socket.io eventy — klient → server
