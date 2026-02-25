@@ -72,8 +72,10 @@ export const useRoomStore = defineStore('room', () => {
 
     socket.on('game:stateSync', (data) => {
       currentBlackCard.value = data.blackCard;
-      czarId.value = data.czarId;
+      czarId.value = data.czarId || null;
       hand.value = data.hand;
+      selectedCards.value = [];
+      roundResult.value = null;
       if (data.submissions.length > 0) {
         submissions.value = data.submissions;
       }
