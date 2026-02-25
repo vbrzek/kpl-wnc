@@ -4,6 +4,7 @@ import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
+import { startNewRound } from './roundUtils.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -173,38 +174,25 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
       return;
     }
 
-    // Init GameEngine and start first round
+    // Init GameEngine
     let engine: GameEngine;
-    let czarId: string;
     try {
       engine = new GameEngine(room.players, blackCards, whiteCards);
       roomManager.setGameEngine(room.code, engine);
-      ({ czarId } = engine.startRound());
     } catch {
       room.status = 'LOBBY';
       callback({ error: 'Chyba při inicializaci hry — zkontroluj sady karet.' });
       return;
     }
-    room.currentBlackCard = engine.currentBlackCard;
-    room.roundNumber = engine.roundNumber;
 
-    // Broadcast status change (SELECTION) to all in room
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
     broadcastPublicRooms(io);
     callback({ ok: true });
 
-    // Send each player their personal hand (per-socket, not broadcast)
-    for (const player of room.players) {
-      if (!player.socketId) continue;
-      const playerSocket = io.sockets.sockets.get(player.socketId);
-      if (playerSocket) {
-        playerSocket.emit('game:roundStart', {
-          blackCard: engine.currentBlackCard!,
-          hand: engine.getPlayerHand(player.id),
-          czarId,
-          roundNumber: engine.roundNumber,
-        });
-      }
+    // Spusť první kolo (broadcast stateUpdate + game:roundStart per player + timer)
+    try {
+      startNewRound(room, engine, io);
+    } catch {
+      io.to(`room:${room.code}`).emit('game:error', 'Chyba při inicializaci hry — zkontroluj sady karet.');
     }
   });
 
