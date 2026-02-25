@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { useLobbyStore } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
 import PublicRoomsList from '../components/PublicRoomsList.vue';
@@ -8,6 +9,7 @@ import CreateTableModal from '../components/CreateTableModal.vue';
 import JoinPrivateModal from '../components/JoinPrivateModal.vue';
 
 const router = useRouter();
+const route = useRoute();
 const lobbyStore = useLobbyStore();
 const roomStore = useRoomStore();
 
@@ -15,7 +17,12 @@ const showCreate = ref(false);
 const showJoinPrivate = ref(false);
 const errorMsg = ref('');
 
-onMounted(() => lobbyStore.subscribe());
+onMounted(() => {
+  lobbyStore.subscribe();
+  if (route.query.error) {
+    errorMsg.value = route.query.error as string;
+  }
+});
 onUnmounted(() => lobbyStore.unsubscribe());
 
 async function onCreateRoom(settings: {
