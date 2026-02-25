@@ -32,7 +32,9 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
     if (result.allSubmitted) {
       room.status = 'JUDGING';
-      io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    }
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    if (result.allSubmitted) {
       io.to(`room:${room.code}`).emit('game:judging', engine.getAnonymousSubmissions());
     }
   });
