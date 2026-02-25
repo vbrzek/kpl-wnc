@@ -8,6 +8,7 @@ import cors from '@fastify/cors';
 import { Server } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { registerLobbyHandlers } from './socket/lobbyHandlers.js';
+import { registerGameHandlers } from './socket/gameHandlers.js';
 import cardSetsRoutes from './routes/cardSets.js';
 
 const app = Fastify({ logger: true });
@@ -31,6 +32,7 @@ io.on('connection', (socket) => {
   io.emit('server:clientCount', io.engine.clientsCount);
 
   registerLobbyHandlers(io, socket);
+  registerGameHandlers(io, socket);
 
   socket.on('disconnect', () => {
     app.log.info(`Client disconnected: ${socket.id}`);
