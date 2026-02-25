@@ -35,7 +35,7 @@ const players = computed(() => roomStore.room?.players ?? []);
 const czar = computed(() => players.value.find(p => p.isCardCzar));
 const waitingFor = computed(() => players.value.filter(p => !p.isCardCzar && !p.isAfk && !p.hasPlayed));
 const submitted = computed(() => players.value.filter(p => !p.isCardCzar && p.hasPlayed));
-const afkPlayers = computed(() => players.value.filter(p => !p.isCardCzar && p.isAfk));
+const afkPlayers = computed(() => players.value.filter(p => !p.isCardCzar && p.isAfk && !p.hasPlayed));
 
 // --- Submit / retract ---
 function submit() {

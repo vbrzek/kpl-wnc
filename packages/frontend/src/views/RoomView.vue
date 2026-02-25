@@ -17,13 +17,12 @@ const roomStore = useRoomStore();
 
 const roomCode = route.params.token as string;
 const needsNickname = ref(false);
-const errorMsg = ref('');
 
 // Watch for being kicked (roomStore clears room on lobby:kicked)
 const stopKickedWatch = watch(
   () => roomStore.room,
   (newRoom, oldRoom) => {
-    if (oldRoom !== null && newRoom === null && !errorMsg.value) {
+    if (oldRoom !== null && newRoom === null) {
       router.push('/');
     }
   }
@@ -73,8 +72,6 @@ onUnmounted(() => {
       @join="onNicknameSubmit"
     />
 
-    <p v-if="errorMsg" class="text-red-400 mb-4">{{ errorMsg }}</p>
-
     <template v-if="roomStore.room">
       <LobbyPanel
         v-if="roomStore.room.status === 'LOBBY'"
@@ -86,7 +83,7 @@ onUnmounted(() => {
       <FinishedPhase v-else-if="roomStore.room.status === 'FINISHED'" />
     </template>
 
-    <div v-else-if="!errorMsg" class="text-gray-400 mt-20 text-center">
+    <div v-else class="text-gray-400 mt-20 text-center">
       Připojování...
     </div>
 
