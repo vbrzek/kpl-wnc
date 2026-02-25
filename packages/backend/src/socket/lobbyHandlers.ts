@@ -69,7 +69,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
         const czarPlayer = room.players.find(p => p.isCardCzar);
         const syncData: GameStateSync = {
           blackCard: engine.currentBlackCard,
-          czarId: czarPlayer?.id ?? '',
+          czarId: czarPlayer?.id ?? null,
           roundNumber: engine.roundNumber,
           hand: engine.getPlayerHand(playerId),
           submissions:

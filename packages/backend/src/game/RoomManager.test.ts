@@ -79,6 +79,40 @@ describe('RoomManager', () => {
     expect('error' in result).toBe(true);
   });
 
+  it('joinRoom returns wasReconnect: false on a fresh join', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const result = rm.joinRoom(room.code, 'Bob');
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.wasReconnect).toBe(false);
+    }
+  });
+
+  it('joinRoom returns wasReconnect: true when playerToken matches the room', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    rm.handleDisconnect(playerToken);
+    const result = rm.joinRoom(room.code, '', playerToken);
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.wasReconnect).toBe(true);
+    }
+  });
+
+  it('joinRoom ignores invalid playerToken and treats join as fresh (wasReconnect: false)', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+    );
+    const result = rm.joinRoom(room.code, 'Bob', 'non-existent-token');
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.wasReconnect).toBe(false);
+    }
+  });
+
   it('reconnects player by playerToken, restores socketId', () => {
     const { room, playerToken } = rm.createRoom(
       { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }

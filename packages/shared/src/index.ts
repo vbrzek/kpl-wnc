@@ -45,7 +45,7 @@ export interface RoundResult {
 
 export interface GameStateSync {
   blackCard: BlackCard;
-  czarId: string;
+  czarId: string | null;
   roundNumber: number;
   hand: WhiteCard[];               // prázdné pro czara
   submissions: AnonymousSubmission[]; // neprázdné jen pro czara ve fázi JUDGING
