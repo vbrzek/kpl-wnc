@@ -4,7 +4,7 @@ import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
-import { startNewRound } from './roundUtils.js';
+import { startNewRound, startJudgingPhase } from './roundUtils.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -225,9 +225,8 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
             const nonCzarActive = updated.players.filter(p => !p.isAfk && !p.isCardCzar);
             const allSubmitted = nonCzarActive.length > 0 && nonCzarActive.every(p => p.hasPlayed);
             if (allSubmitted) {
-              updated.status = 'JUDGING';
-              io.to(`room:${roomCode}`).emit('lobby:stateUpdate', updated);
-              io.to(`room:${roomCode}`).emit('game:judging', engine.getAnonymousSubmissions());
+              roomManager.clearRoundTimer(roomCode);
+              startJudgingPhase(updated, engine, io);
             }
           }
         }
