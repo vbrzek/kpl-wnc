@@ -137,20 +137,37 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const room = result.room;
 
     // Load cards from DB for selected sets
-    const [blackCards, whiteCards] = await Promise.all([
-      db('black_cards')
-        .whereIn('card_set_id', room.selectedSetIds)
-        .select<BlackCard[]>('id', 'text', 'pick'),
-      db('white_cards')
-        .whereIn('card_set_id', room.selectedSetIds)
-        .select<WhiteCard[]>('id', 'text'),
-    ]);
+    let blackCards: BlackCard[];
+    let whiteCards: WhiteCard[];
+    try {
+      [blackCards, whiteCards] = await Promise.all([
+        db('black_cards')
+          .whereIn('card_set_id', room.selectedSetIds)
+          .select<BlackCard[]>('id', 'text', 'pick'),
+        db('white_cards')
+          .whereIn('card_set_id', room.selectedSetIds)
+          .select<WhiteCard[]>('id', 'text'),
+      ]);
+    } catch {
+      room.status = 'LOBBY';
+      callback({ error: 'Chyba při načítání karet.' });
+      return;
+    }
 
     // Init GameEngine and start first round
-    const engine = new GameEngine(room.players, blackCards, whiteCards);
-    roomManager.setGameEngine(room.code, engine);
-    const { czarId } = engine.startRound();
+    let engine: GameEngine;
+    let czarId: string;
+    try {
+      engine = new GameEngine(room.players, blackCards, whiteCards);
+      roomManager.setGameEngine(room.code, engine);
+      ({ czarId } = engine.startRound());
+    } catch {
+      room.status = 'LOBBY';
+      callback({ error: 'Chyba při inicializaci hry — zkontroluj sady karet.' });
+      return;
+    }
     room.currentBlackCard = engine.currentBlackCard;
+    room.roundNumber = engine.roundNumber;
 
     // Broadcast status change (SELECTION) to all in room
     io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
