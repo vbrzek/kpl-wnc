@@ -7,6 +7,7 @@ import { GameEngine } from './GameEngine.js';
 export interface JoinSuccess {
   room: GameRoom;
   playerToken: string;
+  wasReconnect: boolean;
 }
 
 export interface ErrorResult {
@@ -108,7 +109,7 @@ export class RoomManager {
       if (existingRoomCode === code) {
         const reconnected = this.reconnect(playerToken, null);
         if (reconnected) {
-          return { room: reconnected, playerToken };
+          return { room: reconnected, playerToken, wasReconnect: true };
         }
       }
     }
@@ -145,7 +146,7 @@ export class RoomManager {
     this.playerRooms.set(newToken, code);
     this.tokenToPlayerId.set(newToken, playerId);
 
-    return { room, playerToken: newToken };
+    return { room, playerToken: newToken, wasReconnect: false };
   }
 
   // ------------------------------------------------------------------ reconnect

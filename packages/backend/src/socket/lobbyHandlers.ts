@@ -1,5 +1,5 @@
 import type { Server, Socket } from 'socket.io';
-import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
+import type { ServerToClientEvents, ClientToServerEvents, GameStateSync } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
@@ -61,6 +61,26 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     socketToToken.set(socket.id, playerToken);
     socket.join(`room:${room.code}`);
     socket.leave('lobby');
+
+    // Po reconnectu do rozjeté hry pošli hráči jeho aktuální herní stav
+    if (result.wasReconnect && (room.status === 'SELECTION' || room.status === 'JUDGING')) {
+      const engine = roomManager.getGameEngine(room.code);
+      if (engine?.currentBlackCard) {
+        const czarPlayer = room.players.find(p => p.isCardCzar);
+        const player = room.players.find(p => p.id === playerId);
+        const syncData: GameStateSync = {
+          blackCard: engine.currentBlackCard,
+          czarId: czarPlayer?.id ?? '',
+          roundNumber: engine.roundNumber,
+          hand: engine.getPlayerHand(playerId),
+          submissions:
+            room.status === 'JUDGING' && player?.isCardCzar
+              ? engine.getAnonymousSubmissions()
+              : [],
+        };
+        socket.emit('game:stateSync', syncData);
+      }
+    }
 
     // Notify rest of room
     io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
