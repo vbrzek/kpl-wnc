@@ -1,12 +1,10 @@
 import type { Server, Socket } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
+import { socketToToken } from './socketState.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
-
-// Maps socket.id → playerToken (cleared on disconnect)
-const socketToToken = new Map<string, string>();
 
 function broadcastPublicRooms(io: IO) {
   io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
