@@ -30,6 +30,25 @@ export interface CardSubmission {
   cards: WhiteCard[];
 }
 
+export interface GameRoundStart {
+  blackCard: BlackCard;
+  hand: WhiteCard[];
+  czarId: string;
+  roundNumber: number;
+}
+
+export interface AnonymousSubmission {
+  submissionId: string;
+  cards: WhiteCard[];
+}
+
+export interface RoundResult {
+  winnerId: string;
+  winnerNickname: string;
+  winningCards: WhiteCard[];
+  scores: Record<string, number>;
+}
+
 // Sada karet
 export interface CardSet {
   id: number;
@@ -69,11 +88,9 @@ export interface ServerToClientEvents {
   'lobby:publicRoomsUpdate': (rooms: PublicRoomSummary[]) => void;
   'game:stateUpdate': (room: GameRoom) => void;
   'game:error': (message: string) => void;
-  'game:roundStart': (blackCard: BlackCard) => void;
-  // Fix 5: use named CardSubmission type
-  'game:judging': (submissions: CardSubmission[]) => void;
-  // Fix 4: single data object instead of two positional args
-  'game:roundEnd': (result: { winnerId: string; winnerCards: WhiteCard[] }) => void;
+  'game:roundStart': (data: GameRoundStart) => void;
+  'game:judging': (submissions: AnonymousSubmission[]) => void;
+  'game:roundEnd': (result: RoundResult) => void;
 }
 
 // Socket.io eventy — klient → server
@@ -110,5 +127,5 @@ export interface ClientToServerEvents {
   // Fix 3: removed 'game:startGame' — duplicates 'lobby:startGame' with no callback and conflicting semantics
   'game:leave': () => void;
   'game:playCards': (cardIds: number[]) => void;
-  'game:judgeSelect': (playerId: string) => void;
+  'game:judgeSelect': (submissionId: string) => void;
 }
