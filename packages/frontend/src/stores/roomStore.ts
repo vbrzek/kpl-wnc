@@ -73,8 +73,7 @@ export const useRoomStore = defineStore('room', () => {
 
   function leave() {
     socket.emit('lobby:leave');
-    room.value = null;
-    myPlayerId.value = null;
+    cleanup();
   }
 
   async function updateSettings(settings: {
