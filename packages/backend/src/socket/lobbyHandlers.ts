@@ -2,6 +2,9 @@ import type { Server, Socket } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
+import db from '../db/db.js';
+import { GameEngine } from '../game/GameEngine.js';
+import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -124,16 +127,49 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
   });
 
   // Start game (host only)
-  socket.on('lobby:startGame', (callback) => {
+  socket.on('lobby:startGame', async (callback) => {
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) { callback({ error: 'Nejsi přihlášen' }); return; }
 
     const result = roomManager.startGame(playerToken);
     if ('error' in result) { callback(result); return; }
 
-    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    const room = result.room;
+
+    // Load cards from DB for selected sets
+    const [blackCards, whiteCards] = await Promise.all([
+      db('black_cards')
+        .whereIn('card_set_id', room.selectedSetIds)
+        .select<BlackCard[]>('id', 'text', 'pick'),
+      db('white_cards')
+        .whereIn('card_set_id', room.selectedSetIds)
+        .select<WhiteCard[]>('id', 'text'),
+    ]);
+
+    // Init GameEngine and start first round
+    const engine = new GameEngine(room.players, blackCards, whiteCards);
+    roomManager.setGameEngine(room.code, engine);
+    const { czarId } = engine.startRound();
+    room.currentBlackCard = engine.currentBlackCard;
+
+    // Broadcast status change (SELECTION) to all in room
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
     broadcastPublicRooms(io);
     callback({ ok: true });
+
+    // Send each player their personal hand (per-socket, not broadcast)
+    for (const player of room.players) {
+      if (!player.socketId) continue;
+      const playerSocket = io.sockets.sockets.get(player.socketId);
+      if (playerSocket) {
+        playerSocket.emit('game:roundStart', {
+          blackCard: engine.currentBlackCard!,
+          hand: engine.getPlayerHand(player.id),
+          czarId,
+          roundNumber: engine.roundNumber,
+        });
+      }
+    }
   });
 
   // Disconnect — start AFK timer, emit state update
