@@ -22,6 +22,8 @@ export class GameEngine {
   roundNumber = 0;
 
   constructor(
+    // Player objects are shared references with GameRoom.players.
+    // Mutations here (score, isCardCzar, hasPlayed) propagate to RoomManager by design.
     private players: Player[],
     blackCards: BlackCard[],
     whiteCards: WhiteCard[],
@@ -137,6 +139,6 @@ export class GameEngine {
   }
 
   getPlayerHand(playerId: string): WhiteCard[] {
-    return this.playerHands.get(playerId) ?? [];
+    return [...(this.playerHands.get(playerId) ?? [])];
   }
 }
