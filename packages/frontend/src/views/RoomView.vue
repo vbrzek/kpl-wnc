@@ -8,6 +8,7 @@ import LobbyPanel from '../components/LobbyPanel.vue';
 import SelectionPhase from '../components/SelectionPhase.vue';
 import JudgingPhase from '../components/JudgingPhase.vue';
 import ResultsPhase from '../components/ResultsPhase.vue';
+import FinishedPhase from '../components/FinishedPhase.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -37,8 +38,7 @@ onMounted(async () => {
     // Reconnect: pass empty nickname — server will use the stored playerToken
     const result = await lobbyStore.joinRoom(roomCode, '');
     if ('error' in result) {
-      errorMsg.value = result.error;
-      setTimeout(() => router.push('/'), 2000);
+      router.push({ path: '/', query: { error: result.error } });
       return;
     }
     roomStore.setRoom(result.room);
@@ -51,7 +51,7 @@ onMounted(async () => {
 async function onNicknameSubmit(nickname: string) {
   const result = await lobbyStore.joinRoom(roomCode, nickname);
   if ('error' in result) {
-    errorMsg.value = result.error;
+    router.push({ path: '/', query: { error: result.error } });
     return;
   }
   roomStore.setRoom(result.room);
@@ -83,6 +83,7 @@ onUnmounted(() => {
       <SelectionPhase v-else-if="roomStore.room.status === 'SELECTION'" />
       <JudgingPhase v-else-if="roomStore.room.status === 'JUDGING'" />
       <ResultsPhase v-else-if="roomStore.room.status === 'RESULTS'" />
+      <FinishedPhase v-else-if="roomStore.room.status === 'FINISHED'" />
     </template>
 
     <div v-else-if="!errorMsg" class="text-gray-400 mt-20 text-center">
