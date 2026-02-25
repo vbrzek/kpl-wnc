@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, onUnmounted } from 'vue';
 import { useRoomStore } from '../stores/roomStore';
+import { socket } from '../socket';
 
 const roomStore = useRoomStore();
 const pick = computed(() => roomStore.currentBlackCard?.pick ?? 1);
@@ -16,6 +17,20 @@ function retract() {
   retracting.value = true;
   roomStore.retractCards();
 }
+
+// Reset retracting on success (hand updated by server)
+watch(() => roomStore.hand, () => {
+  retracting.value = false;
+});
+
+// Reset retracting on error (server rejected the retract)
+function onGameError() {
+  retracting.value = false;
+}
+socket.on('game:error', onGameError);
+onUnmounted(() => {
+  socket.off('game:error', onGameError);
+});
 </script>
 
 <template>
