@@ -1,11 +1,18 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { socket } from '../socket';
-import type { GameRoom } from '@kpl/shared';
+import type { GameRoom, BlackCard, WhiteCard, AnonymousSubmission, RoundResult } from '@kpl/shared';
 
 export const useRoomStore = defineStore('room', () => {
   const room = ref<GameRoom | null>(null);
   const myPlayerId = ref<string | null>(null);
+
+  const hand = ref<WhiteCard[]>([]);
+  const currentBlackCard = ref<BlackCard | null>(null);
+  const czarId = ref<string | null>(null);
+  const submissions = ref<AnonymousSubmission[]>([]);
+  const roundResult = ref<RoundResult | null>(null);
+  const selectedCards = ref<WhiteCard[]>([]);
 
   const isHost = computed(() =>
     room.value !== null && myPlayerId.value !== null
@@ -17,6 +24,10 @@ export const useRoomStore = defineStore('room', () => {
     room.value && myPlayerId.value
       ? room.value.players.find(p => p.id === myPlayerId.value) ?? null
       : null
+  );
+
+  const isCardCzar = computed(() =>
+    myPlayerId.value !== null && czarId.value === myPlayerId.value
   );
 
   let initialised = false;
@@ -32,6 +43,23 @@ export const useRoomStore = defineStore('room', () => {
     socket.on('lobby:kicked', () => {
       room.value = null;
       myPlayerId.value = null;
+    });
+
+    socket.on('game:roundStart', (data) => {
+      hand.value = data.hand;
+      currentBlackCard.value = data.blackCard;
+      czarId.value = data.czarId;
+      submissions.value = [];
+      roundResult.value = null;
+      selectedCards.value = [];
+    });
+
+    socket.on('game:judging', (subs) => {
+      submissions.value = subs;
+    });
+
+    socket.on('game:roundEnd', (result) => {
+      roundResult.value = result;
     });
   }
 
@@ -78,17 +106,46 @@ export const useRoomStore = defineStore('room', () => {
     });
   }
 
+  function playCards(cardIds: number[]) {
+    socket.emit('game:playCards', cardIds);
+    selectedCards.value = [];
+  }
+
+  function judgeSelect(submissionId: string) {
+    socket.emit('game:judgeSelect', submissionId);
+  }
+
+  function toggleCardSelection(card: WhiteCard) {
+    const idx = selectedCards.value.findIndex(c => c.id === card.id);
+    if (idx === -1) {
+      selectedCards.value.push(card);
+    } else {
+      selectedCards.value.splice(idx, 1);
+    }
+  }
+
   function cleanup() {
     socket.off('lobby:stateUpdate');
     socket.off('lobby:kicked');
+    socket.off('game:roundStart');
+    socket.off('game:judging');
+    socket.off('game:roundEnd');
     room.value = null;
     myPlayerId.value = null;
+    hand.value = [];
+    currentBlackCard.value = null;
+    czarId.value = null;
+    submissions.value = [];
+    roundResult.value = null;
+    selectedCards.value = [];
     initialised = false;
   }
 
   return {
     room, myPlayerId, isHost, me,
+    hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, cleanup,
+    playCards, judgeSelect, toggleCardSelection,
   };
 });
