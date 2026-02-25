@@ -37,6 +37,32 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     }
   });
 
+  // Player retracts submitted cards to change selection
+  socket.on('game:retractCards', () => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'SELECTION') {
+      socket.emit('game:error', 'Karty nelze vzít zpět mimo fázi výběru.');
+      return;
+    }
+
+    const engine = roomManager.getGameEngine(room.code);
+    if (!engine) { socket.emit('game:error', 'Herní engine nenalezen.'); return; }
+
+    const playerId = roomManager.getPlayerIdByToken(playerToken)!;
+    const result = engine.retractCards(playerId);
+
+    if ('error' in result) {
+      socket.emit('game:error', result.error);
+      return;
+    }
+
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    socket.emit('game:handUpdate', engine.getPlayerHand(playerId));
+  });
+
   // Card Czar selects winner during JUDGING
   socket.on('game:judgeSelect', (submissionId) => {
     const playerToken = socketToToken.get(socket.id);
