@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoomStore } from '../stores/roomStore';
 
 const roomStore = useRoomStore();
 const pick = computed(() => roomStore.currentBlackCard?.pick ?? 1);
 const canSubmit = computed(() => roomStore.selectedCards.length === pick.value);
+const retracting = ref(false);
 
 function submit() {
   if (!canSubmit.value) return;
   roomStore.playCards(roomStore.selectedCards.map(c => c.id));
+}
+
+function retract() {
+  retracting.value = true;
+  roomStore.retractCards();
 }
 </script>
 
@@ -27,10 +33,19 @@ function submit() {
       Jsi Card Czar — čekej, až ostatní vyberou karty.
     </p>
 
-    <!-- Hráč odeslal -->
-    <p v-else-if="roomStore.me?.hasPlayed" class="text-green-400 font-semibold text-lg">
-      Karty odeslány — čekáme na ostatní...
-    </p>
+    <!-- Hráč odeslal — může změnit výběr -->
+    <div v-else-if="roomStore.me?.hasPlayed" class="space-y-3">
+      <p class="text-green-400 font-semibold text-lg">
+        Karty odeslány — čekáme na ostatní...
+      </p>
+      <button
+        @click="retract"
+        :disabled="retracting"
+        class="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+      >
+        Změnit výběr
+      </button>
+    </div>
 
     <!-- Výběr karet -->
     <template v-else>
