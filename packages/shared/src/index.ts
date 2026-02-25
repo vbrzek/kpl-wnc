@@ -1,10 +1,10 @@
 // Herní stavy
-export type GameStatus = 'LOBBY' | 'SELECTION' | 'JUDGING' | 'RESULTS';
+export type GameStatus = 'LOBBY' | 'SELECTION' | 'JUDGING' | 'RESULTS' | 'FINISHED';
 
 // Hráč
 export interface Player {
-  id: string;           // player token (UUID, stable across reconnects)
-  socketId: string | null;  // current socket.id, null = offline
+  id: string;
+  socketId: string | null;
   nickname: string;
   score: number;
   isCardCzar: boolean;
@@ -37,8 +37,8 @@ export interface AnonymousSubmission {
 }
 
 export interface RoundResult {
-  winnerId: string;
-  winnerNickname: string;
+  winnerId: string | null;        // null = kolo přeskočeno
+  winnerNickname: string | null;
   winningCards: WhiteCard[];
   scores: Record<string, number>;
 }
@@ -47,8 +47,8 @@ export interface GameStateSync {
   blackCard: BlackCard;
   czarId: string | null;
   roundNumber: number;
-  hand: WhiteCard[];               // prázdné pro czara
-  submissions: AnonymousSubmission[]; // neprázdné jen pro czara ve fázi JUDGING
+  hand: WhiteCard[];
+  submissions: AnonymousSubmission[];
 }
 
 // Sada karet
@@ -56,15 +56,15 @@ export interface CardSet {
   id: number;
   name: string;
   description: string | null;
-  slug: string | null;  // Fix 1: nullable — DB column has no NOT NULL constraint
+  slug: string | null;
   isPublic: boolean;
 }
 
 // Herní místnost
 export interface GameRoom {
-  code: string;           // 6-char hex token (a-f0-9)
+  code: string;
   status: GameStatus;
-  hostId: string;         // player.id of the host
+  hostId: string;
   name: string;
   isPublic: boolean;
   selectedSetIds: number[];
@@ -72,6 +72,7 @@ export interface GameRoom {
   players: Player[];
   currentBlackCard: BlackCard | null;
   roundNumber: number;
+  roundDeadline: number | null;   // Unix ms timestamp, null = žádný aktivní timer
 }
 
 // Zkrácený přehled pro seznam veřejných stolů
@@ -94,6 +95,7 @@ export interface ServerToClientEvents {
   'game:roundEnd': (result: RoundResult) => void;
   'game:handUpdate': (hand: WhiteCard[]) => void;
   'game:stateSync': (data: GameStateSync) => void;
+  'game:roundSkipped': () => void;  // kolo přeskočeno bez bodu (timeout)
 }
 
 // Socket.io eventy — klient → server
@@ -126,8 +128,12 @@ export interface ClientToServerEvents {
   'lobby:startGame': (
     callback: (result: { ok: true } | { error: string }) => void
   ) => void;
-  // Fix 2: removed 'game:join' — duplicates 'lobby:join' with weaker signature and no reconnection support
-  // Fix 3: removed 'game:startGame' — duplicates 'lobby:startGame' with no callback and conflicting semantics
+  'lobby:endGame': (
+    callback: (result: { ok: true } | { error: string }) => void
+  ) => void;
+  'lobby:returnToLobby': (
+    callback: (result: { ok: true } | { error: string }) => void
+  ) => void;
   'game:leave': () => void;
   'game:playCards': (cardIds: number[]) => void;
   'game:judgeSelect': (submissionId: string) => void;
