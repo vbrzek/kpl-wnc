@@ -69,6 +69,15 @@ export const useRoomStore = defineStore('room', () => {
       selectedCards.value = lastPlayedCards.value.filter(c => newHand.some(h => h.id === c.id));
       lastPlayedCards.value = [];
     });
+
+    socket.on('game:stateSync', (data) => {
+      currentBlackCard.value = data.blackCard;
+      czarId.value = data.czarId;
+      hand.value = data.hand;
+      if (data.submissions.length > 0) {
+        submissions.value = data.submissions;
+      }
+    });
   }
 
   function setRoom(joinedRoom: GameRoom) {
@@ -146,6 +155,7 @@ export const useRoomStore = defineStore('room', () => {
     socket.off('game:judging');
     socket.off('game:roundEnd');
     socket.off('game:handUpdate');
+    socket.off('game:stateSync');
     room.value = null;
     myPlayerId.value = null;
     hand.value = [];
