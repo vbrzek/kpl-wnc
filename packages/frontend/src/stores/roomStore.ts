@@ -61,6 +61,10 @@ export const useRoomStore = defineStore('room', () => {
     socket.on('game:roundEnd', (result) => {
       roundResult.value = result;
     });
+
+    socket.on('game:handUpdate', (newHand) => {
+      hand.value = newHand;
+    });
   }
 
   function setRoom(joinedRoom: GameRoom) {
@@ -110,6 +114,11 @@ export const useRoomStore = defineStore('room', () => {
     selectedCards.value = [];
   }
 
+  function retractCards() {
+    socket.emit('game:retractCards');
+    selectedCards.value = [];
+  }
+
   function judgeSelect(submissionId: string) {
     socket.emit('game:judgeSelect', submissionId);
   }
@@ -129,6 +138,7 @@ export const useRoomStore = defineStore('room', () => {
     socket.off('game:roundStart');
     socket.off('game:judging');
     socket.off('game:roundEnd');
+    socket.off('game:handUpdate');
     room.value = null;
     myPlayerId.value = null;
     hand.value = [];
@@ -145,6 +155,6 @@ export const useRoomStore = defineStore('room', () => {
     hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, cleanup,
-    playCards, judgeSelect, toggleCardSelection,
+    playCards, judgeSelect, toggleCardSelection, retractCards,
   };
 });
