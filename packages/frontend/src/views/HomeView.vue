@@ -59,12 +59,12 @@ function onJoinPrivate(code: string) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900 text-white p-6">
+  <div class="bg-gray-800/60 backdrop-blur rounded-2xl p-8 shadow-xl border border-gray-700">
     <h1 class="text-4xl font-bold mb-8">Karty proti lidskosti</h1>
 
     <p v-if="errorMsg" class="text-red-400 mb-4">{{ errorMsg }}</p>
 
-    <div class="flex gap-4 mb-8">
+    <div class="flex flex-col sm:flex-row gap-4 mb-10">
       <button
         @click="showCreate = true"
         class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg font-semibold"
