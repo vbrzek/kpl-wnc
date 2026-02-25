@@ -2,6 +2,7 @@ import type { Server, Socket } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
+import { startNewRound, startJudgingPhase } from './roundUtils.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -31,11 +32,11 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     }
 
     if (result.allSubmitted) {
-      room.status = 'JUDGING';
-    }
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
-    if (result.allSubmitted) {
-      io.to(`room:${room.code}`).emit('game:judging', engine.getAnonymousSubmissions());
+      // Zruš round timer a přejdi do JUDGING
+      roomManager.clearRoundTimer(room.code);
+      startJudgingPhase(room, engine, io);
+    } else {
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
     }
   });
 
@@ -87,7 +88,11 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       return;
     }
 
+    // Zruš judging timer
+    roomManager.clearJudgingTimer(room.code);
+
     room.status = 'RESULTS';
+    room.roundDeadline = null;
     io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
     io.to(`room:${room.code}`).emit('game:roundEnd', result);
 
@@ -97,33 +102,17 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       const currentRoom = roomManager.getRoom(roomCode);
       const currentEngine = roomManager.getGameEngine(roomCode);
       if (!currentRoom || !currentEngine) return;
+      if (currentRoom.status !== 'RESULTS') return; // host mohl ukončit hru
 
       try {
-        const { czarId: newCzarId } = currentEngine.startRound();
-        currentRoom.status = 'SELECTION';
-        currentRoom.currentBlackCard = currentEngine.currentBlackCard;
-        currentRoom.roundNumber = currentEngine.roundNumber;
-        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', currentRoom);
-
-        for (const player of currentRoom.players) {
-          if (!player.socketId) continue;
-          const playerSocket = io.sockets.sockets.get(player.socketId);
-          if (playerSocket) {
-            playerSocket.emit('game:roundStart', {
-              blackCard: currentEngine.currentBlackCard!,
-              hand: currentEngine.getPlayerHand(player.id),
-              czarId: newCzarId,
-              roundNumber: currentEngine.roundNumber,
-            });
-          }
-        }
-      } catch (err) {
+        startNewRound(currentRoom, currentEngine, io);
+      } catch {
         io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
       }
     }, 5_000);
   });
 
-  // Player explicitly leaves during game — same cleanup as lobby:leave
+  // Player explicitly leaves during game
   socket.on('game:leave', () => {
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) return;
@@ -139,5 +128,29 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
         io.to(`room:${roomCode}`).emit('lobby:stateUpdate', roomAfter);
       }
     }
+  });
+
+  // Host ukončí hru (přechod do FINISHED)
+  socket.on('lobby:endGame', (callback) => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) { callback({ error: 'Nejsi přihlášen.' }); return; }
+
+    const result = roomManager.endGame(playerToken);
+    if ('error' in result) { callback(result); return; }
+
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    callback({ ok: true });
+  });
+
+  // Host vrátí hru do lobby (FINISHED → LOBBY)
+  socket.on('lobby:returnToLobby', (callback) => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) { callback({ error: 'Nejsi přihlášen.' }); return; }
+
+    const result = roomManager.returnToLobby(playerToken);
+    if ('error' in result) { callback(result); return; }
+
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    callback({ ok: true });
   });
 }
