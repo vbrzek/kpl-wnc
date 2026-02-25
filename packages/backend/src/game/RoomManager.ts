@@ -57,6 +57,8 @@ export class RoomManager {
   // playerToken → AFK timer handle
   private afkTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private engines = new Map<string, GameEngine>();
+  private roundTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private judgingTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   // ------------------------------------------------------------------ createRoom
 
@@ -86,6 +88,7 @@ export class RoomManager {
       players: [host],
       currentBlackCard: null,
       roundNumber: 0,
+      roundDeadline: null,
     };
 
     this.rooms.set(code, room);
@@ -359,6 +362,105 @@ export class RoomManager {
     return this.engines.get(code) ?? null;
   }
 
+  // ------------------------------------------------------------------ round timer
+
+  setRoundTimer(code: string, callback: () => void, ms: number): void {
+    this.clearRoundTimer(code);
+    const timer = setTimeout(callback, ms);
+    this.roundTimers.set(code, timer);
+  }
+
+  clearRoundTimer(code: string): void {
+    const t = this.roundTimers.get(code);
+    if (t !== undefined) {
+      clearTimeout(t);
+      this.roundTimers.delete(code);
+    }
+  }
+
+  // ------------------------------------------------------------------ judging timer
+
+  setJudgingTimer(code: string, callback: () => void, ms: number): void {
+    this.clearJudgingTimer(code);
+    const timer = setTimeout(callback, ms);
+    this.judgingTimers.set(code, timer);
+  }
+
+  clearJudgingTimer(code: string): void {
+    const t = this.judgingTimers.get(code);
+    if (t !== undefined) {
+      clearTimeout(t);
+      this.judgingTimers.delete(code);
+    }
+  }
+
+  clearAllGameTimers(code: string): void {
+    this.clearRoundTimer(code);
+    this.clearJudgingTimer(code);
+  }
+
+  // ------------------------------------------------------------------ endGame
+
+  endGame(hostToken: string): ActionResult {
+    const code = this.playerRooms.get(hostToken);
+    if (!code) return { error: 'Nejsi v žádné místnosti.' };
+
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Místnost nebyla nalezena.' };
+
+    const hostPlayerId = this.tokenToPlayerId.get(hostToken);
+    if (hostPlayerId !== room.hostId) {
+      return { error: 'Pouze hostitel může ukončit hru.' };
+    }
+
+    if (room.status === 'LOBBY' || room.status === 'FINISHED') {
+      return { error: 'Hra právě neprobíhá.' };
+    }
+
+    this.clearAllGameTimers(code);
+    this.engines.delete(code);
+    room.status = 'FINISHED';
+    room.roundDeadline = null;
+
+    return { room };
+  }
+
+  // ------------------------------------------------------------------ returnToLobby
+
+  returnToLobby(hostToken: string): ActionResult {
+    const code = this.playerRooms.get(hostToken);
+    if (!code) return { error: 'Nejsi v žádné místnosti.' };
+
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Místnost nebyla nalezena.' };
+
+    const hostPlayerId = this.tokenToPlayerId.get(hostToken);
+    if (hostPlayerId !== room.hostId) {
+      return { error: 'Pouze hostitel může vrátit hru do lobby.' };
+    }
+
+    if (room.status !== 'FINISHED') {
+      return { error: 'Hru lze vrátit do lobby pouze ze stavu FINISHED.' };
+    }
+
+    room.status = 'LOBBY';
+    room.roundDeadline = null;
+    room.currentBlackCard = null;
+    room.roundNumber = 0;
+
+    for (const player of room.players) {
+      player.score = 0;
+      player.isCardCzar = false;
+      player.hasPlayed = false;
+      // Zachováme isAfk pro odpojené hráče, resetujeme pro připojené
+      if (player.socketId !== null) {
+        player.isAfk = false;
+      }
+    }
+
+    return { room };
+  }
+
   // ------------------------------------------------------------------ private helpers
 
   private removePlayer(playerToken: string, room: GameRoom): void {
@@ -384,6 +486,7 @@ export class RoomManager {
     if (room.players.length === 0) {
       this.rooms.delete(room.code);
       this.engines.delete(room.code);
+      this.clearAllGameTimers(room.code);
       return;
     }
 
