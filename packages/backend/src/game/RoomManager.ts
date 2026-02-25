@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'crypto';
 import type { GameRoom, Player, PublicRoomSummary } from '@kpl/shared';
+import { GameEngine } from './GameEngine.js';
 
 // --- Result types ---
 
@@ -54,6 +55,7 @@ export class RoomManager {
   private tokenToPlayerId: Map<string, string> = new Map();
   // playerToken → AFK timer handle
   private afkTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private engines = new Map<string, GameEngine>();
 
   // ------------------------------------------------------------------ createRoom
 
@@ -346,6 +348,16 @@ export class RoomManager {
     return this.tokenToPlayerId.get(playerToken) ?? null;
   }
 
+  // ------------------------------------------------------------------ setGameEngine / getGameEngine
+
+  setGameEngine(code: string, engine: GameEngine): void {
+    this.engines.set(code, engine);
+  }
+
+  getGameEngine(code: string): GameEngine | null {
+    return this.engines.get(code) ?? null;
+  }
+
   // ------------------------------------------------------------------ private helpers
 
   private removePlayer(playerToken: string, room: GameRoom): void {
@@ -370,6 +382,7 @@ export class RoomManager {
     // If room is now empty, delete it
     if (room.players.length === 0) {
       this.rooms.delete(room.code);
+      this.engines.delete(room.code);
       return;
     }
 
