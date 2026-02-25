@@ -156,6 +156,9 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 - [x] Lobby — Socket.io místnosti, správa hráčů, AFK, reconnect, host přenos
 - [x] REST API — GET /api/card-sets + seed data (česká sada)
 - [x] Výběr sad karet při vytváření stolu (CreateTableModal)
+- [x] Hra — stavový stroj (rozdávání, hraní, vyhodnocení)
+- [x] VPS deploy — Apache proxy + PM2
+- [ ] Správa místnosti hostem (vyhodnocení hry, změna režimu a pod.)
+- [ ] Profily hráčů (Google, Facebook OAuth)
+- [ ] Vícejazyčná verze (včetně překladu karet)
 - [ ] REST API — CRUD pro správu sad a karet (admin)
-- [ ] Hra — stavový stroj (rozdávání, hraní, vyhodnocení)
-- [ ] VPS deploy — Apache proxy + PM2
