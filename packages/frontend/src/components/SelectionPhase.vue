@@ -8,6 +8,36 @@ const pick = computed(() => roomStore.currentBlackCard?.pick ?? 1);
 const canSubmit = computed(() => roomStore.selectedCards.length === pick.value);
 const retracting = ref(false);
 
+// --- Countdown ---
+const secondsLeft = ref(0);
+let countdownInterval: ReturnType<typeof setInterval> | null = null;
+
+watch(
+  () => roomStore.room?.roundDeadline,
+  (deadline) => {
+    if (countdownInterval) clearInterval(countdownInterval);
+    if (!deadline) { secondsLeft.value = 0; return; }
+    const update = () => {
+      secondsLeft.value = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    };
+    update();
+    countdownInterval = setInterval(update, 1000);
+  },
+  { immediate: true }
+);
+
+onUnmounted(() => {
+  if (countdownInterval) clearInterval(countdownInterval);
+});
+
+// --- Submission status ---
+const players = computed(() => roomStore.room?.players ?? []);
+const czar = computed(() => players.value.find(p => p.isCardCzar));
+const waitingFor = computed(() => players.value.filter(p => !p.isCardCzar && !p.isAfk && !p.hasPlayed));
+const submitted = computed(() => players.value.filter(p => !p.isCardCzar && p.hasPlayed));
+const afkPlayers = computed(() => players.value.filter(p => !p.isCardCzar && p.isAfk));
+
+// --- Submit / retract ---
 function submit() {
   if (!canSubmit.value) return;
   roomStore.playCards(roomStore.selectedCards.map(c => c.id));
@@ -18,28 +48,55 @@ function retract() {
   roomStore.retractCards();
 }
 
-// Reset retracting on success (hand updated by server)
-watch(() => roomStore.hand, () => {
-  retracting.value = false;
-});
+watch(() => roomStore.hand, () => { retracting.value = false; });
 
-// Reset retracting on error (server rejected the retract)
-function onGameError() {
-  retracting.value = false;
-}
+function onGameError() { retracting.value = false; }
 socket.on('game:error', onGameError);
-onUnmounted(() => {
-  socket.off('game:error', onGameError);
-});
+onUnmounted(() => { socket.off('game:error', onGameError); });
 </script>
 
 <template>
   <div class="space-y-6">
+    <!-- Notifikace: kolo přeskočeno -->
+    <div v-if="roomStore.roundSkipped" class="bg-orange-900 border border-orange-500 text-orange-200 rounded-lg px-4 py-3 text-sm">
+      Kolo bylo přeskočeno — časový limit vypršel.
+    </div>
+
+    <!-- Countdown -->
+    <div v-if="secondsLeft > 0" class="flex items-center gap-2">
+      <div class="flex-1 bg-gray-700 rounded-full h-2">
+        <div
+          class="h-2 rounded-full transition-all"
+          :class="secondsLeft <= 10 ? 'bg-red-500' : 'bg-yellow-400'"
+          :style="{ width: `${(secondsLeft / 45) * 100}%` }"
+        />
+      </div>
+      <span class="text-sm font-mono" :class="secondsLeft <= 10 ? 'text-red-400' : 'text-gray-300'">
+        {{ secondsLeft }}s
+      </span>
+    </div>
+
     <!-- Černá karta -->
     <div class="bg-black text-white rounded-xl p-6 max-w-sm text-xl font-bold leading-relaxed shadow-lg">
       {{ roomStore.currentBlackCard?.text ?? '...' }}
       <div class="text-sm font-normal mt-2 text-gray-400">
         Vyber {{ pick }} {{ pick === 1 ? 'kartu' : 'karty' }}
+      </div>
+    </div>
+
+    <!-- Stav odevzdání -->
+    <div class="text-sm space-y-1 bg-gray-800 rounded-lg px-4 py-3">
+      <div v-if="czar" class="text-yellow-400">
+        🎴 {{ czar.nickname }} — Card Czar
+      </div>
+      <div v-for="p in submitted" :key="p.id" class="text-green-400">
+        ✓ {{ p.nickname }}
+      </div>
+      <div v-for="p in waitingFor" :key="p.id" class="text-gray-400">
+        ⏳ {{ p.nickname }}
+      </div>
+      <div v-for="p in afkPlayers" :key="p.id" class="text-gray-600">
+        💤 {{ p.nickname }} (AFK)
       </div>
     </div>
 
