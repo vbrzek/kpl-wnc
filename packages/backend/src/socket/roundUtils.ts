@@ -7,7 +7,6 @@ type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 
 const SELECTION_TIMEOUT_MS = 45_000;
 const JUDGING_TIMEOUT_MS = 60_000;
-const SKIP_DELAY_MS = 3_000;
 
 // Přechod do fáze JUDGING + start časovače pro rozsudek cara
 export function startJudgingPhase(room: GameRoom, engine: GameEngine, io: IO): void {
@@ -18,28 +17,7 @@ export function startJudgingPhase(room: GameRoom, engine: GameEngine, io: IO): v
   io.to(`room:${roomCode}`).emit('game:judging', engine.getAnonymousSubmissions());
 
   roomManager.setJudgingTimer(roomCode, () => {
-    const r = roomManager.getRoom(roomCode);
-    const e = roomManager.getGameEngine(roomCode);
-    if (!r || !e || r.status !== 'JUDGING') return;
-
-    // Označit cara jako AFK
-    const czar = r.players.find(p => p.isCardCzar);
-    if (czar) czar.isAfk = true;
-
-    r.roundDeadline = null;
-    io.to(`room:${roomCode}`).emit('lobby:stateUpdate', r);
-    io.to(`room:${roomCode}`).emit('game:roundSkipped');
-
-    setTimeout(() => {
-      const cr = roomManager.getRoom(roomCode);
-      const ce = roomManager.getGameEngine(roomCode);
-      if (!cr || !ce || cr.status !== 'JUDGING') return;
-      try {
-        startNewRound(cr, ce, io);
-      } catch {
-        io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
-      }
-    }, SKIP_DELAY_MS);
+    // Timer vypršel — čeká se na game:skipCzarJudging od non-Czar hráče
   }, JUDGING_TIMEOUT_MS);
 }
 
@@ -80,37 +58,6 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
 
   // Spusť 45s timer pro výběr karet
   roomManager.setRoundTimer(roomCode, () => {
-    const r = roomManager.getRoom(roomCode);
-    const e = roomManager.getGameEngine(roomCode);
-    if (!r || !e || r.status !== 'SELECTION') return;
-
-    // Označit připojené hráče, kteří neodeslali, jako AFK
-    for (const player of r.players) {
-      if (!player.isAfk && !player.isCardCzar && !player.hasPlayed && player.socketId !== null) {
-        player.isAfk = true;
-      }
-    }
-
-    const submissions = e.getAnonymousSubmissions();
-    if (submissions.length > 0) {
-      // Alespoň jedna odezva — přejdeme do JUDGING
-      startJudgingPhase(r, e, io);
-    } else {
-      // Žádné odezvy — přeskoč kolo
-      r.roundDeadline = null;
-      io.to(`room:${roomCode}`).emit('lobby:stateUpdate', r);
-      io.to(`room:${roomCode}`).emit('game:roundSkipped');
-
-      setTimeout(() => {
-        const cr = roomManager.getRoom(roomCode);
-        const ce = roomManager.getGameEngine(roomCode);
-        if (!cr || !ce || cr.status !== 'SELECTION') return;
-        try {
-          startNewRound(cr, ce, io);
-        } catch {
-          io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
-        }
-      }, SKIP_DELAY_MS);
-    }
+    // Timer vypršel — čeká se na game:czarForceAdvance od Card Czara
   }, SELECTION_TIMEOUT_MS);
 }
