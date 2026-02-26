@@ -1,1 +1,95 @@
-{}
+{
+  "common": {
+    "cancel": "Zrušit",
+    "create": "Vytvořit",
+    "join": "Připojit",
+    "loading": "Načítání...",
+    "copied": "Zkopírováno!",
+    "copyLink": "Kopírovat odkaz"
+  },
+  "home": {
+    "title": "Karty proti lidskosti",
+    "createTable": "Vytvořit stůl",
+    "joinWithCode": "Připojit se (kód)"
+  },
+  "createTable": {
+    "title": "Vytvořit nový stůl",
+    "tableName": "Název stolu",
+    "tableNamePlaceholder": "Můj stůl",
+    "yourNickname": "Tvoje přezdívka",
+    "nicknamePlaceholder": "Přezdívka",
+    "maxPlayers": "Max. hráčů",
+    "cardSets": "Sady karet",
+    "fetchError": "Nepodařilo se načíst sady karet.",
+    "loadingSets": "Načítání sad...",
+    "noSets": "Žádné sady nejsou k dispozici.",
+    "selectAtLeastOne": "Vyber alespoň jednu sadu.",
+    "publicTable": "Veřejný stůl (zobrazí se v seznamu)"
+  },
+  "nickname": {
+    "title": "Zadej svou přezdívku",
+    "placeholder": "Přezdívka",
+    "join": "Sednout si ke stolu"
+  },
+  "joinPrivate": {
+    "title": "Připojit se ke stolu",
+    "codeLabel": "Kód stolu (6 znaků)",
+    "codePlaceholder": "a3f9c1",
+    "codeError": "Kód musí být 6 znaků (a-f, 0-9)"
+  },
+  "room": {
+    "connecting": "Připojování..."
+  },
+  "lobby": {
+    "players": "Hráči ({current}/{max})",
+    "startGame": "Spustit hru",
+    "minPlayers": "({current}/3 min.)",
+    "waitingForHost": "Čekáme, až host spustí hru..."
+  },
+  "player": {
+    "host": "host",
+    "you": "ty",
+    "afk": "AFK",
+    "offline": "offline",
+    "kick": "Vyhodit"
+  },
+  "publicRooms": {
+    "title": "Veřejné stoly",
+    "noRooms": "Žádné volné stoly.",
+    "joinTable": "Sednout si",
+    "yourNickname": "Tvoje přezdívka",
+    "confirm": "Připojit"
+  },
+  "game": {
+    "selection": {
+      "submit": "Odeslat {current}/{total} karet"
+    },
+    "czar": {
+      "judging": "Jsi karetní král — vyber nejlepší odpověď!",
+      "waiting": "Jsi karetní král — čekej, až ostatní vyberou karty.",
+      "forceAdvance": "Dál nečekat",
+      "label": "karetní král"
+    },
+    "waiting": {
+      "czarPicking": "Karetní král vybírá vítěze...",
+      "skipJudging": "Přeskočit hodnocení"
+    },
+    "blackCard": {
+      "pick": "Vyber {n} kartu | Vyber {n} karty | Vyber {n} karet"
+    },
+    "roundSkipped": "Kolo bylo přeskočeno — časový limit vypršel.",
+    "results": {
+      "roundWinner": "Vítěz kola",
+      "winningCards": "Vítězné karty",
+      "score": "Skóre",
+      "nextRound": "Nové kolo začíná za 5 sekund...",
+      "endGame": "Ukončit hru"
+    },
+    "finished": {
+      "title": "Hra skončila!",
+      "finalResults": "Finální výsledky",
+      "returnToLobby": "Návrat do lobby",
+      "waitingForHost": "Čekáme na hostitele..."
+    }
+  }
+}

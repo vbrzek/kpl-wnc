@@ -1,1 +1,95 @@
-{}
+{
+  "common": {
+    "cancel": "Скасувати",
+    "create": "Створити",
+    "join": "Увійти",
+    "loading": "Завантаження...",
+    "copied": "Скопійовано!",
+    "copyLink": "Копіювати посилання"
+  },
+  "home": {
+    "title": "Карти проти людства",
+    "createTable": "Створити стіл",
+    "joinWithCode": "Увійти за кодом"
+  },
+  "createTable": {
+    "title": "Створити новий стіл",
+    "tableName": "Назва столу",
+    "tableNamePlaceholder": "Мій стіл",
+    "yourNickname": "Ваш нікнейм",
+    "nicknamePlaceholder": "Нікнейм",
+    "maxPlayers": "Макс. гравців",
+    "cardSets": "Набори карт",
+    "fetchError": "Не вдалося завантажити набори карт.",
+    "loadingSets": "Завантаження наборів...",
+    "noSets": "Набори недоступні.",
+    "selectAtLeastOne": "Виберіть хоча б один набір.",
+    "publicTable": "Публічний стіл (видно у списку)"
+  },
+  "nickname": {
+    "title": "Введіть нікнейм",
+    "placeholder": "Нікнейм",
+    "join": "Сісти за стіл"
+  },
+  "joinPrivate": {
+    "title": "Увійти до столу",
+    "codeLabel": "Код столу (6 символів)",
+    "codePlaceholder": "a3f9c1",
+    "codeError": "Код має бути 6 символів (a-f, 0-9)"
+  },
+  "room": {
+    "connecting": "Підключення..."
+  },
+  "lobby": {
+    "players": "Гравці ({current}/{max})",
+    "startGame": "Почати гру",
+    "minPlayers": "({current}/3 хв.)",
+    "waitingForHost": "Чекаємо, поки хост почне гру..."
+  },
+  "player": {
+    "host": "хост",
+    "you": "ти",
+    "afk": "AFK",
+    "offline": "офлайн",
+    "kick": "Вигнати"
+  },
+  "publicRooms": {
+    "title": "Публічні столи",
+    "noRooms": "Немає вільних столів.",
+    "joinTable": "Сісти",
+    "yourNickname": "Ваш нікнейм",
+    "confirm": "Увійти"
+  },
+  "game": {
+    "selection": {
+      "submit": "Надіслати {current}/{total} карт"
+    },
+    "czar": {
+      "judging": "Ти Card Czar — вибери найкращу відповідь!",
+      "waiting": "Ти Card Czar — чекай, поки інші виберуть карти.",
+      "forceAdvance": "Не чекати",
+      "label": "Card Czar"
+    },
+    "waiting": {
+      "czarPicking": "Card Czar вибирає переможця...",
+      "skipJudging": "Пропустити оцінку"
+    },
+    "blackCard": {
+      "pick": "Вибери {n} картку | Вибери {n} картки | Вибери {n} карток"
+    },
+    "roundSkipped": "Раунд пропущено — час вичерпано.",
+    "results": {
+      "roundWinner": "Переможець раунду",
+      "winningCards": "Виграшні карти",
+      "score": "Рахунок",
+      "nextRound": "Новий раунд починається за 5 секунд...",
+      "endGame": "Завершити гру"
+    },
+    "finished": {
+      "title": "Гра закінчена!",
+      "finalResults": "Фінальні результаті",
+      "returnToLobby": "Повернутися до лобі",
+      "waitingForHost": "Чекаємо хоста..."
+    }
+  }
+}

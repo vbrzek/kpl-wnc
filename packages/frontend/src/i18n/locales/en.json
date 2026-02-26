@@ -1,1 +1,95 @@
-{}
+{
+  "common": {
+    "cancel": "Cancel",
+    "create": "Create",
+    "join": "Join",
+    "loading": "Loading...",
+    "copied": "Copied!",
+    "copyLink": "Copy link"
+  },
+  "home": {
+    "title": "Cards Against Humanity",
+    "createTable": "Create table",
+    "joinWithCode": "Join with code"
+  },
+  "createTable": {
+    "title": "Create new table",
+    "tableName": "Table name",
+    "tableNamePlaceholder": "My table",
+    "yourNickname": "Your nickname",
+    "nicknamePlaceholder": "Nickname",
+    "maxPlayers": "Max players",
+    "cardSets": "Card sets",
+    "fetchError": "Failed to load card sets.",
+    "loadingSets": "Loading sets...",
+    "noSets": "No sets available.",
+    "selectAtLeastOne": "Select at least one set.",
+    "publicTable": "Public table (visible in the list)"
+  },
+  "nickname": {
+    "title": "Enter your nickname",
+    "placeholder": "Nickname",
+    "join": "Take a seat"
+  },
+  "joinPrivate": {
+    "title": "Join a table",
+    "codeLabel": "Table code (6 chars)",
+    "codePlaceholder": "a3f9c1",
+    "codeError": "Code must be 6 chars (a-f, 0-9)"
+  },
+  "room": {
+    "connecting": "Connecting..."
+  },
+  "lobby": {
+    "players": "Players ({current}/{max})",
+    "startGame": "Start game",
+    "minPlayers": "({current}/3 min.)",
+    "waitingForHost": "Waiting for the host to start the game..."
+  },
+  "player": {
+    "host": "host",
+    "you": "you",
+    "afk": "AFK",
+    "offline": "offline",
+    "kick": "Kick"
+  },
+  "publicRooms": {
+    "title": "Public tables",
+    "noRooms": "No open tables.",
+    "joinTable": "Take a seat",
+    "yourNickname": "Your nickname",
+    "confirm": "Join"
+  },
+  "game": {
+    "selection": {
+      "submit": "Submit {current}/{total} cards"
+    },
+    "czar": {
+      "judging": "You are the Card Czar — pick the best answer!",
+      "waiting": "You are the Card Czar — wait for others to pick their cards.",
+      "forceAdvance": "Don't wait",
+      "label": "card czar"
+    },
+    "waiting": {
+      "czarPicking": "The Card Czar is picking a winner...",
+      "skipJudging": "Skip judging"
+    },
+    "blackCard": {
+      "pick": "Pick {n} card | Pick {n} cards"
+    },
+    "roundSkipped": "Round was skipped — time limit expired.",
+    "results": {
+      "roundWinner": "Round winner",
+      "winningCards": "Winning cards",
+      "score": "Score",
+      "nextRound": "New round starts in 5 seconds...",
+      "endGame": "End game"
+    },
+    "finished": {
+      "title": "Game over!",
+      "finalResults": "Final results",
+      "returnToLobby": "Return to lobby",
+      "waitingForHost": "Waiting for the host..."
+    }
+  }
+}

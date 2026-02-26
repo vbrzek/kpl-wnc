@@ -1,1 +1,95 @@
-{}
+{
+  "common": {
+    "cancel": "Отмена",
+    "create": "Создать",
+    "join": "Войти",
+    "loading": "Загрузка...",
+    "copied": "Скопировано!",
+    "copyLink": "Копировать ссылку"
+  },
+  "home": {
+    "title": "Карты против человечества",
+    "createTable": "Создать стол",
+    "joinWithCode": "Войти по коду"
+  },
+  "createTable": {
+    "title": "Создать новый стол",
+    "tableName": "Название стола",
+    "tableNamePlaceholder": "Мой стол",
+    "yourNickname": "Ваш никнейм",
+    "nicknamePlaceholder": "Никнейм",
+    "maxPlayers": "Макс. игроков",
+    "cardSets": "Наборы карт",
+    "fetchError": "Не удалось загрузить наборы карт.",
+    "loadingSets": "Загрузка наборов...",
+    "noSets": "Наборы недоступны.",
+    "selectAtLeastOne": "Выберите хотя бы один набор.",
+    "publicTable": "Публичный стол (виден в списке)"
+  },
+  "nickname": {
+    "title": "Введите никнейм",
+    "placeholder": "Никнейм",
+    "join": "Сесть за стол"
+  },
+  "joinPrivate": {
+    "title": "Войти в стол",
+    "codeLabel": "Код стола (6 символов)",
+    "codePlaceholder": "a3f9c1",
+    "codeError": "Код должен быть 6 символов (a-f, 0-9)"
+  },
+  "room": {
+    "connecting": "Подключение..."
+  },
+  "lobby": {
+    "players": "Игроки ({current}/{max})",
+    "startGame": "Начать игру",
+    "minPlayers": "({current}/3 мин.)",
+    "waitingForHost": "Ждём, пока хост начнёт игру..."
+  },
+  "player": {
+    "host": "хост",
+    "you": "ты",
+    "afk": "AFK",
+    "offline": "оффлайн",
+    "kick": "Выгнать"
+  },
+  "publicRooms": {
+    "title": "Публичные столы",
+    "noRooms": "Нет свободных столов.",
+    "joinTable": "Сесть",
+    "yourNickname": "Ваш никнейм",
+    "confirm": "Войти"
+  },
+  "game": {
+    "selection": {
+      "submit": "Отправить {current}/{total} карт"
+    },
+    "czar": {
+      "judging": "Ты Card Czar — выбери лучший ответ!",
+      "waiting": "Ты Card Czar — жди, пока остальные выберут карты.",
+      "forceAdvance": "Не ждать",
+      "label": "Card Czar"
+    },
+    "waiting": {
+      "czarPicking": "Card Czar выбирает победителя...",
+      "skipJudging": "Пропустить оценку"
+    },
+    "blackCard": {
+      "pick": "Выбери {n} карту | Выбери {n} карты | Выбери {n} карт"
+    },
+    "roundSkipped": "Раунд пропущен — время истекло.",
+    "results": {
+      "roundWinner": "Победитель раунда",
+      "winningCards": "Выигрышные карты",
+      "score": "Счёт",
+      "nextRound": "Новый раунд начнётся через 5 секунд...",
+      "endGame": "Завершить игру"
+    },
+    "finished": {
+      "title": "Игра окончена!",
+      "finalResults": "Финальные результаты",
+      "returnToLobby": "Вернуться в лобби",
+      "waitingForHost": "Ждём хоста..."
+    }
+  }
+}

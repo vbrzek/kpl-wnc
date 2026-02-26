@@ -1,1 +1,95 @@
-{}
+{
+  "common": {
+    "cancel": "Cancelar",
+    "create": "Crear",
+    "join": "Unirse",
+    "loading": "Cargando...",
+    "copied": "¡Copiado!",
+    "copyLink": "Copiar enlace"
+  },
+  "home": {
+    "title": "Cartas contra la humanidad",
+    "createTable": "Crear mesa",
+    "joinWithCode": "Unirse con código"
+  },
+  "createTable": {
+    "title": "Crear nueva mesa",
+    "tableName": "Nombre de la mesa",
+    "tableNamePlaceholder": "Mi mesa",
+    "yourNickname": "Tu apodo",
+    "nicknamePlaceholder": "Apodo",
+    "maxPlayers": "Máx. jugadores",
+    "cardSets": "Mazos de cartas",
+    "fetchError": "No se pudieron cargar los mazos.",
+    "loadingSets": "Cargando mazos...",
+    "noSets": "No hay mazos disponibles.",
+    "selectAtLeastOne": "Selecciona al menos un mazo.",
+    "publicTable": "Mesa pública (visible en la lista)"
+  },
+  "nickname": {
+    "title": "Introduce tu apodo",
+    "placeholder": "Apodo",
+    "join": "Sentarse a la mesa"
+  },
+  "joinPrivate": {
+    "title": "Unirse a una mesa",
+    "codeLabel": "Código de mesa (6 caracteres)",
+    "codePlaceholder": "a3f9c1",
+    "codeError": "El código debe tener 6 caracteres (a-f, 0-9)"
+  },
+  "room": {
+    "connecting": "Conectando..."
+  },
+  "lobby": {
+    "players": "Jugadores ({current}/{max})",
+    "startGame": "Iniciar juego",
+    "minPlayers": "({current}/3 mín.)",
+    "waitingForHost": "Esperando a que el anfitrión inicie el juego..."
+  },
+  "player": {
+    "host": "anfitrión",
+    "you": "tú",
+    "afk": "AFK",
+    "offline": "desconectado",
+    "kick": "Expulsar"
+  },
+  "publicRooms": {
+    "title": "Mesas públicas",
+    "noRooms": "No hay mesas disponibles.",
+    "joinTable": "Sentarse",
+    "yourNickname": "Tu apodo",
+    "confirm": "Unirse"
+  },
+  "game": {
+    "selection": {
+      "submit": "Enviar {current}/{total} cartas"
+    },
+    "czar": {
+      "judging": "¡Eres el Zar de Cartas — elige la mejor respuesta!",
+      "waiting": "Eres el Zar de Cartas — espera a que los demás elijan sus cartas.",
+      "forceAdvance": "No esperar",
+      "label": "Zar de Cartas"
+    },
+    "waiting": {
+      "czarPicking": "El Zar de Cartas está eligiendo al ganador...",
+      "skipJudging": "Omitir juicio"
+    },
+    "blackCard": {
+      "pick": "Elige {n} carta | Elige {n} cartas"
+    },
+    "roundSkipped": "Ronda saltada — tiempo agotado.",
+    "results": {
+      "roundWinner": "Ganador de la ronda",
+      "winningCards": "Cartas ganadoras",
+      "score": "Puntuación",
+      "nextRound": "La nueva ronda comienza en 5 segundos...",
+      "endGame": "Terminar juego"
+    },
+    "finished": {
+      "title": "¡Juego terminado!",
+      "finalResults": "Resultados finales",
+      "returnToLobby": "Volver al lobby",
+      "waitingForHost": "Esperando al anfitrión..."
+    }
+  }
+}
