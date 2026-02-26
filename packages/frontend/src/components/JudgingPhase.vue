@@ -31,6 +31,10 @@ onUnmounted(() => {
 function pickWinner(submissionId: string) {
   roomStore.judgeSelect(submissionId);
 }
+
+function skipCzarJudging() {
+  roomStore.skipCzarJudging();
+}
 </script>
 
 <template>
@@ -49,5 +53,6 @@ function pickWinner(submissionId: string) {
     :secondsLeft="secondsLeft"
     :submissions="roomStore.submissions"
     :roundSkipped="roomStore.roundSkipped"
+    @skipJudging="skipCzarJudging"
   />
 </template>
