@@ -49,14 +49,19 @@ kpl-wnc/
 │       ├── components/
 │       │   ├── LobbyPanel.vue      # Hlavní panel lobby (seznam hráčů, spuštění hry)
 │       │   ├── PlayerList.vue      # Seznam hráčů s AFK/offline/host/self badges
+│       │   ├── PlayerAvatar.vue    # Kulatý avatar (DiceBear bottts), kliknutím otevře edit profilu
+│       │   ├── PlayerProfileModal.vue # Setup/edit profilu — přezdívka, jazyk, live DiceBear náhled
 │       │   ├── InviteLink.vue      # Kopírování URL stolu
-│       │   ├── NicknameModal.vue   # Zadání přezdívky při prvním vstupu
 │       │   ├── CreateTableModal.vue # Formulář pro vytvoření stolu + výběr sad karet
 │       │   ├── JoinPrivateModal.vue # Vstup přes 6-znakový kód
-│       │   └── PublicRoomsList.vue # Živý seznam veřejných stolů
+│       │   └── PublicRoomsList.vue # Živý seznam veřejných stolů (join emituje jen kód)
 │       ├── stores/
 │       │   ├── lobbyStore.ts       # Veřejné stoly, create/join, fetchCardSets, localStorage token
-│       │   └── roomStore.ts        # Stav aktuálního stolu, isHost, kick, startGame
+│       │   ├── roomStore.ts        # Stav aktuálního stolu, isHost, kick, startGame
+│       │   └── profileStore.ts     # Globální profil hráče: nickname, locale, avatarUrl (DiceBear)
+│       ├── i18n/
+│       │   ├── index.ts            # vue-i18n setup, detectLocale(), 5 supported locales
+│       │   └── locales/            # cs.json, en.json, ru.json, uk.json, es.json
 │       └── socket/index.ts         # Socket.io client wrapper (URL z VITE_BACKEND_URL)
 ├── docs/plans/                     # Design a implementační plány
 ├── package.json                    # npm workspaces root
@@ -72,7 +77,7 @@ npm run dev:frontend    # Vite dev server
 npm run build           # Build všech balíčků
 npm run migrate --workspace=packages/backend   # Spustí DB migrace
 npm run seed --workspace=packages/backend      # Naplní DB seed daty (destruktivní!)
-npm test --workspace=packages/backend          # Vitest unit testy (RoomManager) — 20 testů
+npm test --workspace=packages/backend          # Vitest unit testy — 57 testů
 ```
 
 ## 🗄️ Databázové schéma
@@ -117,6 +122,20 @@ Server používá Socket.io **rooms** pro izolaci:
 
 **Host:** zakládá stůl, může vyhazovat hráče a měnit nastavení. Při odchodu hosta přechází role na dalšího non-AFK hráče.
 
+## 👤 Player Profile
+
+Globální profil hráče uložený v `localStorage['playerProfile']` (JSON: `{nickname, locale}`).
+
+**`profileStore.ts`** (Pinia): `nickname`, `locale`, computed `avatarUrl` (DiceBear bottts CDN), `hasProfile`, `init()`, `save()`.
+
+**Inicializace:** `App.vue` volá `profileStore.init()` při mountu. Pokud `!hasProfile`, zobrazí `PlayerProfileModal` (setup mode) a blokuje `RouterView` dokud profil není vyplněn.
+
+**Editace:** `GameLayout.vue` zobrazuje `PlayerAvatar` v pravém rohu — kliknutím otevře `PlayerProfileModal` (edit mode). Backdrop + tlačítko ✕ zavřou modal.
+
+**Přihlášení do místnosti:** `RoomView` a `HomeView` čtou `profileStore.nickname` — žádný inline formulář pro přezdívku. Při reconnectu (existující `playerToken`) se předá prázdný nickname (server použije token).
+
+**Lokalizace:** `save()` okamžitě přepne `i18n.global.locale` + uloží do `localStorage['locale']`. Podporované: `cs`, `en`, `ru`, `uk`, `es`.
+
 ## 🌐 REST API
 
 | Metoda | Endpoint | Popis |
@@ -158,7 +177,8 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 - [x] Výběr sad karet při vytváření stolu (CreateTableModal)
 - [x] Hra — stavový stroj (rozdávání, hraní, vyhodnocení)
 - [x] VPS deploy — Apache proxy + PM2
-- [ ] Správa místnosti hostem (vyhodnocení hry, změna režimu a pod.)
-- [ ] Profily hráčů (Google, Facebook OAuth)
-- [ ] Vícejazyčná verze (včetně překladu karet)
+- [x] Správa místnosti hostem (vyhodnocení hry, změna režimu a pod.)
+- [x] Globální profil hráče — nickname + DiceBear avatar + locale (localStorage, bez OAuth)
+- [x] Vícejazyčná verze — 5 jazyků (cs, en, ru, uk, es), překlad karet přes REST
+- [ ] Profily hráčů — OAuth (Google, Facebook)
 - [ ] REST API — CRUD pro správu sad a karet (admin)
