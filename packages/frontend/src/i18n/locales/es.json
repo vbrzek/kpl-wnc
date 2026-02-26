@@ -45,6 +45,10 @@
     "codePlaceholder": "a3f9c1",
     "codeError": "El código debe tener 6 caracteres (a-f, 0-9)"
   },
+  "header": {
+    "table": "Mesa",
+    "score": "Puntos"
+  },
   "room": {
     "connecting": "Conectando..."
   },

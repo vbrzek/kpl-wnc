@@ -62,6 +62,7 @@ function onJoinPrivate(code: string) {
 </script>
 
 <template>
+
   <div class="bg-gray-800/60 backdrop-blur rounded-2xl p-8 shadow-xl border border-gray-700">
     <h1 class="text-4xl font-bold mb-8">{{ t('home.title') }}</h1>
 

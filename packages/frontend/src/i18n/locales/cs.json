@@ -45,6 +45,10 @@
     "codePlaceholder": "a3f9c1",
     "codeError": "Kód musí být 6 znaků (a-f, 0-9)"
   },
+  "header": {
+    "table": "Stůl",
+    "score": "Body"
+  },
   "room": {
     "connecting": "Připojování..."
   },

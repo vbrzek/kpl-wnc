@@ -45,6 +45,10 @@
     "codePlaceholder": "a3f9c1",
     "codeError": "Код має бути 6 символів (a-f, 0-9)"
   },
+  "header": {
+    "table": "Стіл",
+    "score": "Очки"
+  },
   "room": {
     "connecting": "Підключення..."
   },
