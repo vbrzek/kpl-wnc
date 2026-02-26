@@ -81,6 +81,7 @@ export interface PublicRoomSummary {
   name: string;
   playerCount: number;
   maxPlayers: number;
+  selectedSetIds: number[];
 }
 
 // Socket.io eventy — server → klient

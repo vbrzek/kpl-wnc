@@ -10,7 +10,8 @@
   "home": {
     "title": "Карти проти людства",
     "createTable": "Створити стіл",
-    "joinWithCode": "Увійти за кодом"
+    "joinWithCode": "Увійти за кодом",
+    "publicRooms": "Публічні столи"
   },
   "createTable": {
     "title": "Створити новий стіл",

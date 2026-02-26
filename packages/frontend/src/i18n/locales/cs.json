@@ -10,7 +10,8 @@
   "home": {
     "title": "Karty proti lidskosti",
     "createTable": "Vytvořit stůl",
-    "joinWithCode": "Připojit se (kód)"
+    "joinWithCode": "Připojit se (kód)",
+    "publicRooms": "Veřejné stoly"
   },
   "createTable": {
     "title": "Vytvořit nový stůl",

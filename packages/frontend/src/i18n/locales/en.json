@@ -10,7 +10,8 @@
   "home": {
     "title": "Cards Against Humanity",
     "createTable": "Create table",
-    "joinWithCode": "Join with code"
+    "joinWithCode": "Join with code",
+    "publicRooms": "Public tables"
   },
   "createTable": {
     "title": "Create new table",

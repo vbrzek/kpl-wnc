@@ -10,7 +10,8 @@
   "home": {
     "title": "Cartas contra la humanidad",
     "createTable": "Crear mesa",
-    "joinWithCode": "Unirse con código"
+    "joinWithCode": "Unirse con código",
+    "publicRooms": "Mesas públicas"
   },
   "createTable": {
     "title": "Crear nueva mesa",

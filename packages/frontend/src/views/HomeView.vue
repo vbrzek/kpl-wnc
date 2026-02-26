@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -20,6 +20,15 @@ const profileStore = useProfileStore();
 const showCreate = ref(false);
 const showJoinPrivate = ref(false);
 const errorMsg = ref('');
+
+const titleStart = computed(() => {
+  const words = t('home.title').split(' ');
+  return words.slice(0, -1).join(' ');
+});
+const titleEnd = computed(() => {
+  const words = t('home.title').split(' ');
+  return words[words.length - 1];
+});
 
 onMounted(() => {
   lobbyStore.subscribe();
@@ -60,44 +69,55 @@ function onJoinPrivate(code: string) {
   router.push(`/room/${code}`);
 }
 </script>
-
 <template>
+  <div class="min-h-screen flex flex-col justify-start px-4 pt-8 pb-12">
+    
+    <header class="mb-6 flex items-end justify-between">
+      <div>
+        <h1 class="text-3xl font-black tracking-tighter leading-none uppercase italic">
+          {{ titleStart }} <span class="text-white/40">{{ titleEnd }}</span>
+        </h1>
+        <div class="h-1 w-12 bg-yellow-500 rounded-full mt-2"></div>
+      </div>
+      </header>
 
-  <div class="bg-gray-800/60 backdrop-blur rounded-2xl p-8 shadow-xl border border-gray-700">
-    <h1 class="text-4xl font-bold mb-8">{{ t('home.title') }}</h1>
+    <p v-if="errorMsg" class="bg-red-500/20 text-red-400 p-3 rounded-xl border border-red-500/30 mb-4 text-sm">
+      {{ errorMsg }}
+    </p>
 
-    <p v-if="errorMsg" class="text-red-400 mb-4">{{ errorMsg }}</p>
-
-    <div class="flex flex-col sm:flex-row gap-4 mb-10">
+    <div class="grid grid-cols-2 gap-3 mb-8">
       <button
         @click="showCreate = true"
-        class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg font-semibold"
+        class="group relative bg-white text-black text-sm font-black py-4 rounded-xl shadow-[0_4px_0_rgb(200,200,200)] active:shadow-none active:translate-y-1 transition-all overflow-hidden uppercase"
       >
-        {{ t('home.createTable') }}
+        <span class="relative z-10">{{ t('home.createTable') }}</span>
       </button>
+
       <button
         @click="showJoinPrivate = true"
-        class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-lg font-semibold"
+        class="bg-slate-800 border border-white/10 hover:bg-slate-700 text-white text-sm font-black py-4 rounded-xl active:translate-y-1 transition-all uppercase"
       >
         {{ t('home.joinWithCode') }}
       </button>
     </div>
 
-    <PublicRoomsList
-      :rooms="lobbyStore.publicRooms"
-      @join="onJoinPublic"
-    />
+    <div class="flex-1 flex flex-col min-h-0">
+      <div class="flex items-center justify-between mb-3 px-2">
+        <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
+          {{ t('home.publicRooms') }}
+        </h2>
+        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+      </div>
 
-    <CreateTableModal
-      v-if="showCreate"
-      @close="showCreate = false"
-      @create="onCreateRoom"
-    />
+      
+        <PublicRoomsList
+          :rooms="lobbyStore.publicRooms"
+          @join="onJoinPublic"
+        />
+      
+    </div>
 
-    <JoinPrivateModal
-      v-if="showJoinPrivate"
-      @close="showJoinPrivate = false"
-      @join="onJoinPrivate"
-    />
+    <CreateTableModal v-if="showCreate" @close="showCreate = false" @create="onCreateRoom" />
+    <JoinPrivateModal v-if="showJoinPrivate" @close="showJoinPrivate = false" @join="onJoinPrivate" />
   </div>
 </template>

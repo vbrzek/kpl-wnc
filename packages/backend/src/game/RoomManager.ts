@@ -326,6 +326,7 @@ export class RoomManager {
           name: room.name,
           playerCount: room.players.length,
           maxPlayers: room.maxPlayers,
+          selectedSetIds: room.selectedSetIds,
         });
       }
     }

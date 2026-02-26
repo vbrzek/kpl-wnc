@@ -10,7 +10,8 @@
   "home": {
     "title": "Карты против человечества",
     "createTable": "Создать стол",
-    "joinWithCode": "Войти по коду"
+    "joinWithCode": "Войти по коду",
+    "publicRooms": "Публичные столы"
   },
   "createTable": {
     "title": "Создать новый стол",

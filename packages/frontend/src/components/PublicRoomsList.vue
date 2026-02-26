@@ -1,34 +1,71 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PublicRoomSummary } from '@kpl/shared';
+import { useLobbyStore } from '../stores/lobbyStore';
 
 defineProps<{ rooms: PublicRoomSummary[] }>();
 const emit = defineEmits<{ join: [code: string] }>();
 
 const { t } = useI18n();
-</script>
+const lobbyStore = useLobbyStore();
 
+onMounted(() => lobbyStore.fetchCardSets());
+
+function setNamesForRoom(room: PublicRoomSummary): string {
+  if (!lobbyStore.cardSets.length) return '';
+  return room.selectedSetIds
+    .map(id => lobbyStore.cardSets.find(s => s.id === id)?.name)
+    .filter(Boolean)
+    .join(', ');
+}
+</script>
 <template>
-  <section>
-    <h2 class="text-xl font-semibold mb-4">{{ t('publicRooms.title') }}</h2>
-    <p v-if="rooms.length === 0" class="text-gray-400">{{ t('publicRooms.noRooms') }}</p>
-    <ul class="space-y-2">
+  <div class="w-full">
+    <div v-if="rooms.length === 0" class="flex flex-col items-center justify-center py-20 text-center opacity-30">
+      <div class="text-5xl mb-4">🌑</div>
+      <p class="font-black uppercase tracking-tighter text-sm">{{ t('publicRooms.noRooms') }}</p>
+    </div>
+
+    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3">
       <li
         v-for="room in rooms"
         :key="room.code"
-        class="flex items-center justify-between bg-gray-800 px-4 py-3 rounded-lg"
+        class="group bg-slate-900/40 border border-white/5 hover:border-white/20 rounded-2xl transition-all duration-300 overflow-hidden shadow-sm"
       >
-        <span>
-          {{ room.name }}
-          <span class="text-gray-400 text-sm ml-1">({{ room.playerCount }}/{{ room.maxPlayers }})</span>
-        </span>
-        <button
-          @click="emit('join', room.code)"
-          class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1 rounded"
-        >
-          {{ t('publicRooms.joinTable') }}
-        </button>
+        <div class="flex flex-col p-5">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex flex-col gap-0.5">
+              <h3 class="font-black text-white text-xl tracking-tight leading-tight group-hover:text-yellow-500 transition-colors">
+                {{ room.name }}
+              </h3>
+              <div class="flex items-center gap-2">
+                 <span class="text-[10px] font-mono text-slate-500">#{{ room.code }}</span>
+                 <span class="w-1 h-1 bg-slate-700 rounded-full"></span>
+                 <span v-if="setNamesForRoom(room)" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ setNamesForRoom(room) }}</span>
+              </div>
+            </div>
+
+            <div 
+              class="flex flex-col items-end"
+              :class="room.playerCount >= room.maxPlayers ? 'text-red-500' : 'text-green-500'"
+            >
+              <span class="text-lg font-black leading-none">{{ room.playerCount }}</span>
+              <span class="text-[9px] font-black uppercase opacity-50">/ {{ room.maxPlayers }}</span>
+            </div>
+          </div>
+
+          <button
+            @click="emit('join', room.code)"
+            :disabled="room.playerCount >= room.maxPlayers"
+            class="w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] transition-all
+                   disabled:bg-slate-800 disabled:text-slate-600 disabled:opacity-50
+                   bg-white text-black hover:bg-yellow-500 active:scale-95 shadow-lg shadow-black/20"
+          >
+            {{ room.playerCount >= room.maxPlayers ? 'Plno' : t('publicRooms.joinTable') }}
+          </button>
+        </div>
       </li>
     </ul>
-  </section>
+  </div>
 </template>
