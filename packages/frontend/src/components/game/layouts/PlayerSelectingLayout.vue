@@ -28,7 +28,6 @@ const emit = defineEmits<{
     <RoundSkippedNotice v-if="roundSkipped" />
     <Countdown v-if="secondsLeft > 0" :secondsLeft="secondsLeft" :totalSeconds="totalSeconds" />
     <BlackCardAtom :text="blackCard.text" :pick="blackCard.pick" />
-    <SubmissionStatus :players="players" />
     <CardHand
       :cards="hand"
       :selectedCards="selectedCards"
