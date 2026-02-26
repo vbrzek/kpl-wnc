@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { BlackCard, WhiteCard, Player } from '@kpl/shared'
 import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
@@ -20,6 +21,8 @@ const emit = defineEmits<{
   toggleCard: [card: WhiteCard]
   submit: []
 }>()
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -38,7 +41,7 @@ const emit = defineEmits<{
       :disabled="!canSubmit"
       class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-8 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
     >
-      Odeslat {{ selectedCards.length }}/{{ blackCard.pick }} karet
+      {{ t('game.selection.submit', { current: selectedCards.length, total: blackCard.pick }) }}
     </button>
   </div>
 </template>

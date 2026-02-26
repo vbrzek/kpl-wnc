@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { BlackCard, Player } from '@kpl/shared'
 import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
@@ -16,6 +17,8 @@ defineProps<{
 const emit = defineEmits<{
   forceAdvance: []
 }>()
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -25,14 +28,14 @@ const emit = defineEmits<{
     <BlackCardAtom :text="blackCard.text" :pick="blackCard.pick" />
     <SubmissionStatus :players="players" />
     <p class="text-yellow-400 font-semibold text-lg">
-      Jsi <strong>karetní král</strong> — čekej, až ostatní vyberou karty.
+      {{ t('game.czar.waiting') }}
     </p>
     <button
       v-if="secondsLeft === 0"
       @click="emit('forceAdvance')"
       class="w-full py-3 px-6 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition-colors"
     >
-      Dál nečekat
+      {{ t('game.czar.forceAdvance') }}
     </button>
   </div>
 </template>

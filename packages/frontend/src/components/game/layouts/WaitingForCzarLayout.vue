@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { BlackCard, AnonymousSubmission } from '@kpl/shared'
 import BlackCardAtom from '../atoms/BlackCard.vue'
 import SubmissionGrid from '../atoms/SubmissionGrid.vue'
@@ -14,6 +15,8 @@ defineProps<{
 const emit = defineEmits<{
   skipJudging: []
 }>()
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -21,7 +24,7 @@ const emit = defineEmits<{
     <RoundSkippedNotice v-if="roundSkipped" />
     <BlackCardAtom :text="blackCard.text" />
     <p class="text-gray-400 text-lg">
-      Karetní král vybírá vítěze...
+      {{ t('game.waiting.czarPicking') }}
       <span v-if="secondsLeft > 0" class="ml-2 text-sm text-gray-500">({{ secondsLeft }}s)</span>
     </p>
     <SubmissionGrid :submissions="submissions" :selectable="false" />
@@ -30,7 +33,7 @@ const emit = defineEmits<{
       @click="emit('skipJudging')"
       class="w-full py-3 px-6 bg-red-700 hover:bg-red-600 text-white font-bold rounded-xl transition-colors"
     >
-      Přeskočit hodnocení
+      {{ t('game.waiting.skipJudging') }}
     </button>
   </div>
 </template>

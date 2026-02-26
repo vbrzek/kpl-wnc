@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import Podium from './game/atoms/Podium.vue';
 import Scoreboard from './game/atoms/Scoreboard.vue';
 
+const { t } = useI18n();
 const roomStore = useRoomStore();
 const returning = ref(false);
 const returnError = ref('');
@@ -28,8 +30,8 @@ async function onReturnToLobby() {
 <template>
   <div class="space-y-8 text-center max-w-md mx-auto">
     <div>
-      <h2 class="text-4xl font-bold text-yellow-400 mb-1">Hra skončila!</h2>
-      <p class="text-gray-400">Finální výsledky</p>
+      <h2 class="text-4xl font-bold text-yellow-400 mb-1">{{ t('game.finished.title') }}</h2>
+      <p class="text-gray-400">{{ t('game.finished.finalResults') }}</p>
     </div>
 
     <Podium v-if="scoreboard.length > 0" :entries="scoreboard" />
@@ -46,10 +48,10 @@ async function onReturnToLobby() {
         :disabled="returning"
         class="bg-green-600 hover:bg-green-500 text-white font-bold px-8 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        Návrat do lobby
+        {{ t('game.finished.returnToLobby') }}
       </button>
       <p v-else class="text-gray-500 text-sm">
-        Čekáme na hostitele...
+        {{ t('game.finished.waitingForHost') }}
       </p>
     </div>
   </div>

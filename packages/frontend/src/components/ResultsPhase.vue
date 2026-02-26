@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import Scoreboard from './game/atoms/Scoreboard.vue';
 
+const { t } = useI18n();
 const roomStore = useRoomStore();
 const endingGame = ref(false);
 const endGameError = ref('');
@@ -30,7 +32,7 @@ async function onEndGame() {
   <div class="space-y-8 text-center">
     <!-- Vítěz kola -->
     <div>
-      <p class="text-gray-400 text-lg mb-2">Vítěz kola</p>
+      <p class="text-gray-400 text-lg mb-2">{{ t('game.results.roundWinner') }}</p>
       <h2 class="text-4xl font-bold text-yellow-400">
         {{ roomStore.roundResult?.winnerNickname ?? '...' }}
       </h2>
@@ -49,11 +51,11 @@ async function onEndGame() {
 
     <!-- Skóre -->
     <div class="max-w-sm mx-auto text-left">
-      <h3 class="text-xl font-semibold mb-3">Skóre</h3>
+      <h3 class="text-xl font-semibold mb-3">{{ t('game.results.score') }}</h3>
       <Scoreboard :entries="scoreboard" />
     </div>
 
-    <p class="text-gray-500 text-sm">Nové kolo začíná za 5 sekund...</p>
+    <p class="text-gray-500 text-sm">{{ t('game.results.nextRound') }}</p>
 
     <!-- Host: ukončit hru -->
     <div v-if="roomStore.isHost" class="pt-4 border-t border-gray-700">
@@ -63,7 +65,7 @@ async function onEndGame() {
         :disabled="endingGame"
         class="bg-red-700 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        Ukončit hru
+        {{ t('game.results.endGame') }}
       </button>
     </div>
   </div>

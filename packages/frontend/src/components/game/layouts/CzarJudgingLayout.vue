@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { BlackCard, AnonymousSubmission } from '@kpl/shared'
 import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
@@ -16,6 +17,8 @@ defineProps<{
 const emit = defineEmits<{
   pick: [submissionId: string]
 }>()
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -23,7 +26,7 @@ const emit = defineEmits<{
     <RoundSkippedNotice v-if="roundSkipped" />
     <Countdown v-if="secondsLeft > 0" :secondsLeft="secondsLeft" :totalSeconds="totalSeconds" />
     <BlackCardAtom :text="blackCard.text" />
-    <p class="text-yellow-400 font-semibold text-lg">Jsi karetní král — vyber nejlepší odpověď!</p>
+    <p class="text-yellow-400 font-semibold text-lg">{{ t('game.czar.judging') }}</p>
     <SubmissionGrid :submissions="submissions" :selectable="true" @pick="emit('pick', $event)" />
   </div>
 </template>
