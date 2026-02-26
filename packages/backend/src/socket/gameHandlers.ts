@@ -231,7 +231,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     roomManager.clearJudgingTimer(room.code);
 
     const czar = room.players.find(p => p.isCardCzar);
-    if (czar) czar.isAfk = true;
+    if (czar && !czar.isAfk) czar.isAfk = true;
 
     room.roundDeadline = null;
     io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
