@@ -5,10 +5,27 @@ import { useRoomStore } from '../stores/roomStore';
 import { useCardTranslations } from '../composables/useCardTranslations.js';
 import Scoreboard from './game/atoms/Scoreboard.vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const roomStore = useRoomStore();
 const endingGame = ref(false);
 const endGameError = ref('');
+const cardTranslations = useCardTranslations();
+
+watch(
+  [() => roomStore.roundResult, locale],
+  async () => {
+    const ids = roomStore.roundResult?.winningCards.map((c) => c.id) ?? [];
+    await cardTranslations.fetchTranslations([], ids);
+  },
+  { immediate: true },
+);
+
+const translatedWinningCards = computed(() =>
+  roomStore.roundResult?.winningCards.map((c) => ({
+    ...c,
+    text: cardTranslations.getWhite(c.id, c.text),
+  })) ?? [],
+);
 
 const scoreboard = computed(() => {
   const result = roomStore.roundResult;
@@ -42,7 +59,7 @@ async function onEndGame() {
     <!-- Vítězné karty -->
     <div class="flex flex-wrap gap-3 justify-center">
       <div
-        v-for="card in roomStore.roundResult?.winningCards ?? []"
+        v-for="card in translatedWinningCards"
         :key="card.id"
         class="bg-white text-black rounded-lg p-4 text-sm font-medium max-w-xs text-left"
       >
