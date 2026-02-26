@@ -10,6 +10,10 @@ defineProps<{
   submissions: AnonymousSubmission[]
   roundSkipped: boolean
 }>()
+
+const emit = defineEmits<{
+  skipJudging: []
+}>()
 </script>
 
 <template>
@@ -21,5 +25,12 @@ defineProps<{
       <span v-if="secondsLeft > 0" class="ml-2 text-sm text-gray-500">({{ secondsLeft }}s)</span>
     </p>
     <SubmissionGrid :submissions="submissions" :selectable="false" />
+    <button
+      v-if="secondsLeft === 0"
+      @click="emit('skipJudging')"
+      class="w-full py-3 px-6 bg-red-700 hover:bg-red-600 text-white font-bold rounded-xl transition-colors"
+    >
+      Přeskočit hodnocení
+    </button>
   </div>
 </template>
