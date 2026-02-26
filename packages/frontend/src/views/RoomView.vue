@@ -53,22 +53,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900 text-white p-6">
-
+  <div class="flex-1 flex flex-col min-h-0 h-full">
     <template v-if="roomStore.room">
-      <LobbyPanel
-        v-if="roomStore.room.status === 'LOBBY'"
-        :room="roomStore.room"
-      />
+      <LobbyPanel v-if="roomStore.room.status === 'LOBBY'" :room="roomStore.room" />
       <SelectionPhase v-else-if="roomStore.room.status === 'SELECTION'" />
       <JudgingPhase v-else-if="roomStore.room.status === 'JUDGING'" />
       <ResultsPhase v-else-if="roomStore.room.status === 'RESULTS'" />
       <FinishedPhase v-else-if="roomStore.room.status === 'FINISHED'" />
     </template>
-
-    <div v-else class="text-gray-400 mt-20 text-center">
-      {{ t('room.connecting') }}
+    
+    <div v-else class="flex items-center justify-center flex-1 text-gray-400 italic font-black uppercase tracking-tighter">
+       {{ t('room.connecting') }}
     </div>
-
   </div>
 </template>
