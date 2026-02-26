@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLobbyStore } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
+import { useProfileStore } from '../stores/profileStore';
 import PublicRoomsList from '../components/PublicRoomsList.vue';
 import CreateTableModal from '../components/CreateTableModal.vue';
 import JoinPrivateModal from '../components/JoinPrivateModal.vue';
@@ -14,6 +15,7 @@ const route = useRoute();
 const { t } = useI18n();
 const lobbyStore = useLobbyStore();
 const roomStore = useRoomStore();
+const profileStore = useProfileStore();
 
 const showCreate = ref(false);
 const showJoinPrivate = ref(false);
@@ -32,9 +34,8 @@ async function onCreateRoom(settings: {
   isPublic: boolean;
   selectedSetIds: number[];
   maxPlayers: number;
-  nickname: string;
 }) {
-  const result = await lobbyStore.createRoom(settings);
+  const result = await lobbyStore.createRoom({ ...settings, nickname: profileStore.nickname });
   if ('error' in result) {
     errorMsg.value = result.error;
     return;
@@ -44,8 +45,8 @@ async function onCreateRoom(settings: {
   router.push(`/room/${result.code}`);
 }
 
-async function onJoinPublic(code: string, nickname: string) {
-  const result = await lobbyStore.joinRoom(code, nickname);
+async function onJoinPublic(code: string) {
+  const result = await lobbyStore.joinRoom(code, profileStore.nickname);
   if ('error' in result) {
     errorMsg.value = result.error;
     return;
