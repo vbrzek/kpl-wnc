@@ -32,7 +32,8 @@ kpl-wnc/
 │   │   ├── socket/
 │   │   │   └── lobbyHandlers.ts    # Socket.io lobby handlery (create/join/leave/kick/settings/startGame)
 │   │   ├── routes/
-│   │   │   └── cardSets.ts         # GET /api/card-sets — seznam sad s počty karet
+│   │   │   ├── cardSets.ts         # GET /api/card-sets — seznam sad s počty karet
+│   │   │   └── cardTranslations.ts # GET /api/cards/translations — překlad karet (COALESCE fallback na cs)
 │   │   └── db/
 │   │       ├── db.ts               # Knex singleton (sdílený napříč routami)
 │   │       ├── knexfile.ts         # Knex config (migrations + seeds)
@@ -40,7 +41,8 @@ kpl-wnc/
 │   │       ├── seed.ts             # CLI runner pro seed data
 │   │       ├── migrations/         # Knex migrace
 │   │       └── seeds/
-│   │           └── 01_czech_set.ts # Základní česká sada (15 černých + 35 bílých karet)
+│   │           ├── 01_czech_set.ts       # Základní česká sada
+│   │           └── 02_liberecaci_2026.ts # Liberecká banda 2026
 │   └── frontend/src/
 │       ├── router/index.ts         # Vue Router: / a /room/:token
 │       ├── views/
@@ -51,10 +53,13 @@ kpl-wnc/
 │       │   ├── PlayerList.vue      # Seznam hráčů s AFK/offline/host/self badges
 │       │   ├── PlayerAvatar.vue    # Kulatý avatar (DiceBear bottts), kliknutím otevře edit profilu
 │       │   ├── PlayerProfileModal.vue # Setup/edit profilu — přezdívka, jazyk, live DiceBear náhled
+│       │   ├── LanguageSwitcher.vue # Přepínač jazyka (cs/en/ru/uk/es), ukotven v GameLayout
 │       │   ├── InviteLink.vue      # Kopírování URL stolu
 │       │   ├── CreateTableModal.vue # Formulář pro vytvoření stolu + výběr sad karet
 │       │   ├── JoinPrivateModal.vue # Vstup přes 6-znakový kód
 │       │   └── PublicRoomsList.vue # Živý seznam veřejných stolů (join emituje jen kód)
+│       ├── composables/
+│       │   └── useCardTranslations.ts # Fetch + module-level cache překladu karet; reaktivní cacheVersion
 │       ├── stores/
 │       │   ├── lobbyStore.ts       # Veřejné stoly, create/join, fetchCardSets, localStorage token
 │       │   ├── roomStore.ts        # Stav aktuálního stolu, isHost, kick, startGame
@@ -82,7 +87,8 @@ npm test --workspace=packages/backend          # Vitest unit testy — 57 testů
 
 ## 🗄️ Databázové schéma
 
-Každá karta patří právě jedné sadě (přístup duplikace přiřazení).
+Každá karta patří právě jedné sadě (přístup duplikace přiřazení). Každá karta může mít překlad do libovolného počtu jazyků. 
+Výchozím jazykem je čeština
 
 ```sql
 CREATE TABLE card_sets (
@@ -107,6 +113,25 @@ CREATE TABLE white_cards (
     card_set_id INT NOT NULL,
     text TEXT NOT NULL,
     FOREIGN KEY (card_set_id) REFERENCES card_sets(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Překlady karet (fallback na originál přes COALESCE v dotazu)
+CREATE TABLE black_card_translations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    black_card_id INT UNSIGNED NOT NULL,
+    language_code VARCHAR(5) NOT NULL,
+    text TEXT NOT NULL,
+    UNIQUE (black_card_id, language_code),
+    FOREIGN KEY (black_card_id) REFERENCES black_cards(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE white_card_translations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    white_card_id INT UNSIGNED NOT NULL,
+    language_code VARCHAR(5) NOT NULL,
+    text TEXT NOT NULL,
+    UNIQUE (white_card_id, language_code),
+    FOREIGN KEY (white_card_id) REFERENCES white_cards(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -141,6 +166,7 @@ Globální profil hráče uložený v `localStorage['playerProfile']` (JSON: `{n
 | Metoda | Endpoint | Popis |
 |---|---|---|
 | GET | `/api/card-sets` | Seznam sad s počty karet (`blackCardCount`, `whiteCardCount`) |
+| GET | `/api/cards/translations` | Překlad karet: `?lang=ru&blackIds=1,2&whiteIds=3,4` → `{black:{}, white:{}}` |
 | GET | `/health` | Health check |
 
 `CardSetSummary` typ je definován v `lobbyStore.ts` (frontend) — obsahuje `id, name, description, slug, isPublic, blackCardCount, whiteCardCount`.
@@ -180,5 +206,6 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 - [x] Správa místnosti hostem (vyhodnocení hry, změna režimu a pod.)
 - [x] Globální profil hráče — nickname + DiceBear avatar + locale (localStorage, bez OAuth)
 - [x] Vícejazyčná verze — 5 jazyků (cs, en, ru, uk, es), překlad karet přes REST
+- [x] Finální vzhled (layout, design)
 - [ ] Profily hráčů — OAuth (Google, Facebook)
 - [ ] REST API — CRUD pro správu sad a karet (admin)
