@@ -64,6 +64,10 @@
     "selection": {
       "submit": "Submit {current}/{total} cards"
     },
+    "submitted": {
+      "waiting": "Cards submitted — waiting for others...",
+      "retract": "Change selection"
+    },
     "czar": {
       "judging": "You are the Card Czar — pick the best answer!",
       "waiting": "You are the Card Czar — wait for others to pick their cards.",

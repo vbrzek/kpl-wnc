@@ -64,6 +64,10 @@
     "selection": {
       "submit": "Надіслати {current}/{total} карт"
     },
+    "submitted": {
+      "waiting": "Карти надіслано — чекаємо на інших...",
+      "retract": "Змінити вибір"
+    },
     "czar": {
       "judging": "Ти Card Czar — вибери найкращу відповідь!",
       "waiting": "Ти Card Czar — чекай, поки інші виберуть карти.",

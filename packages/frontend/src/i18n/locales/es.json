@@ -64,6 +64,10 @@
     "selection": {
       "submit": "Enviar {current}/{total} cartas"
     },
+    "submitted": {
+      "waiting": "Cartas enviadas — esperando a los demás...",
+      "retract": "Cambiar selección"
+    },
     "czar": {
       "judging": "¡Eres el Zar de Cartas — elige la mejor respuesta!",
       "waiting": "Eres el Zar de Cartas — espera a que los demás elijan sus cartas.",

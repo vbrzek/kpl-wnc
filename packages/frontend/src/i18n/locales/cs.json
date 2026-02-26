@@ -64,6 +64,10 @@
     "selection": {
       "submit": "Odeslat {current}/{total} karet"
     },
+    "submitted": {
+      "waiting": "Karty odeslány — čekáme na ostatní...",
+      "retract": "Změnit výběr"
+    },
     "czar": {
       "judging": "Jsi karetní král — vyber nejlepší odpověď!",
       "waiting": "Jsi karetní král — čekej, až ostatní vyberou karty.",
