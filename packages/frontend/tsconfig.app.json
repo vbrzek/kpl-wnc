@@ -15,6 +15,9 @@
     "noEmit": true,
     "jsx": "preserve",
 
+    /* JSON imports */
+    "resolveJsonModule": true,
+
     /* Types */
     "types": ["vite/client"],
 
