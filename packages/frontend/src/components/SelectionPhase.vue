@@ -87,7 +87,7 @@ onUnmounted(() => { socket.off('game:error', onGameError); });
     <!-- Stav odevzdání -->
     <div class="text-sm space-y-1 bg-gray-800 rounded-lg px-4 py-3">
       <div v-if="czar" class="text-yellow-400">
-        🎴 {{ czar.nickname }} — Card Czar
+        🎴 {{ czar.nickname }} — karetní král
       </div>
       <div v-for="p in submitted" :key="p.id" class="text-green-400">
         ✓ {{ p.nickname }}
@@ -102,7 +102,7 @@ onUnmounted(() => { socket.off('game:error', onGameError); });
 
     <!-- Czar čeká -->
     <p v-if="roomStore.isCardCzar" class="text-yellow-400 font-semibold text-lg">
-      Jsi Card Czar — čekej, až ostatní vyberou karty.
+      Jsi <strong>karetní král</strong> — čekej, až ostatní vyberou karty.
     </p>
 
     <!-- Hráč odeslal — může změnit výběr -->

@@ -60,10 +60,10 @@ function pickWinner(submissionId: string) {
 
     <!-- Instrukce -->
     <p v-if="roomStore.isCardCzar" class="text-yellow-400 font-semibold text-lg">
-      Jsi Card Czar — vyber nejlepší odpověď!
+      Jsi karetní král — vyber nejlepší odpověď!
     </p>
     <p v-else class="text-gray-400 text-lg">
-      Card Czar vybírá vítěze...
+      Karetní král vybírá vítěze...
       <span v-if="secondsLeft > 0" class="ml-2 text-sm text-gray-500">({{ secondsLeft }}s)</span>
     </p>
 
