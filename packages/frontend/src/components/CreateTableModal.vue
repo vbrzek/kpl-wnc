@@ -10,7 +10,6 @@ const emit = defineEmits<{
     isPublic: boolean;
     selectedSetIds: number[];
     maxPlayers: number;
-    nickname: string;
   }];
 }>();
 
@@ -20,13 +19,11 @@ const lobbyStore = useLobbyStore();
 const name = ref('');
 const isPublic = ref(true);
 const maxPlayers = ref(8);
-const nickname = ref('');
 const selectedSetIds = ref<number[]>([]);
 const fetchError = ref('');
 
 const canSubmit = computed(() =>
   name.value.trim() !== '' &&
-  nickname.value.trim() !== '' &&
   selectedSetIds.value.length > 0
 );
 
@@ -46,7 +43,6 @@ function submit() {
     isPublic: isPublic.value,
     selectedSetIds: selectedSetIds.value,
     maxPlayers: maxPlayers.value,
-    nickname: nickname.value.trim(),
   });
 }
 
@@ -71,15 +67,6 @@ onMounted(async () => {
           v-model="name"
           class="mt-1 w-full bg-gray-700 px-3 py-2 rounded"
           :placeholder="t('createTable.tableNamePlaceholder')"
-        />
-      </label>
-
-      <label class="block">
-        <span class="text-sm text-gray-300">{{ t('createTable.yourNickname') }}</span>
-        <input
-          v-model="nickname"
-          class="mt-1 w-full bg-gray-700 px-3 py-2 rounded"
-          :placeholder="t('createTable.nicknamePlaceholder')"
         />
       </label>
 
