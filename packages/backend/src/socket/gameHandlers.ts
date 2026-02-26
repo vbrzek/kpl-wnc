@@ -6,6 +6,7 @@ import { startNewRound, startJudgingPhase } from './roundUtils.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+const SKIP_DELAY_MS = 3_000;
 
 export function registerGameHandlers(io: IO, socket: AppSocket) {
 
@@ -152,5 +153,100 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
     io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
     callback({ ok: true });
+  });
+
+  // Card Czar manuálně přeskočí čekání na odevzdání (po vypršení timeru)
+  socket.on('game:czarForceAdvance', () => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'SELECTION') return;
+
+    const engine = roomManager.getGameEngine(room.code);
+    if (!engine) return;
+
+    const playerId = roomManager.getPlayerIdByToken(playerToken)!;
+    const player = room.players.find(p => p.id === playerId);
+    if (!player?.isCardCzar) {
+      socket.emit('game:error', 'Jen karetní král může přeskočit čekání.');
+      return;
+    }
+
+    if (!room.roundDeadline || Date.now() < room.roundDeadline) {
+      socket.emit('game:error', 'Časový limit ještě nevypršel.');
+      return;
+    }
+
+    roomManager.clearRoundTimer(room.code);
+
+    // Označit nepřipravené hráče jako AFK
+    for (const p of room.players) {
+      if (!p.isAfk && !p.isCardCzar && !p.hasPlayed && p.socketId !== null) {
+        p.isAfk = true;
+      }
+    }
+
+    const submissions = engine.getAnonymousSubmissions();
+    if (submissions.length > 0) {
+      startJudgingPhase(room, engine, io);
+    } else {
+      room.roundDeadline = null;
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+      io.to(`room:${room.code}`).emit('game:roundSkipped');
+      const roomCode = room.code;
+      setTimeout(() => {
+        const cr = roomManager.getRoom(roomCode);
+        const ce = roomManager.getGameEngine(roomCode);
+        if (!cr || !ce || cr.status !== 'SELECTION') return;
+        try {
+          startNewRound(cr, ce, io);
+        } catch {
+          io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
+        }
+      }, SKIP_DELAY_MS);
+    }
+  });
+
+  // Non-Czar hráč manuálně přeskočí hodnocení (po vypršení timeru)
+  socket.on('game:skipCzarJudging', () => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'JUDGING') return;
+
+    const playerId = roomManager.getPlayerIdByToken(playerToken)!;
+    const player = room.players.find(p => p.id === playerId);
+    if (player?.isCardCzar) {
+      socket.emit('game:error', 'Karetní král nemůže přeskočit vlastní hodnocení.');
+      return;
+    }
+
+    if (!room.roundDeadline || Date.now() < room.roundDeadline) {
+      socket.emit('game:error', 'Časový limit ještě nevypršel.');
+      return;
+    }
+
+    roomManager.clearJudgingTimer(room.code);
+
+    const czar = room.players.find(p => p.isCardCzar);
+    if (czar) czar.isAfk = true;
+
+    room.roundDeadline = null;
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    io.to(`room:${room.code}`).emit('game:roundSkipped');
+
+    const roomCode = room.code;
+    setTimeout(() => {
+      const cr = roomManager.getRoom(roomCode);
+      const ce = roomManager.getGameEngine(roomCode);
+      if (!cr || !ce || cr.status !== 'JUDGING') return;
+      try {
+        startNewRound(cr, ce, io);
+      } catch {
+        io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
+      }
+    }, SKIP_DELAY_MS);
   });
 }
