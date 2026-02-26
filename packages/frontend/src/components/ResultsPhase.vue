@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRoomStore } from '../stores/roomStore';
+import Scoreboard from './game/atoms/Scoreboard.vue';
 
 const roomStore = useRoomStore();
 const endingGame = ref(false);
@@ -11,7 +12,7 @@ const scoreboard = computed(() => {
   const players = roomStore.room?.players ?? [];
   if (!result) return [];
   return players
-    .map(p => ({ nickname: p.nickname, score: result.scores[p.id] ?? 0 }))
+    .map(p => ({ id: p.id, nickname: p.nickname, score: result.scores[p.id] ?? 0 }))
     .sort((a, b) => b.score - a.score);
 });
 
@@ -47,16 +48,9 @@ async function onEndGame() {
     </div>
 
     <!-- Skóre -->
-    <div class="max-w-sm mx-auto">
-      <h3 class="text-xl font-semibold mb-3 text-left">Skóre</h3>
-      <div
-        v-for="entry in scoreboard"
-        :key="entry.nickname"
-        class="flex justify-between py-2 border-b border-gray-700"
-      >
-        <span>{{ entry.nickname }}</span>
-        <span class="font-bold text-yellow-400">{{ entry.score }}</span>
-      </div>
+    <div class="max-w-sm mx-auto text-left">
+      <h3 class="text-xl font-semibold mb-3">Skóre</h3>
+      <Scoreboard :entries="scoreboard" />
     </div>
 
     <p class="text-gray-500 text-sm">Nové kolo začíná za 5 sekund...</p>
