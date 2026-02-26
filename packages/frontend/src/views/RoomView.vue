@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLobbyStore, loadPlayerToken } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
-import NicknameModal from '../components/NicknameModal.vue';
+import { useProfileStore } from '../stores/profileStore';
 import LobbyPanel from '../components/LobbyPanel.vue';
 import SelectionPhase from '../components/SelectionPhase.vue';
 import JudgingPhase from '../components/JudgingPhase.vue';
@@ -16,11 +16,10 @@ const router = useRouter();
 const { t } = useI18n();
 const lobbyStore = useLobbyStore();
 const roomStore = useRoomStore();
+const profileStore = useProfileStore();
 
 const roomCode = route.params.token as string;
-const needsNickname = ref(false);
 
-// Watch for being kicked (roomStore clears room on lobby:kicked)
 const stopKickedWatch = watch(
   () => roomStore.room,
   (newRoom, oldRoom) => {
@@ -34,22 +33,10 @@ onMounted(async () => {
   roomStore.init();
 
   const existingToken = loadPlayerToken(roomCode);
+  // Pokud má hráč token: reconnect s prázdnou přezdívkou (server použije token)
+  // Pokud ne: připoj se s přezdívkou z globálního profilu
+  const nickname = existingToken ? '' : profileStore.nickname;
 
-  if (existingToken) {
-    // Reconnect: pass empty nickname — server will use the stored playerToken
-    const result = await lobbyStore.joinRoom(roomCode, '');
-    if ('error' in result) {
-      router.push({ path: '/', query: { error: result.error } });
-      return;
-    }
-    roomStore.setRoom(result.room);
-    roomStore.setMyPlayerId(result.playerId);
-  } else {
-    needsNickname.value = true;
-  }
-});
-
-async function onNicknameSubmit(nickname: string) {
   const result = await lobbyStore.joinRoom(roomCode, nickname);
   if ('error' in result) {
     router.push({ path: '/', query: { error: result.error } });
@@ -57,8 +44,7 @@ async function onNicknameSubmit(nickname: string) {
   }
   roomStore.setRoom(result.room);
   roomStore.setMyPlayerId(result.playerId);
-  needsNickname.value = false;
-}
+});
 
 onUnmounted(() => {
   stopKickedWatch();
@@ -68,11 +54,6 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-screen bg-gray-900 text-white p-6">
-
-    <NicknameModal
-      v-if="needsNickname"
-      @join="onNicknameSubmit"
-    />
 
     <template v-if="roomStore.room">
       <LobbyPanel
