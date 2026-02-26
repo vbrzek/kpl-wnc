@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useLobbyStore } from '../stores/lobbyStore';
 
 const emit = defineEmits<{
@@ -13,6 +14,7 @@ const emit = defineEmits<{
   }];
 }>();
 
+const { t } = useI18n();
 const lobbyStore = useLobbyStore();
 
 const name = ref('');
@@ -52,7 +54,7 @@ onMounted(async () => {
   try {
     await lobbyStore.fetchCardSets();
   } catch {
-    fetchError.value = 'Nepodařilo se načíst sady karet.';
+    fetchError.value = t('createTable.fetchError');
   }
 });
 </script>
@@ -61,28 +63,28 @@ onMounted(async () => {
   <Teleport to="body">
   <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 text-white">
     <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
-      <h2 class="text-xl font-bold">Vytvořit nový stůl</h2>
+      <h2 class="text-xl font-bold">{{ t('createTable.title') }}</h2>
 
       <label class="block">
-        <span class="text-sm text-gray-300">Název stolu</span>
+        <span class="text-sm text-gray-300">{{ t('createTable.tableName') }}</span>
         <input
           v-model="name"
           class="mt-1 w-full bg-gray-700 px-3 py-2 rounded"
-          placeholder="Můj stůl"
+          :placeholder="t('createTable.tableNamePlaceholder')"
         />
       </label>
 
       <label class="block">
-        <span class="text-sm text-gray-300">Tvoje přezdívka</span>
+        <span class="text-sm text-gray-300">{{ t('createTable.yourNickname') }}</span>
         <input
           v-model="nickname"
           class="mt-1 w-full bg-gray-700 px-3 py-2 rounded"
-          placeholder="Přezdívka"
+          :placeholder="t('createTable.nicknamePlaceholder')"
         />
       </label>
 
       <label class="block">
-        <span class="text-sm text-gray-300">Max. hráčů</span>
+        <span class="text-sm text-gray-300">{{ t('createTable.maxPlayers') }}</span>
         <input
           v-model.number="maxPlayers"
           type="number"
@@ -93,19 +95,19 @@ onMounted(async () => {
       </label>
 
       <div>
-        <span class="text-sm text-gray-300">Sady karet</span>
+        <span class="text-sm text-gray-300">{{ t('createTable.cardSets') }}</span>
         <p v-if="fetchError" class="mt-1 text-sm text-red-400">{{ fetchError }}</p>
         <div
           v-else-if="!lobbyStore.cardSetsLoaded"
           class="mt-1 text-sm text-gray-500"
         >
-          Načítání sad...
+          {{ t('createTable.loadingSets') }}
         </div>
         <div
           v-else-if="lobbyStore.cardSets.length === 0"
           class="mt-1 text-sm text-gray-500"
         >
-          Žádné sady nejsou k dispozici.
+          {{ t('createTable.noSets') }}
         </div>
         <div v-else class="mt-1 space-y-2">
           <label
@@ -129,13 +131,13 @@ onMounted(async () => {
           </label>
         </div>
         <p v-if="!fetchError && lobbyStore.cardSets.length > 0 && selectedSetIds.length === 0" class="text-xs text-yellow-500 mt-1">
-          Vyber alespoň jednu sadu.
+          {{ t('createTable.selectAtLeastOne') }}
         </p>
       </div>
 
       <label class="flex items-center gap-2">
         <input v-model="isPublic" type="checkbox" class="w-4 h-4" />
-        <span class="text-sm text-gray-300">Veřejný stůl (zobrazí se v seznamu)</span>
+        <span class="text-sm text-gray-300">{{ t('createTable.publicTable') }}</span>
       </label>
 
       <div class="flex gap-3 pt-2">
@@ -144,10 +146,10 @@ onMounted(async () => {
           :disabled="!canSubmit"
           class="bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-5 py-2 rounded font-semibold flex-1"
         >
-          Vytvořit
+          {{ t('common.create') }}
         </button>
         <button @click="$emit('close')" class="text-gray-400 hover:text-white px-4 py-2">
-          Zrušit
+          {{ t('common.cancel') }}
         </button>
       </div>
     </div>

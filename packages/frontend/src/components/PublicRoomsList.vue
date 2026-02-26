@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PublicRoomSummary } from '@kpl/shared';
 
 defineProps<{ rooms: PublicRoomSummary[] }>();
 const emit = defineEmits<{ join: [code: string, nickname: string] }>();
 
+const { t } = useI18n();
 const nickname = ref('');
 const joiningCode = ref<string | null>(null);
 
@@ -22,8 +24,8 @@ function confirmJoin() {
 
 <template>
   <section>
-    <h2 class="text-xl font-semibold mb-4">Veřejné stoly</h2>
-    <p v-if="rooms.length === 0" class="text-gray-400">Žádné volné stoly.</p>
+    <h2 class="text-xl font-semibold mb-4">{{ t('publicRooms.title') }}</h2>
+    <p v-if="rooms.length === 0" class="text-gray-400">{{ t('publicRooms.noRooms') }}</p>
     <ul class="space-y-2">
       <li
         v-for="room in rooms"
@@ -38,7 +40,7 @@ function confirmJoin() {
           @click="startJoin(room.code)"
           class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1 rounded"
         >
-          Sednout si
+          {{ t('publicRooms.joinTable') }}
         </button>
       </li>
     </ul>
@@ -46,13 +48,13 @@ function confirmJoin() {
     <div v-if="joiningCode" class="mt-4 flex gap-2">
       <input
         v-model="nickname"
-        placeholder="Tvoje přezdívka"
+        :placeholder="t('publicRooms.yourNickname')"
         class="bg-gray-700 px-3 py-2 rounded flex-1"
         @keyup.enter="confirmJoin"
         autofocus
       />
-      <button @click="confirmJoin" class="bg-indigo-600 px-4 py-2 rounded">Připojit</button>
-      <button @click="joiningCode = null" class="text-gray-400 px-2">Zrušit</button>
+      <button @click="confirmJoin" class="bg-indigo-600 px-4 py-2 rounded">{{ t('publicRooms.confirm') }}</button>
+      <button @click="joiningCode = null" class="text-gray-400 px-2">{{ t('common.cancel') }}</button>
     </div>
   </section>
 </template>

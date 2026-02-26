@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useLobbyStore, loadPlayerToken } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
 import NicknameModal from '../components/NicknameModal.vue';
@@ -12,6 +13,7 @@ import FinishedPhase from '../components/FinishedPhase.vue';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const lobbyStore = useLobbyStore();
 const roomStore = useRoomStore();
 
@@ -84,7 +86,7 @@ onUnmounted(() => {
     </template>
 
     <div v-else class="text-gray-400 mt-20 text-center">
-      Připojování...
+      {{ t('room.connecting') }}
     </div>
 
   </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { GameRoom } from '@kpl/shared';
 import { useRoomStore } from '../stores/roomStore';
 import PlayerList from './PlayerList.vue';
@@ -7,6 +8,7 @@ import InviteLink from './InviteLink.vue';
 
 const props = defineProps<{ room: GameRoom }>();
 
+const { t } = useI18n();
 const roomStore = useRoomStore();
 const errorMsg = ref('');
 
@@ -36,7 +38,7 @@ async function startGame() {
 
     <section>
       <h2 class="text-lg font-semibold mb-2">
-        Hráči ({{ room.players.length }}/{{ room.maxPlayers }})
+        {{ t('lobby.players', { current: room.players.length, max: room.maxPlayers }) }}
       </h2>
       <PlayerList
         :players="room.players"
@@ -54,11 +56,11 @@ async function startGame() {
         @click="startGame"
         class="bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed px-8 py-3 rounded-lg font-bold text-lg"
       >
-        Spustit hru
-        <span class="text-sm font-normal ml-1">({{ activePlayers }}/3 min.)</span>
+        {{ t('lobby.startGame') }}
+        <span class="text-sm font-normal ml-1">{{ t('lobby.minPlayers', { current: activePlayers }) }}</span>
       </button>
       <p v-else class="text-gray-400">
-        Čekáme, až host spustí hru...
+        {{ t('lobby.waitingForHost') }}
       </p>
     </div>
   </div>

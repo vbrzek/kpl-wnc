@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useLobbyStore } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
 import PublicRoomsList from '../components/PublicRoomsList.vue';
@@ -10,6 +11,7 @@ import JoinPrivateModal from '../components/JoinPrivateModal.vue';
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 const lobbyStore = useLobbyStore();
 const roomStore = useRoomStore();
 
@@ -60,7 +62,7 @@ function onJoinPrivate(code: string) {
 
 <template>
   <div class="bg-gray-800/60 backdrop-blur rounded-2xl p-8 shadow-xl border border-gray-700">
-    <h1 class="text-4xl font-bold mb-8">Karty proti lidskosti</h1>
+    <h1 class="text-4xl font-bold mb-8">{{ t('home.title') }}</h1>
 
     <p v-if="errorMsg" class="text-red-400 mb-4">{{ errorMsg }}</p>
 
@@ -69,13 +71,13 @@ function onJoinPrivate(code: string) {
         @click="showCreate = true"
         class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-lg font-semibold"
       >
-        Vytvořit stůl
+        {{ t('home.createTable') }}
       </button>
       <button
         @click="showJoinPrivate = true"
         class="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-lg font-semibold"
       >
-        Připojit se (kód)
+        {{ t('home.joinWithCode') }}
       </button>
     </div>
 
