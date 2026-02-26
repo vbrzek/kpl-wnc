@@ -1,7 +1,10 @@
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 // Module-level cache: survives component remounts within the same page session
 const cache = new Map<string, string>();
+// Reactive counter: increments after each fetch so computed properties re-evaluate
+const cacheVersion = ref(0);
 
 function cacheKey(lang: string, type: 'b' | 'w', id: number): string {
   return `${lang}:${type}:${id}`;
@@ -34,16 +37,19 @@ export function useCardTranslations() {
       for (const [id, text] of Object.entries(data.white)) {
         cache.set(cacheKey(lang, 'w', Number(id)), text);
       }
+      cacheVersion.value++;
     } catch {
       // Silently fail — components fall back to original text
     }
   }
 
   function getBlack(id: number, fallback: string): string {
+    void cacheVersion.value; // reactive dependency — re-evaluates computed when cache is populated
     return cache.get(cacheKey(locale.value, 'b', id)) ?? fallback;
   }
 
   function getWhite(id: number, fallback: string): string {
+    void cacheVersion.value; // reactive dependency — re-evaluates computed when cache is populated
     return cache.get(cacheKey(locale.value, 'w', id)) ?? fallback;
   }
 
