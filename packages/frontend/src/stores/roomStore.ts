@@ -159,6 +159,14 @@ export const useRoomStore = defineStore('room', () => {
     socket.emit('game:judgeSelect', submissionId);
   }
 
+  function czarForceAdvance() {
+    socket.emit('game:czarForceAdvance');
+  }
+
+  function skipCzarJudging() {
+    socket.emit('game:skipCzarJudging');
+  }
+
   function toggleCardSelection(card: WhiteCard) {
     const idx = selectedCards.value.findIndex(c => c.id === card.id);
     if (idx === -1) {
@@ -198,6 +206,6 @@ export const useRoomStore = defineStore('room', () => {
     roundSkipped,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, endGame, returnToLobby, cleanup,
-    playCards, judgeSelect, toggleCardSelection, retractCards,
+    playCards, judgeSelect, toggleCardSelection, retractCards, czarForceAdvance, skipCzarJudging,
   };
 });
