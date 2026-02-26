@@ -31,6 +31,14 @@
     "placeholder": "Nickname",
     "join": "Take a seat"
   },
+  "profile": {
+    "setupTitle": "Set up your profile",
+    "editTitle": "Edit profile",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Your nickname",
+    "language": "Language",
+    "save": "Save"
+  },
   "joinPrivate": {
     "title": "Join a table",
     "codeLabel": "Table code (6 chars)",

@@ -31,6 +31,14 @@
     "placeholder": "Apodo",
     "join": "Sentarse a la mesa"
   },
+  "profile": {
+    "setupTitle": "Configura tu perfil",
+    "editTitle": "Editar perfil",
+    "nickname": "Apodo",
+    "nicknamePlaceholder": "Tu apodo",
+    "language": "Idioma",
+    "save": "Guardar"
+  },
   "joinPrivate": {
     "title": "Unirse a una mesa",
     "codeLabel": "Código de mesa (6 caracteres)",

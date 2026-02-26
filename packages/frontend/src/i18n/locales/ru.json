@@ -31,6 +31,14 @@
     "placeholder": "Никнейм",
     "join": "Сесть за стол"
   },
+  "profile": {
+    "setupTitle": "Настрой свой профиль",
+    "editTitle": "Редактировать профиль",
+    "nickname": "Псевдоним",
+    "nicknamePlaceholder": "Твой псевдоним",
+    "language": "Язык",
+    "save": "Сохранить"
+  },
   "joinPrivate": {
     "title": "Войти в стол",
     "codeLabel": "Код стола (6 символов)",

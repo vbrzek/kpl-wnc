@@ -31,6 +31,14 @@
     "placeholder": "Přezdívka",
     "join": "Sednout si ke stolu"
   },
+  "profile": {
+    "setupTitle": "Nastav svůj profil",
+    "editTitle": "Upravit profil",
+    "nickname": "Přezdívka",
+    "nicknamePlaceholder": "Tvoje přezdívka",
+    "language": "Jazyk",
+    "save": "Uložit"
+  },
   "joinPrivate": {
     "title": "Připojit se ke stolu",
     "codeLabel": "Kód stolu (6 znaků)",
