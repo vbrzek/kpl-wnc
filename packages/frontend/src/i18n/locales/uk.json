@@ -74,21 +74,29 @@
     "confirm": "Увійти"
   },
   "game": {
+    "status": {
+      "playerProgress": "Прогрес гравців",
+      "waiting": "Очікування"
+    },
     "selection": {
       "submit": "Надіслати {current}/{total} карт"
     },
     "submitted": {
       "waiting": "Карти надіслано — чекаємо на інших...",
-      "retract": "Змінити вибір"
+      "retract": "Змінити вибір",
+      "longText": "Твої карти здано. Тепер залишається лише чекати на інших."
     },
     "czar": {
       "judging": "Ти Card Czar — вибери найкращу відповідь!",
       "waiting": "Ти Card Czar — чекай, поки інші виберуть карти.",
+      "waitingText": "Інші зараз ламають голову, щоб тебе розважити. Стеж за їхнім прогресом нижче.",
       "forceAdvance": "Не чекати",
+      "forceAdvanceHint": "Час вийшов. Ти можеш просунути гру далі.",
       "label": "Card Czar"
     },
     "waiting": {
       "czarPicking": "Card Czar вибирає переможця...",
+      "candidate": "Кандидати на перемогу",
       "skipJudging": "Пропустити оцінку"
     },
     "blackCard": {

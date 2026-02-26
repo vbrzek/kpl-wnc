@@ -74,21 +74,29 @@
     "confirm": "Join"
   },
   "game": {
+    "status": {
+      "playerProgress": "Player progress",
+      "waiting": "Waiting"
+    },
     "selection": {
       "submit": "Submit {current}/{total} cards"
     },
     "submitted": {
       "waiting": "Cards submitted — waiting for others...",
-      "retract": "Change selection"
+      "retract": "Change selection",
+      "longText": "Your cards are submitted. All you can do now is wait for the others."
     },
     "czar": {
       "judging": "You are the Card Czar — pick the best answer!",
       "waiting": "You are the Card Czar — wait for others to pick their cards.",
+      "waitingText": "Others are racking their brains to amuse you. Watch their progress below.",
       "forceAdvance": "Don't wait",
+      "forceAdvanceHint": "Time's up. You can move the game forward.",
       "label": "card czar"
     },
     "waiting": {
       "czarPicking": "The Card Czar is picking a winner...",
+      "candidate": "Winner candidates",
       "skipJudging": "Skip judging"
     },
     "blackCard": {

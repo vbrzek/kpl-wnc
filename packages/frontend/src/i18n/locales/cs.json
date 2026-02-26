@@ -74,21 +74,29 @@
     "confirm": "Připojit"
   },
   "game": {
+    "status": {
+      "playerProgress": "Stav hráčů",
+      "waiting": "Čeká se"
+    },
     "selection": {
       "submit": "Odeslat {current}/{total} karet"
     },
     "submitted": {
       "waiting": "Karty odeslány — čekáme na ostatní...",
-      "retract": "Změnit výběr"
+      "retract": "Změnit výběr",
+      "longText": "Tvoje karty jsou odevzdány. Nyní nezbývá než čekat, až to udělají ostatní."
     },
     "czar": {
       "judging": "Jsi karetní král — vyber nejlepší odpověď!",
       "waiting": "Jsi karetní král — čekej, až ostatní vyberou karty.",
+      "waitingText": "Ostatní právě potí krev, aby tě pobavili. Sleduj jejich progres níže.",
       "forceAdvance": "Dál nečekat",
+      "forceAdvanceHint": "Čas vypršel. Můžeš hru posunout dál.",
       "label": "karetní král"
     },
     "waiting": {
       "czarPicking": "Karetní král vybírá vítěze...",
+      "candidate": "Kandidáti na vítěze",
       "skipJudging": "Přeskočit hodnocení"
     },
     "blackCard": {

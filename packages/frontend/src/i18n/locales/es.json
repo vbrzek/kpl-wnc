@@ -74,21 +74,29 @@
     "confirm": "Unirse"
   },
   "game": {
+    "status": {
+      "playerProgress": "Progreso de jugadores",
+      "waiting": "Esperando"
+    },
     "selection": {
       "submit": "Enviar {current}/{total} cartas"
     },
     "submitted": {
       "waiting": "Cartas enviadas — esperando a los demás...",
-      "retract": "Cambiar selección"
+      "retract": "Cambiar selección",
+      "longText": "Tus cartas están enviadas. Ahora solo queda esperar a los demás."
     },
     "czar": {
       "judging": "¡Eres el Zar de Cartas — elige la mejor respuesta!",
       "waiting": "Eres el Zar de Cartas — espera a que los demás elijan sus cartas.",
+      "waitingText": "Los demás se devanan los sesos para divertirte. Mira su progreso abajo.",
       "forceAdvance": "No esperar",
+      "forceAdvanceHint": "Se acabó el tiempo. Puedes avanzar el juego.",
       "label": "Zar de Cartas"
     },
     "waiting": {
       "czarPicking": "El Zar de Cartas está eligiendo al ganador...",
+      "candidate": "Candidatos al ganador",
       "skipJudging": "Omitir juicio"
     },
     "blackCard": {

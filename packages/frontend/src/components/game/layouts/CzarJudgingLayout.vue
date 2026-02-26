@@ -22,11 +22,24 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <div class="space-y-6">
-    <RoundSkippedNotice v-if="roundSkipped" />
-    <Countdown v-if="secondsLeft > 0" :secondsLeft="secondsLeft" :totalSeconds="totalSeconds" />
-    <BlackCardAtom :text="blackCard.text" />
-    <p class="text-yellow-400 font-semibold text-lg">{{ t('game.czar.judging') }}</p>
-    <SubmissionGrid :submissions="submissions" :selectable="true" @pick="emit('pick', $event)" />
+  <div class="flex flex-col h-full min-h-0 pt-4">
+    <div class="flex-none space-y-4 mb-6">
+      <BlackCardAtom :text="blackCard.text" />
+      <div class="flex items-center gap-3 px-1">
+        <div class="h-[1px] flex-1 bg-yellow-500/20"></div>
+        <p class="text-yellow-500 font-black uppercase text-[11px] tracking-widest italic">
+          {{ t('game.czar.judging') }}
+        </p>
+        <div class="h-[1px] flex-1 bg-yellow-500/20"></div>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto pb-12 custom-scrollbar">
+      <SubmissionGrid 
+        :submissions="submissions" 
+        :selectable="true" 
+        @pick="emit('pick', $event)" 
+      />
+    </div>
   </div>
 </template>

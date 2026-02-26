@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 
-defineProps<{
+const props = defineProps<{
   text: string
-  pick?: number
+  pick: number
 }>()
 
 const { t } = useI18n();

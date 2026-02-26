@@ -74,21 +74,29 @@
     "confirm": "Войти"
   },
   "game": {
+    "status": {
+      "playerProgress": "Прогресс игроков",
+      "waiting": "Ожидание"
+    },
     "selection": {
       "submit": "Отправить {current}/{total} карт"
     },
     "submitted": {
       "waiting": "Карты отправлены — ждём остальных...",
-      "retract": "Изменить выбор"
+      "retract": "Изменить выбор",
+      "longText": "Твои карты отправлены. Теперь остаётся только ждать остальных."
     },
     "czar": {
       "judging": "Ты Card Czar — выбери лучший ответ!",
       "waiting": "Ты Card Czar — жди, пока остальные выберут карты.",
+      "waitingText": "Остальные сейчас ломают голову, чтобы тебя позабавить. Следи за их прогрессом ниже.",
       "forceAdvance": "Не ждать",
+      "forceAdvanceHint": "Время вышло. Ты можешь продвинуть игру дальше.",
       "label": "Card Czar"
     },
     "waiting": {
       "czarPicking": "Card Czar выбирает победителя...",
+      "candidate": "Кандидаты на победу",
       "skipJudging": "Пропустить оценку"
     },
     "blackCard": {
