@@ -2,7 +2,6 @@
 import type { BlackCard, WhiteCard, Player } from '@kpl/shared'
 import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
-import SubmissionStatus from '../atoms/SubmissionStatus.vue'
 import CardHand from '../atoms/CardHand.vue'
 import RoundSkippedNotice from '../atoms/RoundSkippedNotice.vue'
 

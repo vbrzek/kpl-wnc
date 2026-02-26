@@ -58,8 +58,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md space-y-4">
+  <Teleport to="body">
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 text-white">
+    <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md space-y-4 max-h-[90vh] overflow-y-auto">
       <h2 class="text-xl font-bold">Vytvořit nový stůl</h2>
 
       <label class="block">
@@ -151,4 +152,5 @@ onMounted(async () => {
       </div>
     </div>
   </div>
+  </Teleport>
 </template>

@@ -17,7 +17,8 @@ function submit() {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+  <Teleport to="body">
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 text-white">
     <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm space-y-4">
       <h2 class="text-xl font-bold">Připojit se ke stolu</h2>
       <label class="block">
@@ -45,4 +46,5 @@ function submit() {
       </div>
     </div>
   </div>
+  </Teleport>
 </template>
