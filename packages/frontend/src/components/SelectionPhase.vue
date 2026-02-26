@@ -45,6 +45,10 @@ function retract() {
   roomStore.retractCards();
 }
 
+function czarForceAdvance() {
+  roomStore.czarForceAdvance();
+}
+
 watch(() => roomStore.hand, () => { retracting.value = false; });
 
 function onGameError() { retracting.value = false; }
@@ -62,6 +66,7 @@ const players = computed(() => roomStore.room?.players ?? []);
     :totalSeconds="45"
     :players="players"
     :roundSkipped="roomStore.roundSkipped"
+    @forceAdvance="czarForceAdvance"
   />
   <PlayerSubmittedLayout
     v-else-if="roomStore.me?.hasPlayed"
