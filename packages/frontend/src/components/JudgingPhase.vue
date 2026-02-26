@@ -1,10 +1,37 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
+import { computed, ref, watch, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
+import { useCardTranslations } from '../composables/useCardTranslations.js';
 import CzarJudgingLayout from './game/layouts/CzarJudgingLayout.vue';
 import WaitingForCzarLayout from './game/layouts/WaitingForCzarLayout.vue';
 
+const { locale } = useI18n();
 const roomStore = useRoomStore();
+const cardTranslations = useCardTranslations();
+
+watch(
+  [() => roomStore.currentBlackCard, () => roomStore.submissions, locale],
+  async () => {
+    const blackIds = roomStore.currentBlackCard ? [roomStore.currentBlackCard.id] : [];
+    const whiteIds = roomStore.submissions.flatMap((s) => s.cards.map((c) => c.id));
+    await cardTranslations.fetchTranslations(blackIds, whiteIds);
+  },
+  { immediate: true },
+);
+
+const translatedBlackCard = computed(() => {
+  const bc = roomStore.currentBlackCard;
+  if (!bc) return bc;
+  return { ...bc, text: cardTranslations.getBlack(bc.id, bc.text) };
+});
+
+const translatedSubmissions = computed(() =>
+  roomStore.submissions.map((s) => ({
+    ...s,
+    cards: s.cards.map((c) => ({ ...c, text: cardTranslations.getWhite(c.id, c.text) })),
+  })),
+);
 
 // --- Countdown ---
 const secondsLeft = ref(0);
@@ -40,18 +67,18 @@ function skipCzarJudging() {
 <template>
   <CzarJudgingLayout
     v-if="roomStore.isCardCzar"
-    :blackCard="roomStore.currentBlackCard!"
+    :blackCard="translatedBlackCard!"
     :secondsLeft="secondsLeft"
     :totalSeconds="60"
-    :submissions="roomStore.submissions"
+    :submissions="translatedSubmissions"
     :roundSkipped="roomStore.roundSkipped"
     @pick="pickWinner"
   />
   <WaitingForCzarLayout
     v-else
-    :blackCard="roomStore.currentBlackCard!"
+    :blackCard="translatedBlackCard!"
     :secondsLeft="secondsLeft"
-    :submissions="roomStore.submissions"
+    :submissions="translatedSubmissions"
     :roundSkipped="roomStore.roundSkipped"
     @skipJudging="skipCzarJudging"
   />

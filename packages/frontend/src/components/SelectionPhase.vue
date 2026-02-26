@@ -1,13 +1,39 @@
 <script setup lang="ts">
 import { computed, ref, watch, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { socket } from '../socket';
 import type { WhiteCard } from '@kpl/shared';
+import { useCardTranslations } from '../composables/useCardTranslations.js';
 import PlayerSelectingLayout from './game/layouts/PlayerSelectingLayout.vue';
 import PlayerSubmittedLayout from './game/layouts/PlayerSubmittedLayout.vue';
 import CzarWaitingSelectionLayout from './game/layouts/CzarWaitingSelectionLayout.vue';
 
+const { locale } = useI18n();
 const roomStore = useRoomStore();
+const cardTranslations = useCardTranslations();
+
+// Watch for card/locale changes and fetch translations
+watch(
+  [() => roomStore.currentBlackCard, () => roomStore.hand, locale],
+  async () => {
+    const blackIds = roomStore.currentBlackCard ? [roomStore.currentBlackCard.id] : [];
+    const whiteIds = roomStore.hand.map((c) => c.id);
+    await cardTranslations.fetchTranslations(blackIds, whiteIds);
+  },
+  { immediate: true },
+);
+
+const translatedBlackCard = computed(() => {
+  const bc = roomStore.currentBlackCard;
+  if (!bc) return bc;
+  return { ...bc, text: cardTranslations.getBlack(bc.id, bc.text) };
+});
+
+const translatedHand = computed(() =>
+  roomStore.hand.map((c) => ({ ...c, text: cardTranslations.getWhite(c.id, c.text) })),
+);
+
 const pick = computed(() => roomStore.currentBlackCard?.pick ?? 1);
 const canSubmit = computed(() => roomStore.selectedCards.length === pick.value);
 const retracting = ref(false);
@@ -61,7 +87,7 @@ const players = computed(() => roomStore.room?.players ?? []);
 <template>
   <CzarWaitingSelectionLayout
     v-if="roomStore.isCardCzar"
-    :blackCard="roomStore.currentBlackCard!"
+    :blackCard="translatedBlackCard!"
     :secondsLeft="secondsLeft"
     :totalSeconds="45"
     :players="players"
@@ -70,7 +96,7 @@ const players = computed(() => roomStore.room?.players ?? []);
   />
   <PlayerSubmittedLayout
     v-else-if="roomStore.me?.hasPlayed"
-    :blackCard="roomStore.currentBlackCard!"
+    :blackCard="translatedBlackCard!"
     :secondsLeft="secondsLeft"
     :totalSeconds="45"
     :players="players"
@@ -80,11 +106,11 @@ const players = computed(() => roomStore.room?.players ?? []);
   />
   <PlayerSelectingLayout
     v-else
-    :blackCard="roomStore.currentBlackCard!"
+    :blackCard="translatedBlackCard!"
     :secondsLeft="secondsLeft"
     :totalSeconds="45"
     :players="players"
-    :hand="roomStore.hand"
+    :hand="translatedHand"
     :selectedCards="roomStore.selectedCards"
     :canSubmit="canSubmit"
     :roundSkipped="roomStore.roundSkipped"
