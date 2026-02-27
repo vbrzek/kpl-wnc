@@ -5,6 +5,7 @@ import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
 import SubmissionStatus from '../atoms/SubmissionStatus.vue'
 import RoundSkippedNotice from '../atoms/RoundSkippedNotice.vue'
+import CzarBadge from '../atoms/CzarBadge.vue'
 
 defineProps<{
   blackCard: BlackCard
@@ -12,6 +13,7 @@ defineProps<{
   totalSeconds: number
   players: Player[]
   roundSkipped: boolean
+  czarNickname: string
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +27,7 @@ const { t } = useI18n();
   <div class="flex flex-col h-full min-h-0 pt-4">
     <div class="flex-none space-y-4 mb-6">
       <BlackCardAtom :text="blackCard.text" :pick="blackCard.pick" />
+      <CzarBadge czarNickname="" :isMe="true" />
       <div v-if="secondsLeft > 0">
         <Countdown :secondsLeft="secondsLeft" :totalSeconds="totalSeconds" />
       </div>

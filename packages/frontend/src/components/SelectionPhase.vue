@@ -82,6 +82,9 @@ socket.on('game:error', onGameError);
 onUnmounted(() => { socket.off('game:error', onGameError); });
 
 const players = computed(() => roomStore.room?.players ?? []);
+const czarNickname = computed(() =>
+  roomStore.room?.players.find(p => p.id === roomStore.czarId)?.nickname ?? ''
+);
 </script>
 
 <template>
@@ -92,6 +95,7 @@ const players = computed(() => roomStore.room?.players ?? []);
     :totalSeconds="45"
     :players="players"
     :roundSkipped="roomStore.roundSkipped"
+    :czarNickname="czarNickname"
     @forceAdvance="czarForceAdvance"
   />
   <PlayerSubmittedLayout
@@ -102,6 +106,7 @@ const players = computed(() => roomStore.room?.players ?? []);
     :players="players"
     :retracting="retracting"
     :roundSkipped="roomStore.roundSkipped"
+    :czarNickname="czarNickname"
     @retract="retract"
   />
   <PlayerSelectingLayout
@@ -115,6 +120,7 @@ const players = computed(() => roomStore.room?.players ?? []);
     :canSubmit="canSubmit"
     :roundSkipped="roomStore.roundSkipped"
     @toggleCard="roomStore.toggleCardSelection"
+    :czarNickname="czarNickname"
     @submit="submit"
   />
 </template>

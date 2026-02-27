@@ -59,6 +59,10 @@ function pickWinner(submissionId: string) {
   roomStore.judgeSelect(submissionId);
 }
 
+const czarNickname = computed(() =>
+  roomStore.room?.players.find(p => p.id === roomStore.czarId)?.nickname ?? ''
+);
+
 function skipCzarJudging() {
   roomStore.skipCzarJudging();
 }
@@ -72,6 +76,7 @@ function skipCzarJudging() {
     :totalSeconds="60"
     :submissions="translatedSubmissions"
     :roundSkipped="roomStore.roundSkipped"
+    :czarNickname="czarNickname"
     @pick="pickWinner"
   />
   <WaitingForCzarLayout
@@ -80,6 +85,7 @@ function skipCzarJudging() {
     :secondsLeft="secondsLeft"
     :submissions="translatedSubmissions"
     :roundSkipped="roomStore.roundSkipped"
+    :czarNickname="czarNickname"
     @skipJudging="skipCzarJudging"
   />
 </template>

@@ -4,12 +4,14 @@ import type { BlackCard, AnonymousSubmission } from '@kpl/shared'
 import BlackCardAtom from '../atoms/BlackCard.vue'
 import SubmissionGrid from '../atoms/SubmissionGrid.vue'
 import RoundSkippedNotice from '../atoms/RoundSkippedNotice.vue'
+import CzarBadge from '../atoms/CzarBadge.vue'
 
 defineProps<{
   blackCard: BlackCard
   secondsLeft: number
   submissions: AnonymousSubmission[]
   roundSkipped: boolean
+  czarNickname: string
 }>()
 
 const emit = defineEmits<{
@@ -24,20 +26,7 @@ const { t } = useI18n();
     <div class="flex-none space-y-4 mb-6">
       <BlackCardAtom :text="blackCard.text" />
       
-      <div class="flex items-center justify-between bg-white/5 rounded-2xl px-4 py-3 border border-white/5">
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <div class="w-3 h-3 bg-yellow-500 rounded-full animate-ping absolute inset-0"></div>
-            <div class="w-3 h-3 bg-yellow-500 rounded-full relative"></div>
-          </div>
-          <span class="text-sm font-bold text-yellow-500">
-            {{ t('game.waiting.czarPicking') }}
-          </span>
-        </div>
-        <span v-if="secondsLeft > 0" class="font-mono text-xs text-gray-500 bg-black/30 px-2 py-1 rounded-lg">
-          {{ secondsLeft }}s
-        </span>
-      </div>
+      <CzarBadge :czarNickname="czarNickname" :isMe="false" />
     </div>
 
     <div class="flex-1 overflow-y-auto pb-24 custom-scrollbar px-1">

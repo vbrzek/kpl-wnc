@@ -5,6 +5,7 @@ import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
 import SubmissionStatus from '../atoms/SubmissionStatus.vue'
 import RoundSkippedNotice from '../atoms/RoundSkippedNotice.vue'
+import CzarBadge from '../atoms/CzarBadge.vue'
 
 const { t } = useI18n()
 
@@ -15,6 +16,7 @@ defineProps<{
   players: Player[]
   retracting: boolean
   roundSkipped: boolean
+  czarNickname: string
 }>()
 
 const emit = defineEmits<{
@@ -31,7 +33,7 @@ const emit = defineEmits<{
     </div>
 
     <div class="flex-1 flex flex-col items-center justify-center text-center px-6">
-      
+      <CzarBadge :czarNickname="czarNickname" :isMe="false" class="mb-6" />
 
       <h2 class="text-xl font-black leading-tight mb-2">
         {{ t('game.submitted.waiting') }}
