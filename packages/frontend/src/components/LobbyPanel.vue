@@ -28,16 +28,15 @@ async function startGame() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-8 pt-4 pb-24 max-w-2xl mx-auto">
     
-    <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-6">
+    <div class="flex items-center justify-between gap-4 border-b border-white/5 pt-2 pb-6">
       <div class="flex flex-col">
         <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Název stolu</span>
         <h1 class="text-3xl font-black tracking-tighter uppercase italic text-white leading-none">
           {{ room.name }}
         </h1>
       </div>
-      <InviteLink :room-code="room.code" class="shrink-0" />
+      <InviteLink :room-code="room.code" class="shrink-0 self-center" />
     </div>
 
     <p v-if="errorMsg" class="bg-red-500/10 text-red-400 p-4 rounded-2xl border border-red-500/20 text-sm font-bold animate-pulse">
@@ -90,5 +89,4 @@ async function startGame() {
       </div>
       <div class="h-[env(safe-area-inset-bottom)]"></div>
     </div>
-  </div>
 </template>
