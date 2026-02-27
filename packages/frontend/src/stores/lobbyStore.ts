@@ -13,6 +13,23 @@ export interface CardSetSummary {
   whiteCardCount: number;
 }
 
+export interface RoomPreview {
+  code: string;
+  name: string;
+  status: string;
+  playerCount: number;
+  maxPlayers: number;
+  players: { nickname: string; isAfk: boolean }[];
+  selectedSetIds: number[];
+}
+
+export async function fetchRoomPreview(code: string): Promise<RoomPreview | null> {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
+  const res = await fetch(`${backendUrl}/api/rooms/${code}/preview`);
+  if (!res.ok) return null;
+  return res.json() as Promise<RoomPreview>;
+}
+
 export const useLobbyStore = defineStore('lobby', () => {
   const publicRooms = ref<PublicRoomSummary[]>([]);
   const isSubscribed = ref(false);
