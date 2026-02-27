@@ -179,7 +179,7 @@ function onJoinPrivate(code: string) {
       
         <PublicRoomsList
           :rooms="lobbyStore.publicRooms"
-          @join="onJoinPublic"
+          @preview="onJoinPublic"
         />
       
     </div>

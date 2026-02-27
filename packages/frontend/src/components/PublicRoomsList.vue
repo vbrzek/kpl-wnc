@@ -5,7 +5,7 @@ import type { PublicRoomSummary } from '@kpl/shared';
 import { useLobbyStore } from '../stores/lobbyStore';
 
 defineProps<{ rooms: PublicRoomSummary[] }>();
-const emit = defineEmits<{ join: [code: string] }>();
+const emit = defineEmits<{ preview: [code: string] }>();
 
 const { t } = useI18n();
 const lobbyStore = useLobbyStore();
@@ -56,7 +56,7 @@ function setNamesForRoom(room: PublicRoomSummary): string {
           </div>
 
           <button
-            @click="emit('join', room.code)"
+            @click="emit('preview', room.code)"
             :disabled="room.playerCount >= room.maxPlayers"
             class="w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] transition-all
                    disabled:bg-slate-800 disabled:text-slate-600 disabled:opacity-50
