@@ -11,7 +11,8 @@
     "title": "Cards Against Humanity",
     "createTable": "Create table",
     "joinWithCode": "Join with code",
-    "publicRooms": "Public tables"
+    "publicRooms": "Public tables",
+    "activeRooms": "Your games"
   },
   "createTable": {
     "title": "Create new table",
@@ -92,7 +93,9 @@
       "waitingText": "Others are racking their brains to amuse you. Watch their progress below.",
       "forceAdvance": "Don't wait",
       "forceAdvanceHint": "Time's up. You can move the game forward.",
-      "label": "card czar"
+      "label": "card czar",
+      "youAreCzar": "You are the Card Czar",
+      "willPick": "{name} will pick the winner"
     },
     "waiting": {
       "czarPicking": "The Card Czar is picking a winner...",
@@ -116,5 +119,14 @@
       "returnToLobby": "Return to lobby",
       "waitingForHost": "Waiting for the host..."
     }
+  },
+  "roomPreview": {
+    "join": "Take a seat",
+    "back": "Back",
+    "players": "Players ({current}/{max})",
+    "cardSets": "Card sets",
+    "inLobby": "Lobby",
+    "inGame": "In game",
+    "finished": "Finished"
   }
 }

@@ -11,7 +11,8 @@
     "title": "Cartas contra la humanidad",
     "createTable": "Crear mesa",
     "joinWithCode": "Unirse con código",
-    "publicRooms": "Mesas públicas"
+    "publicRooms": "Mesas públicas",
+    "activeRooms": "Tus partidas"
   },
   "createTable": {
     "title": "Crear nueva mesa",
@@ -92,7 +93,9 @@
       "waitingText": "Los demás se devanan los sesos para divertirte. Mira su progreso abajo.",
       "forceAdvance": "No esperar",
       "forceAdvanceHint": "Se acabó el tiempo. Puedes avanzar el juego.",
-      "label": "Zar de Cartas"
+      "label": "Zar de Cartas",
+      "youAreCzar": "Eres el Zar de cartas",
+      "willPick": "{name} elegirá al ganador"
     },
     "waiting": {
       "czarPicking": "El Zar de Cartas está eligiendo al ganador...",
@@ -116,5 +119,14 @@
       "returnToLobby": "Volver al lobby",
       "waitingForHost": "Esperando al anfitrión..."
     }
+  },
+  "roomPreview": {
+    "join": "Sentarse",
+    "back": "Volver",
+    "players": "Jugadores ({current}/{max})",
+    "cardSets": "Mazos",
+    "inLobby": "Sala",
+    "inGame": "En juego",
+    "finished": "Terminado"
   }
 }

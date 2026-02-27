@@ -11,7 +11,8 @@
     "title": "Karty proti lidskosti",
     "createTable": "Vytvořit stůl",
     "joinWithCode": "Připojit se (kód)",
-    "publicRooms": "Veřejné stoly"
+    "publicRooms": "Veřejné stoly",
+    "activeRooms": "Tvoje hry"
   },
   "createTable": {
     "title": "Vytvořit nový stůl",
@@ -92,7 +93,9 @@
       "waitingText": "Ostatní právě potí krev, aby tě pobavili. Sleduj jejich progres níže.",
       "forceAdvance": "Dál nečekat",
       "forceAdvanceHint": "Čas vypršel. Můžeš hru posunout dál.",
-      "label": "karetní král"
+      "label": "karetní král",
+      "youAreCzar": "Ty jsi karetní král",
+      "willPick": "{name} vybere vítěze"
     },
     "waiting": {
       "czarPicking": "Karetní král vybírá vítěze...",
@@ -116,5 +119,14 @@
       "returnToLobby": "Návrat do lobby",
       "waitingForHost": "Čekáme na hostitele..."
     }
+  },
+  "roomPreview": {
+    "join": "Přisednout",
+    "back": "Zpět",
+    "players": "Hráči ({current}/{max})",
+    "cardSets": "Sady karet",
+    "inLobby": "Lobby",
+    "inGame": "Ve hře",
+    "finished": "Skončeno"
   }
 }

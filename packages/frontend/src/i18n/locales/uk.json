@@ -11,7 +11,8 @@
     "title": "Карти проти людства",
     "createTable": "Створити стіл",
     "joinWithCode": "Увійти за кодом",
-    "publicRooms": "Публічні столи"
+    "publicRooms": "Публічні столи",
+    "activeRooms": "Ваші ігри"
   },
   "createTable": {
     "title": "Створити новий стіл",
@@ -92,7 +93,9 @@
       "waitingText": "Інші зараз ламають голову, щоб тебе розважити. Стеж за їхнім прогресом нижче.",
       "forceAdvance": "Не чекати",
       "forceAdvanceHint": "Час вийшов. Ти можеш просунути гру далі.",
-      "label": "Card Czar"
+      "label": "Card Czar",
+      "youAreCzar": "Ти — Карт-Цар",
+      "willPick": "{name} обере переможця"
     },
     "waiting": {
       "czarPicking": "Card Czar вибирає переможця...",
@@ -116,5 +119,14 @@
       "returnToLobby": "Повернутися до лобі",
       "waitingForHost": "Чекаємо хоста..."
     }
+  },
+  "roomPreview": {
+    "join": "Приєднатися",
+    "back": "Назад",
+    "players": "Гравці ({current}/{max})",
+    "cardSets": "Набори карт",
+    "inLobby": "Лобі",
+    "inGame": "В грі",
+    "finished": "Завершено"
   }
 }

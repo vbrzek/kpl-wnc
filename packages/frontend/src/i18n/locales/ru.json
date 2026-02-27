@@ -11,7 +11,8 @@
     "title": "Карты против человечества",
     "createTable": "Создать стол",
     "joinWithCode": "Войти по коду",
-    "publicRooms": "Публичные столы"
+    "publicRooms": "Публичные столы",
+    "activeRooms": "Ваши игры"
   },
   "createTable": {
     "title": "Создать новый стол",
@@ -92,7 +93,9 @@
       "waitingText": "Остальные сейчас ломают голову, чтобы тебя позабавить. Следи за их прогрессом ниже.",
       "forceAdvance": "Не ждать",
       "forceAdvanceHint": "Время вышло. Ты можешь продвинуть игру дальше.",
-      "label": "Card Czar"
+      "label": "Card Czar",
+      "youAreCzar": "Ты — Карточный Король",
+      "willPick": "{name} выберет победителя"
     },
     "waiting": {
       "czarPicking": "Card Czar выбирает победителя...",
@@ -116,5 +119,14 @@
       "returnToLobby": "Вернуться в лобби",
       "waitingForHost": "Ждём хоста..."
     }
+  },
+  "roomPreview": {
+    "join": "Присоединиться",
+    "back": "Назад",
+    "players": "Игроки ({current}/{max})",
+    "cardSets": "Наборы карт",
+    "inLobby": "Лобби",
+    "inGame": "В игре",
+    "finished": "Завершено"
   }
 }
