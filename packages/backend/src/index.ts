@@ -11,6 +11,7 @@ import { registerLobbyHandlers } from './socket/lobbyHandlers.js';
 import { registerGameHandlers } from './socket/gameHandlers.js';
 import cardSetsRoutes from './routes/cardSets.js';
 import cardTranslationsRoute from './routes/cardTranslations.js';
+import roomsRoutes from './routes/rooms.js';
 
 const app = Fastify({ logger: true });
 
@@ -28,6 +29,7 @@ app.get('/health', async () => ({ status: 'ok' }));
 
 await app.register(cardSetsRoutes, { prefix: '/api' });
 await app.register(cardTranslationsRoute, { prefix: '/api' });
+await app.register(roomsRoutes, { prefix: '/api' });
 
 io.on('connection', (socket) => {
   app.log.info(`Client connected: ${socket.id}`);
