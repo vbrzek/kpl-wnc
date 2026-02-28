@@ -13,6 +13,7 @@ interface PlayerProfile {
 export const useProfileStore = defineStore('profile', () => {
   const nickname = ref('');
   const locale = ref<SupportedLocale>('cs');
+  const soundMuted = ref(localStorage.getItem('soundMuted') === 'true');
 
   const avatarUrl = computed(() =>
     `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(nickname.value || 'default')}`
@@ -40,9 +41,13 @@ export const useProfileStore = defineStore('profile', () => {
     const profile: PlayerProfile = { nickname: nickname.value, locale: newLocale };
     localStorage.setItem('playerProfile', JSON.stringify(profile));
     localStorage.setItem('locale', newLocale);
-    // Okamžitě přepne i18n locale v aktuální session
     (i18n.global.locale as { value: string }).value = newLocale;
   }
 
-  return { nickname, locale, avatarUrl, hasProfile, init, save };
+  function toggleSoundMuted() {
+    soundMuted.value = !soundMuted.value;
+    localStorage.setItem('soundMuted', String(soundMuted.value));
+  }
+
+  return { nickname, locale, soundMuted, avatarUrl, hasProfile, init, save, toggleSoundMuted };
 });
