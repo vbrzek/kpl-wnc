@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Avatar from '../../Avatar.vue';
+
 defineProps<{
   entries: { id: string; nickname: string; score: number }[]
 }>()
@@ -8,6 +10,9 @@ defineProps<{
   <div class="flex items-end justify-center gap-4">
     <div v-if="entries[1]" class="text-center">
       <div class="bg-gray-600 rounded-t-lg px-4 py-6 w-24">
+        <div class="flex justify-center mb-2">
+          <Avatar :nickname="entries[1].nickname" :size="36" />
+        </div>
         <p class="font-bold truncate">{{ entries[1].nickname }}</p>
         <p class="text-2xl font-bold text-gray-300">{{ entries[1].score }}</p>
       </div>
@@ -15,7 +20,9 @@ defineProps<{
     </div>
     <div v-if="entries[0]" class="text-center">
       <div class="bg-yellow-700 rounded-t-lg px-4 py-8 w-28">
-        <p class="text-2xl">🏆</p>
+        <div class="flex justify-center mb-2">
+          <Avatar :nickname="entries[0].nickname" :size="48" />
+        </div>
         <p class="font-bold truncate">{{ entries[0].nickname }}</p>
         <p class="text-2xl font-bold text-yellow-300">{{ entries[0].score }}</p>
       </div>
@@ -23,6 +30,9 @@ defineProps<{
     </div>
     <div v-if="entries[2]" class="text-center">
       <div class="bg-gray-700 rounded-t-lg px-4 py-4 w-24">
+        <div class="flex justify-center mb-2">
+          <Avatar :nickname="entries[2].nickname" :size="36" />
+        </div>
         <p class="font-bold truncate">{{ entries[2].nickname }}</p>
         <p class="text-2xl font-bold text-gray-400">{{ entries[2].score }}</p>
       </div>
