@@ -1,41 +1,67 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useRoomStore } from '../stores/roomStore';
+import { useLobbyStore } from '../stores/lobbyStore';
+import { useProfileStore } from '../stores/profileStore';
 import { useSound } from '../composables/useSound';
 import Podium from './game/atoms/Podium.vue';
 import Scoreboard from './game/atoms/Scoreboard.vue';
 import confetti from 'canvas-confetti';
 
 const { t } = useI18n();
+const router = useRouter();
 const roomStore = useRoomStore();
-const returning = ref(false);
-const returnError = ref('');
+const lobbyStore = useLobbyStore();
+const profileStore = useProfileStore();
 const { play } = useSound();
 
-const scoreboard = computed(() => {
-  const players = roomStore.room?.players ?? [];
-  return [...players]
-    .sort((a, b) => b.score - a.score)
-    .map((p, i) => ({ rank: i + 1, id: p.id, nickname: p.nickname, score: p.score }));
-});
+const joiningNew = ref(false);
+const joinError = ref('');
+
+// Data bereme z finishedState (cached payload), NE z živého room
+const scoreboard = computed(() =>
+  (roomStore.finishedState?.finalScores ?? []).map(p => ({
+    id: p.playerId,
+    nickname: p.nickname,
+    score: p.score,
+    rank: p.rank,
+  }))
+);
+
+const roomCode = computed(() => roomStore.finishedState?.roomCode ?? '');
 
 onMounted(() => {
-  // Fire confetti + fanfare after 1st place animates in (~1300ms delay)
   setTimeout(() => {
-    play('fanfare')
-    confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0, y: 0.7 } })
-    confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1, y: 0.7 } })
-  }, 1300)
+    play('fanfare');
+    confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0, y: 0.7 } });
+    confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1, y: 0.7 } });
+  }, 1300);
 });
 
-async function onReturnToLobby() {
-  returning.value = true;
-  const err = await roomStore.returnToLobby();
-  if (err) {
-    returnError.value = err.error;
-    returning.value = false;
+async function onNewGame() {
+  if (roomStore.isHost) {
+    // Host je stále v místnosti (LOBBY), stačí vymazat finishedState
+    roomStore.clearFinishedState();
+    return;
   }
+  // Ostatní hráči: znovu se připojit do místnosti
+  joiningNew.value = true;
+  const result = await lobbyStore.joinRoom(roomCode.value, profileStore.nickname);
+  if ('error' in result) {
+    joinError.value = result.error;
+    joiningNew.value = false;
+    return;
+  }
+  roomStore.setRoom(result.room);
+  roomStore.setMyPlayerId(result.playerId);
+  roomStore.clearFinishedState();
+}
+
+function onLeaveRoom() {
+  roomStore.clearFinishedState();
+  router.push('/');
 }
 </script>
 
@@ -52,19 +78,22 @@ async function onReturnToLobby() {
       <Scoreboard :entries="scoreboard" :showRank="true" />
     </div>
 
-    <div class="pt-2">
-      <p v-if="returnError" class="text-red-400 text-sm mb-2">{{ returnError }}</p>
+    <div class="pt-2 flex flex-col items-center gap-3">
+      <p v-if="joinError" class="text-red-400 text-sm">{{ joinError }}</p>
       <button
-        v-if="roomStore.isHost"
-        @click="onReturnToLobby"
-        :disabled="returning"
-        class="bg-green-600 hover:bg-green-500 text-white font-bold px-8 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+        @click="onNewGame"
+        :disabled="joiningNew"
+        class="bg-green-600 hover:bg-green-500 text-white font-bold px-8 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed w-full max-w-xs"
       >
-        {{ t('game.finished.returnToLobby') }}
+        {{ joiningNew ? '...' : t('game.finished.newGame') }}
       </button>
-      <p v-else class="text-gray-500 text-sm">
-        {{ t('game.finished.waitingForHost') }}
-      </p>
+      <button
+        @click="onLeaveRoom"
+        :disabled="joiningNew"
+        class="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-8 py-2 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed w-full max-w-xs"
+      >
+        {{ t('game.finished.leaveRoom') }}
+      </button>
     </div>
   </div>
 </template>
