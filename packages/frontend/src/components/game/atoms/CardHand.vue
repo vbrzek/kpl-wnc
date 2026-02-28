@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WhiteCard } from '@kpl/shared'
+import { useSound } from '../../../composables/useSound'
 
 const props = defineProps<{
   cards: WhiteCard[]
@@ -11,6 +12,12 @@ const emit = defineEmits<{
   toggle: [card: WhiteCard]
 }>()
 
+const { play } = useSound()
+
+function onToggle(card: WhiteCard) {
+  play('card-pick')
+  emit('toggle', card)
+}
 </script>
 
 <template>
@@ -18,12 +25,11 @@ const emit = defineEmits<{
     <button
       v-for="card in cards"
       :key="card.id"
-      @click="emit('toggle', card)"
+      @click="onToggle(card)"
       :class="[
         'relative min-h-[110px] p-4 rounded-2xl text-left transition-all duration-200 flex flex-col justify-between shadow-sm border-2',
-        // STYL PRO VYBRANOU KARTU
         selectedCards.some(c => c.id === card.id)
-          ? 'bg-yellow-50 border-transparent border-gray-100' 
+          ? 'bg-yellow-50 border-transparent border-gray-100 -translate-y-2 shadow-lg'
           : 'bg-white border-transparent hover:border-gray-100'
       ]"
     >
