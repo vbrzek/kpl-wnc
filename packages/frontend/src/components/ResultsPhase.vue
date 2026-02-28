@@ -39,7 +39,9 @@ const scoreboard = computed(() => {
 });
 
 onMounted(() => {
-  play('round-win')
+  if (roomStore.roundResult?.winnerId === roomStore.myPlayerId) {
+    play('round-win')
+  }
 });
 
 async function onEndGame() {
