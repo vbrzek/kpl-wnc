@@ -67,6 +67,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     selectedSetIds: number[];
     maxPlayers: number;
     nickname: string;
+    targetScore: number;
   }): Promise<{ room: GameRoom; code: string; playerToken: string; playerId: string } | { error: string }> {
     return new Promise((resolve) => {
       socket.emit('lobby:create', settings, (result) => {
