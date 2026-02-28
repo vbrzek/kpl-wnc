@@ -55,15 +55,38 @@ onUnmounted(() => {
 <template>
   <div class="flex-1 flex flex-col min-h-0 h-full">
     <template v-if="roomStore.room">
-      <LobbyPanel v-if="roomStore.room.status === 'LOBBY'" :room="roomStore.room" />
-      <SelectionPhase v-else-if="roomStore.room.status === 'SELECTION'" />
-      <JudgingPhase v-else-if="roomStore.room.status === 'JUDGING'" />
-      <ResultsPhase v-else-if="roomStore.room.status === 'RESULTS'" />
-      <FinishedPhase v-else-if="roomStore.room.status === 'FINISHED'" />
+      <div class="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+        <Transition name="phase-slide" mode="out-in">
+          <LobbyPanel    v-if="roomStore.room.status === 'LOBBY'"         key="LOBBY"     :room="roomStore.room" />
+          <SelectionPhase v-else-if="roomStore.room.status === 'SELECTION'" key="SELECTION" />
+          <JudgingPhase  v-else-if="roomStore.room.status === 'JUDGING'"   key="JUDGING" />
+          <ResultsPhase  v-else-if="roomStore.room.status === 'RESULTS'"   key="RESULTS" />
+          <FinishedPhase v-else-if="roomStore.room.status === 'FINISHED'"  key="FINISHED" />
+        </Transition>
+      </div>
     </template>
-    
+
     <div v-else class="flex items-center justify-center flex-1 text-gray-400 italic font-black uppercase tracking-tighter">
        {{ t('room.connecting') }}
     </div>
   </div>
 </template>
+
+<style scoped>
+.phase-slide-enter-active,
+.phase-slide-leave-active {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.phase-slide-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.phase-slide-leave-to {
+  transform: translateX(-30%);
+  opacity: 0;
+}
+</style>
