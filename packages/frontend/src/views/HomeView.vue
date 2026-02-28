@@ -49,6 +49,7 @@ async function onCreateRoom(settings: {
   isPublic: boolean;
   selectedSetIds: number[];
   maxPlayers: number;
+  targetScore: number;
 }) {
   const result = await lobbyStore.createRoom({ ...settings, nickname: profileStore.nickname });
   if ('error' in result) {

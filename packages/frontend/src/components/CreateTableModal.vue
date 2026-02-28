@@ -10,6 +10,7 @@ const emit = defineEmits<{
     isPublic: boolean;
     selectedSetIds: number[];
     maxPlayers: number;
+    targetScore: number;
   }];
 }>();
 
@@ -19,6 +20,8 @@ const lobbyStore = useLobbyStore();
 const name = ref('');
 const isPublic = ref(true);
 const maxPlayers = ref(8);
+const targetScore = ref(10);
+const TARGET_SCORE_OPTIONS = [8, 10, 15, 20, 30] as const;
 const selectedSetIds = ref<number[]>([]);
 const fetchError = ref('');
 
@@ -43,6 +46,7 @@ function submit() {
     isPublic: isPublic.value,
     selectedSetIds: selectedSetIds.value,
     maxPlayers: maxPlayers.value,
+    targetScore: targetScore.value,
   });
 }
 
@@ -79,6 +83,18 @@ onMounted(async () => {
           max="20"
           class="mt-1 w-full bg-gray-700 px-3 py-2 rounded"
         />
+      </label>
+
+      <label class="block">
+        <span class="text-sm text-gray-300">{{ t('createTable.targetScore') }}</span>
+        <select
+          v-model.number="targetScore"
+          class="mt-1 w-full bg-gray-700 px-3 py-2 rounded"
+        >
+          <option v-for="n in TARGET_SCORE_OPTIONS" :key="n" :value="n">
+            {{ n }} {{ t('createTable.points') }}
+          </option>
+        </select>
       </label>
 
       <div>
