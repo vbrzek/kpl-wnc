@@ -60,6 +60,17 @@ export interface CardSet {
   isPublic: boolean;
 }
 
+// Výsledky po konci hry
+export interface GameOverPayload {
+  finalScores: Array<{
+    playerId: string;
+    nickname: string;
+    score: number;
+    rank: number;      // 1 = vítěz
+  }>;
+  roomCode: string;
+}
+
 // Herní místnost
 export interface GameRoom {
   code: string;
@@ -73,6 +84,8 @@ export interface GameRoom {
   currentBlackCard: BlackCard | null;
   roundNumber: number;
   roundDeadline: number | null;   // Unix ms timestamp, null = žádný aktivní timer
+  targetScore: number;            // výherní podmínka: 8 | 10 | 15 | 20 | 30
+  lastActivityAt: number;         // Unix ms timestamp poslední akce (pro GC)
 }
 
 // Zkrácený přehled pro seznam veřejných stolů
@@ -97,6 +110,8 @@ export interface ServerToClientEvents {
   'game:handUpdate': (hand: WhiteCard[]) => void;
   'game:stateSync': (data: GameStateSync) => void;
   'game:roundSkipped': () => void;  // kolo přeskočeno bez bodu (timeout)
+  'game:gameOver': (payload: GameOverPayload) => void;
+  'room:deleted': () => void;
 }
 
 // Socket.io eventy — klient → server
@@ -108,6 +123,7 @@ export interface ClientToServerEvents {
       selectedSetIds: number[];
       maxPlayers: number;
       nickname: string;
+      targetScore: number;
     },
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
@@ -130,9 +146,6 @@ export interface ClientToServerEvents {
     callback: (result: { ok: true } | { error: string }) => void
   ) => void;
   'lobby:endGame': (
-    callback: (result: { ok: true } | { error: string }) => void
-  ) => void;
-  'lobby:returnToLobby': (
     callback: (result: { ok: true } | { error: string }) => void
   ) => void;
   'game:leave': () => void;
