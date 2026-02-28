@@ -26,7 +26,9 @@
     "loadingSets": "Завантаження наборів...",
     "noSets": "Набори недоступні.",
     "selectAtLeastOne": "Виберіть хоча б один набір.",
-    "publicTable": "Публічний стіл (видно у списку)"
+    "publicTable": "Публічний стіл (видно у списку)",
+    "targetScore": "Цільова кількість очок",
+    "points": "очок"
   },
   "nickname": {
     "title": "Введіть нікнейм",
@@ -119,8 +121,8 @@
     "finished": {
       "title": "Гра закінчена!",
       "finalResults": "Фінальні результаті",
-      "returnToLobby": "Повернутися до лобі",
-      "waitingForHost": "Чекаємо хоста..."
+      "newGame": "Нова гра",
+      "leaveRoom": "Залишити кімнату"
     }
   },
   "roomPreview": {

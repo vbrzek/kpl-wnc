@@ -26,7 +26,9 @@
     "loadingSets": "Loading sets...",
     "noSets": "No sets available.",
     "selectAtLeastOne": "Select at least one set.",
-    "publicTable": "Public table (visible in the list)"
+    "publicTable": "Public table (visible in the list)",
+    "targetScore": "Target score",
+    "points": "points"
   },
   "nickname": {
     "title": "Enter your nickname",
@@ -119,8 +121,8 @@
     "finished": {
       "title": "Game over!",
       "finalResults": "Final results",
-      "returnToLobby": "Return to lobby",
-      "waitingForHost": "Waiting for the host..."
+      "newGame": "New Game",
+      "leaveRoom": "Leave Room"
     }
   },
   "roomPreview": {

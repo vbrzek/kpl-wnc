@@ -26,7 +26,9 @@
     "loadingSets": "Načítání sad...",
     "noSets": "Žádné sady nejsou k dispozici.",
     "selectAtLeastOne": "Vyber alespoň jednu sadu.",
-    "publicTable": "Veřejný stůl (zobrazí se v seznamu)"
+    "publicTable": "Veřejný stůl (zobrazí se v seznamu)",
+    "targetScore": "Cílový počet bodů",
+    "points": "bodů"
   },
   "nickname": {
     "title": "Zadej svou přezdívku",
@@ -119,8 +121,8 @@
     "finished": {
       "title": "Hra skončila!",
       "finalResults": "Finální výsledky",
-      "returnToLobby": "Návrat do lobby",
-      "waitingForHost": "Čekáme na hostitele..."
+      "newGame": "Nová hra",
+      "leaveRoom": "Opustit místnost"
     }
   },
   "roomPreview": {

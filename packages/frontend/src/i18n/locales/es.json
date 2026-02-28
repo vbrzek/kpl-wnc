@@ -26,7 +26,9 @@
     "loadingSets": "Cargando mazos...",
     "noSets": "No hay mazos disponibles.",
     "selectAtLeastOne": "Selecciona al menos un mazo.",
-    "publicTable": "Mesa pública (visible en la lista)"
+    "publicTable": "Mesa pública (visible en la lista)",
+    "targetScore": "Puntuación objetivo",
+    "points": "puntos"
   },
   "nickname": {
     "title": "Introduce tu apodo",
@@ -119,8 +121,8 @@
     "finished": {
       "title": "¡Juego terminado!",
       "finalResults": "Resultados finales",
-      "returnToLobby": "Volver al lobby",
-      "waitingForHost": "Esperando al anfitrión..."
+      "newGame": "Nueva partida",
+      "leaveRoom": "Abandonar sala"
     }
   },
   "roomPreview": {
