@@ -14,6 +14,8 @@ defineProps<{
   submissions: AnonymousSubmission[]
   roundSkipped: boolean
   czarNickname: string
+  revealedCount: number
+  allFlipped: boolean
 }>()
 
 const emit = defineEmits<{
@@ -38,10 +40,11 @@ const { t } = useI18n();
     </div>
 
     <div class="flex-1 overflow-y-auto pb-12 custom-scrollbar">
-      <SubmissionGrid 
-        :submissions="submissions" 
-        :selectable="true" 
-        @pick="emit('pick', $event)" 
+      <SubmissionGrid
+        :submissions="submissions"
+        :selectable="allFlipped"
+        :revealedCount="revealedCount"
+        @pick="emit('pick', $event)"
       />
     </div>
   </div>

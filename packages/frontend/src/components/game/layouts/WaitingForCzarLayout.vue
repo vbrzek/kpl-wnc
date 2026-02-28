@@ -12,6 +12,7 @@ defineProps<{
   submissions: AnonymousSubmission[]
   roundSkipped: boolean
   czarNickname: string
+  revealedCount: number
 }>()
 
 const emit = defineEmits<{
@@ -34,9 +35,10 @@ const { t } = useI18n();
         <p class="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-2 px-1">
           {{ t('game.waiting.candidate') }}
         </p>
-        <SubmissionGrid 
-          :submissions="submissions" 
-          :selectable="false" 
+        <SubmissionGrid
+          :submissions="submissions"
+          :selectable="false"
+          :revealedCount="revealedCount"
           class="opacity-90"
         />
       </div>

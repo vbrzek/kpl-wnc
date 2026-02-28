@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { useCardTranslations } from '../composables/useCardTranslations.js';
@@ -33,6 +33,23 @@ const translatedSubmissions = computed(() =>
   })),
 );
 
+// --- Flip stagger ---
+const FLIP_STAGGER_MS = 600
+
+const revealedCount = ref(0)
+const allFlipped = computed(() => revealedCount.value >= roomStore.submissions.length)
+
+let flipTimers: ReturnType<typeof setTimeout>[] = []
+
+onMounted(() => {
+  roomStore.submissions.forEach((_, i) => {
+    const timer = setTimeout(() => {
+      revealedCount.value = i + 1
+    }, i * FLIP_STAGGER_MS)
+    flipTimers.push(timer)
+  })
+})
+
 // --- Countdown ---
 const secondsLeft = ref(0);
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
@@ -53,6 +70,7 @@ watch(
 
 onUnmounted(() => {
   if (countdownInterval) clearInterval(countdownInterval);
+  flipTimers.forEach(t => clearTimeout(t));
 });
 
 function pickWinner(submissionId: string) {
@@ -77,6 +95,8 @@ function skipCzarJudging() {
     :submissions="translatedSubmissions"
     :roundSkipped="roomStore.roundSkipped"
     :czarNickname="czarNickname"
+    :revealedCount="revealedCount"
+    :allFlipped="allFlipped"
     @pick="pickWinner"
   />
   <WaitingForCzarLayout
@@ -86,6 +106,7 @@ function skipCzarJudging() {
     :submissions="translatedSubmissions"
     :roundSkipped="roomStore.roundSkipped"
     :czarNickname="czarNickname"
+    :revealedCount="revealedCount"
     @skipJudging="skipCzarJudging"
   />
 </template>
