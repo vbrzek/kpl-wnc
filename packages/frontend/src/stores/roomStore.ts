@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { socket } from '../socket';
-import type { GameRoom, BlackCard, WhiteCard, AnonymousSubmission, RoundResult } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult } from '@kpl/shared';
 
 export const useRoomStore = defineStore('room', () => {
   const room = ref<GameRoom | null>(null);
@@ -15,6 +15,7 @@ export const useRoomStore = defineStore('room', () => {
   const selectedCards = ref<WhiteCard[]>([]);
   const lastPlayedCards = ref<WhiteCard[]>([]);
   const roundSkipped = ref(false);
+  const finishedState = ref<GameOverPayload | null>(null);
 
   const isHost = computed(() =>
     room.value !== null && myPlayerId.value !== null
@@ -84,6 +85,16 @@ export const useRoomStore = defineStore('room', () => {
     socket.on('game:roundSkipped', () => {
       roundSkipped.value = true;
     });
+
+    socket.on('game:gameOver', (payload) => {
+      finishedState.value = payload;
+    });
+
+    socket.on('room:deleted', () => {
+      finishedState.value = null;
+      room.value = null;
+      myPlayerId.value = null;
+    });
   }
 
   function setRoom(joinedRoom: GameRoom) {
@@ -136,12 +147,8 @@ export const useRoomStore = defineStore('room', () => {
     });
   }
 
-  async function returnToLobby(): Promise<{ error: string } | null> {
-    return new Promise((resolve) => {
-      socket.emit('lobby:returnToLobby', (result) => {
-        resolve('error' in result ? result : null);
-      });
-    });
+  function clearFinishedState() {
+    finishedState.value = null;
   }
 
   function playCards(cardIds: number[]) {
@@ -187,6 +194,9 @@ export const useRoomStore = defineStore('room', () => {
     socket.off('game:handUpdate');
     socket.off('game:stateSync');
     socket.off('game:roundSkipped');
+    socket.off('game:gameOver');
+    socket.off('room:deleted');
+    finishedState.value = null;
     room.value = null;
     myPlayerId.value = null;
     hand.value = [];
@@ -203,9 +213,9 @@ export const useRoomStore = defineStore('room', () => {
   return {
     room, myPlayerId, isHost, me,
     hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
-    roundSkipped,
+    roundSkipped, finishedState,
     init, setRoom, setMyPlayerId, leave,
-    updateSettings, kickPlayer, startGame, endGame, returnToLobby, cleanup,
+    updateSettings, kickPlayer, startGame, endGame, clearFinishedState, cleanup,
     playCards, judgeSelect, toggleCardSelection, retractCards, czarForceAdvance, skipCzarJudging,
   };
 });
