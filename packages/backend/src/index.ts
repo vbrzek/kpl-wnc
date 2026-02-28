@@ -9,6 +9,7 @@ import { Server } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { registerLobbyHandlers } from './socket/lobbyHandlers.js';
 import { registerGameHandlers } from './socket/gameHandlers.js';
+import { startGarbageCollector } from './game/GarbageCollector.js';
 import cardSetsRoutes from './routes/cardSets.js';
 import cardTranslationsRoute from './routes/cardTranslations.js';
 import roomsRoutes from './routes/rooms.js';
@@ -46,3 +47,4 @@ io.on('connection', (socket) => {
 
 const port = Number(process.env.PORT ?? 3000);
 await app.listen({ port, host: '0.0.0.0' });
+startGarbageCollector(io);
