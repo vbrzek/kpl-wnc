@@ -1,20 +1,32 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
+import { useSound } from '../composables/useSound';
 import Podium from './game/atoms/Podium.vue';
 import Scoreboard from './game/atoms/Scoreboard.vue';
+import confetti from 'canvas-confetti';
 
 const { t } = useI18n();
 const roomStore = useRoomStore();
 const returning = ref(false);
 const returnError = ref('');
+const { play } = useSound();
 
 const scoreboard = computed(() => {
   const players = roomStore.room?.players ?? [];
   return [...players]
     .sort((a, b) => b.score - a.score)
     .map((p, i) => ({ rank: i + 1, id: p.id, nickname: p.nickname, score: p.score }));
+});
+
+onMounted(() => {
+  // Fire confetti + fanfare after 1st place animates in (~1300ms delay)
+  setTimeout(() => {
+    play('fanfare')
+    confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0, y: 0.7 } })
+    confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1, y: 0.7 } })
+  }, 1300)
 });
 
 async function onReturnToLobby() {
