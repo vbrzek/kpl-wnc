@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
-import type { GameRoom, Player, PublicRoomSummary } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, Player, PublicRoomSummary } from '@kpl/shared';
 import { GameEngine } from './GameEngine.js';
 
 // --- Result types ---
@@ -37,6 +37,13 @@ export interface CreateRoomSettings {
   selectedSetIds: number[];
   maxPlayers: number;
   nickname: string;
+  targetScore: number;
+}
+
+export interface FinishGameResult {
+  room: GameRoom;
+  payload: GameOverPayload;
+  kickedTokens: string[];
 }
 
 export interface UpdateSettingsData {
@@ -89,6 +96,8 @@ export class RoomManager {
       currentBlackCard: null,
       roundNumber: 0,
       roundDeadline: null,
+      targetScore: settings.targetScore,
+      lastActivityAt: Date.now(),
     };
 
     this.rooms.set(code, room);
@@ -460,6 +469,98 @@ export class RoomManager {
     }
 
     return { room };
+  }
+
+  // ------------------------------------------------------------------ finishGame
+
+  finishGame(code: string): FinishGameResult | ErrorResult {
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Místnost nebyla nalezena.' };
+
+    this.clearAllGameTimers(code);
+    this.engines.delete(code);
+
+    // Sestav payload PŘED resetem skóre
+    const sorted = [...room.players].sort((a, b) => b.score - a.score);
+    const payload: GameOverPayload = {
+      roomCode: code,
+      finalScores: sorted.map((p, i) => ({
+        playerId: p.id,
+        nickname: p.nickname,
+        score: p.score,
+        rank: i + 1,
+      })),
+    };
+
+    // Najdi tokeny nehóstovských hráčů
+    const kickedTokens: string[] = [];
+    for (const [token, pid] of this.tokenToPlayerId.entries()) {
+      if (this.playerRooms.get(token) === code && pid !== room.hostId) {
+        kickedTokens.push(token);
+      }
+    }
+
+    // Vyhod nehóstovské hráče
+    for (const token of kickedTokens) {
+      const timer = this.afkTimers.get(token);
+      if (timer !== undefined) {
+        clearTimeout(timer);
+        this.afkTimers.delete(token);
+      }
+      this.playerRooms.delete(token);
+      this.tokenToPlayerId.delete(token);
+    }
+    room.players = room.players.filter(p => p.id === room.hostId);
+
+    // Reset místnosti do LOBBY
+    room.status = 'LOBBY';
+    room.roundDeadline = null;
+    room.currentBlackCard = null;
+    room.roundNumber = 0;
+    room.lastActivityAt = Date.now();
+    for (const p of room.players) {
+      p.score = 0;
+      p.isCardCzar = false;
+      p.hasPlayed = false;
+      if (p.socketId !== null) p.isAfk = false;
+    }
+
+    return { room, payload, kickedTokens };
+  }
+
+  // ------------------------------------------------------------------ updateActivity
+
+  updateActivity(code: string): void {
+    const room = this.rooms.get(code);
+    if (room) room.lastActivityAt = Date.now();
+  }
+
+  // ------------------------------------------------------------------ getAllRooms
+
+  getAllRooms(): IterableIterator<GameRoom> {
+    return this.rooms.values();
+  }
+
+  // ------------------------------------------------------------------ deleteRoom
+
+  deleteRoom(code: string): void {
+    const room = this.rooms.get(code);
+    if (!room) return;
+    // Vyčisti tokeny všech hráčů
+    for (const [token, roomCode] of this.playerRooms.entries()) {
+      if (roomCode === code) {
+        const timer = this.afkTimers.get(token);
+        if (timer !== undefined) {
+          clearTimeout(timer);
+          this.afkTimers.delete(token);
+        }
+        this.playerRooms.delete(token);
+        this.tokenToPlayerId.delete(token);
+      }
+    }
+    this.clearAllGameTimers(code);
+    this.engines.delete(code);
+    this.rooms.delete(code);
   }
 
   // ------------------------------------------------------------------ private helpers

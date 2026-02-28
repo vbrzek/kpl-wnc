@@ -386,3 +386,81 @@ describe('RoomManager', () => {
     expect(cbJ).not.toHaveBeenCalled();
   });
 });
+
+describe('finishGame', () => {
+  function setupRoom() {
+    const rm = new RoomManager();
+    const { room, playerToken: hostToken } = rm.createRoom({
+      name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6,
+      nickname: 'Alice', targetScore: 10,
+    });
+    const r2 = rm.joinRoom(room.code, 'Bob');
+    const r3 = rm.joinRoom(room.code, 'Charlie');
+    const bobToken = 'error' in r2 ? '' : r2.playerToken;
+    const charlieToken = 'error' in r3 ? '' : r3.playerToken;
+    // Set scores
+    const bobId = rm.getPlayerIdByToken(bobToken)!;
+    const charlieId = rm.getPlayerIdByToken(charlieToken)!;
+    room.players.find(p => p.id === bobId)!.score = 10;
+    room.players.find(p => p.id === charlieId)!.score = 5;
+    return { rm, room, hostToken, bobToken, charlieToken, bobId, charlieId };
+  }
+
+  it('returns GameOverPayload with sorted final scores', () => {
+    const { rm, room } = setupRoom();
+    const result = rm.finishGame(room.code);
+    expect('error' in result).toBe(false);
+    if ('error' in result) return;
+    expect(result.payload.roomCode).toBe(room.code);
+    expect(result.payload.finalScores[0].rank).toBe(1);
+    expect(result.payload.finalScores[0].score).toBe(10); // Bob wins
+  });
+
+  it('kicks all non-host players from room', () => {
+    const { rm, room, bobToken, charlieToken } = setupRoom();
+    rm.finishGame(room.code);
+    expect(rm.getRoomByPlayerToken(bobToken)).toBeNull();
+    expect(rm.getRoomByPlayerToken(charlieToken)).toBeNull();
+    expect(room.players).toHaveLength(1); // jen host
+  });
+
+  it('returns kicked player tokens', () => {
+    const { rm, room, bobToken, charlieToken } = setupRoom();
+    const result = rm.finishGame(room.code);
+    if ('error' in result) return;
+    expect(result.kickedTokens).toContain(bobToken);
+    expect(result.kickedTokens).toContain(charlieToken);
+    expect(result.kickedTokens).toHaveLength(2);
+  });
+
+  it('resets room to LOBBY with zeroed scores', () => {
+    const { rm, room } = setupRoom();
+    rm.finishGame(room.code);
+    expect(room.status).toBe('LOBBY');
+    for (const p of room.players) {
+      expect(p.score).toBe(0);
+    }
+  });
+
+  it('returns error for unknown room code', () => {
+    const rm = new RoomManager();
+    const result = rm.finishGame('xxxxxx');
+    expect('error' in result).toBe(true);
+  });
+});
+
+describe('updateActivity', () => {
+  it('updates lastActivityAt', () => {
+    vi.useFakeTimers();
+    const rm = new RoomManager();
+    const { room } = rm.createRoom({
+      name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 4,
+      nickname: 'A', targetScore: 10,
+    });
+    const before = room.lastActivityAt;
+    vi.advanceTimersByTime(1000);
+    rm.updateActivity(room.code);
+    expect(room.lastActivityAt).toBeGreaterThan(before);
+    vi.useRealTimers();
+  });
+});
