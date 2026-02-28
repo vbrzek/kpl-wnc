@@ -85,6 +85,13 @@ const players = computed(() => roomStore.room?.players ?? []);
 const czarNickname = computed(() =>
   roomStore.room?.players.find(p => p.id === roomStore.czarId)?.nickname ?? ''
 );
+
+const endingGame = ref(false);
+async function onEndGame() {
+  endingGame.value = true;
+  await roomStore.endGame();
+  endingGame.value = false;
+}
 </script>
 
 <template>
@@ -123,4 +130,13 @@ const czarNickname = computed(() =>
     :czarNickname="czarNickname"
     @submit="submit"
   />
+  <div v-if="roomStore.isHost" class="mt-4 text-center">
+    <button
+      @click="onEndGame"
+      :disabled="endingGame"
+      class="bg-red-700 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-lg text-sm disabled:opacity-40"
+    >
+      {{ t('game.results.endGame') }}
+    </button>
+  </div>
 </template>

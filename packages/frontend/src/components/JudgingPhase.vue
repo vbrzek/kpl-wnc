@@ -6,7 +6,7 @@ import { useCardTranslations } from '../composables/useCardTranslations.js';
 import CzarJudgingLayout from './game/layouts/CzarJudgingLayout.vue';
 import WaitingForCzarLayout from './game/layouts/WaitingForCzarLayout.vue';
 
-const { locale } = useI18n();
+const { t, locale } = useI18n();
 const roomStore = useRoomStore();
 const cardTranslations = useCardTranslations();
 
@@ -84,6 +84,13 @@ const czarNickname = computed(() =>
 function skipCzarJudging() {
   roomStore.skipCzarJudging();
 }
+
+const endingGame = ref(false);
+async function onEndGame() {
+  endingGame.value = true;
+  await roomStore.endGame();
+  endingGame.value = false;
+}
 </script>
 
 <template>
@@ -109,4 +116,13 @@ function skipCzarJudging() {
     :revealedCount="revealedCount"
     @skipJudging="skipCzarJudging"
   />
+  <div v-if="roomStore.isHost" class="mt-4 text-center">
+    <button
+      @click="onEndGame"
+      :disabled="endingGame"
+      class="bg-red-700 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-lg text-sm disabled:opacity-40"
+    >
+      {{ t('game.results.endGame') }}
+    </button>
+  </div>
 </template>
