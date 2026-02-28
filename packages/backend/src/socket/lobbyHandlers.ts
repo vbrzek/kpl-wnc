@@ -179,6 +179,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     try {
       engine = new GameEngine(room.players, blackCards, whiteCards);
       roomManager.setGameEngine(room.code, engine);
+      roomManager.updateActivity(room.code);
     } catch {
       room.status = 'LOBBY';
       callback({ error: 'Chyba při inicializaci hry — zkontroluj sady karet.' });

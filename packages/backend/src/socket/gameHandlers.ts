@@ -8,6 +8,10 @@ type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 const SKIP_DELAY_MS = 3_000;
 
+function broadcastPublicRooms(io: IO) {
+  io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
+}
+
 export function registerGameHandlers(io: IO, socket: AppSocket) {
 
   // Player submits white cards during SELECTION
@@ -20,6 +24,8 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       socket.emit('game:error', 'Hra není ve fázi výběru karet.');
       return;
     }
+
+    roomManager.updateActivity(room.code);
 
     const engine = roomManager.getGameEngine(room.code);
     if (!engine) { socket.emit('game:error', 'Herní engine nenalezen.'); return; }
@@ -91,11 +97,31 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
     // Zruš judging timer
     roomManager.clearJudgingTimer(room.code);
+    roomManager.updateActivity(room.code);
 
     room.status = 'RESULTS';
     room.roundDeadline = null;
     io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
     io.to(`room:${room.code}`).emit('game:roundEnd', result);
+
+    // Auto-win: zkontroluj jestli vítěz dosáhl targetScore
+    const winnerId = result.winnerId;
+    if (winnerId && result.scores[winnerId] >= room.targetScore) {
+      const finishResult = roomManager.finishGame(room.code);
+      if (!('error' in finishResult)) {
+        io.to(`room:${room.code}`).emit('game:gameOver', finishResult.payload);
+        for (const [sid, token] of socketToToken.entries()) {
+          if (finishResult.kickedTokens.includes(token)) {
+            const kickedSocket = io.sockets.sockets.get(sid);
+            if (kickedSocket) kickedSocket.leave(`room:${room.code}`);
+            socketToToken.delete(sid);
+          }
+        }
+        io.to(`room:${room.code}`).emit('lobby:stateUpdate', finishResult.room);
+        broadcastPublicRooms(io);
+      }
+      return; // nepokračuj na setTimeout pro startNewRound
+    }
 
     // After 5s: start next round
     const roomCode = room.code;
@@ -131,27 +157,37 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     }
   });
 
-  // Host ukončí hru (přechod do FINISHED)
+  // Host ukončí hru (finishGame → LOBBY + game:gameOver)
   socket.on('lobby:endGame', (callback) => {
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) { callback({ error: 'Nejsi přihlášen.' }); return; }
 
-    const result = roomManager.endGame(playerToken);
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room) { callback({ error: 'Místnost nebyla nalezena.' }); return; }
+
+    const playerId = roomManager.getPlayerIdByToken(playerToken)!;
+    if (playerId !== room.hostId) { callback({ error: 'Pouze hostitel může ukončit hru.' }); return; }
+
+    if (room.status === 'LOBBY') { callback({ error: 'Hra právě neprobíhá.' }); return; }
+
+    const result = roomManager.finishGame(room.code);
     if ('error' in result) { callback(result); return; }
 
-    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
-    callback({ ok: true });
-  });
+    // Emituj game:gameOver všem hráčům (včetně kicknutých — jsou stále v room:${code})
+    io.to(`room:${room.code}`).emit('game:gameOver', result.payload);
 
-  // Host vrátí hru do lobby (FINISHED → LOBBY)
-  socket.on('lobby:returnToLobby', (callback) => {
-    const playerToken = socketToToken.get(socket.id);
-    if (!playerToken) { callback({ error: 'Nejsi přihlášen.' }); return; }
+    // Odstraň sockety kicknutých hráčů z room channel
+    for (const [sid, token] of socketToToken.entries()) {
+      if (result.kickedTokens.includes(token)) {
+        const kickedSocket = io.sockets.sockets.get(sid);
+        if (kickedSocket) kickedSocket.leave(`room:${room.code}`);
+        socketToToken.delete(sid);
+      }
+    }
 
-    const result = roomManager.returnToLobby(playerToken);
-    if ('error' in result) { callback(result); return; }
-
-    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    // Informuj hosta o novém stavu místnosti (LOBBY)
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', result.room);
+    broadcastPublicRooms(io);
     callback({ ok: true });
   });
 
@@ -179,6 +215,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     }
 
     roomManager.clearRoundTimer(room.code);
+    roomManager.updateActivity(room.code);
 
     // Označit nepřipravené hráče jako AFK
     for (const p of room.players) {
@@ -229,6 +266,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     }
 
     roomManager.clearJudgingTimer(room.code);
+    roomManager.updateActivity(room.code);
 
     const czar = room.players.find(p => p.isCardCzar);
     if (czar && !czar.isAfk) czar.isAfk = true;
