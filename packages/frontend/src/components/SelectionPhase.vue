@@ -9,7 +9,7 @@ import PlayerSelectingLayout from './game/layouts/PlayerSelectingLayout.vue';
 import PlayerSubmittedLayout from './game/layouts/PlayerSubmittedLayout.vue';
 import CzarWaitingSelectionLayout from './game/layouts/CzarWaitingSelectionLayout.vue';
 
-const { locale } = useI18n();
+const { t, locale } = useI18n();
 const roomStore = useRoomStore();
 const cardTranslations = useCardTranslations();
 

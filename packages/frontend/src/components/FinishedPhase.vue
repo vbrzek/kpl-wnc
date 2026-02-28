@@ -41,14 +41,14 @@ onMounted(() => {
 });
 
 async function onNewGame() {
-  if (roomStore.isHost) {
-    // Host je stále v místnosti (LOBBY), stačí vymazat finishedState
-    roomStore.clearFinishedState();
-    return;
-  }
-  // Ostatní hráči: znovu se připojit do místnosti
+  // Všichni hráči (včetně hosta) musí zavolat joinRoom, aby se znovu registroval
+  // jejich socket.id v socketToToken na serveru. Pokud se socket mezitím
+  // auto-reconnectnul, bez tohoto kroku by server ignoroval jejich herní akce.
   joiningNew.value = true;
-  const result = await lobbyStore.joinRoom(roomCode.value, profileStore.nickname);
+  joinError.value = '';
+  // Host má token v localStorage — předá prázdnou přezdívku (server použije token)
+  const nickname = roomStore.isHost ? '' : profileStore.nickname;
+  const result = await lobbyStore.joinRoom(roomCode.value, nickname);
   if ('error' in result) {
     joinError.value = result.error;
     joiningNew.value = false;
@@ -60,6 +60,11 @@ async function onNewGame() {
 }
 
 function onLeaveRoom() {
+  // Non-host token byl invalidován serverem při finishGame — vymazat z localStorage,
+  // aby příští příchod do místnosti neposílal prázdnou přezdívku.
+  if (!roomStore.isHost && roomCode.value) {
+    localStorage.removeItem(`playerToken_${roomCode.value}`);
+  }
   roomStore.clearFinishedState();
   router.push('/');
 }

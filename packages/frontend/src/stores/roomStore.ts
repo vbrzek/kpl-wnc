@@ -44,6 +44,9 @@ export const useRoomStore = defineStore('room', () => {
     });
 
     socket.on('lobby:kicked', () => {
+      if (room.value?.code) {
+        localStorage.removeItem(`playerToken_${room.value.code}`);
+      }
       room.value = null;
       myPlayerId.value = null;
     });
