@@ -39,6 +39,9 @@
     "nickname": "Nickname",
     "nicknamePlaceholder": "Your nickname",
     "language": "Language",
+    "sound": "Sound",
+    "soundOn": "On",
+    "soundOff": "Off",
     "save": "Save"
   },
   "joinPrivate": {

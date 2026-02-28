@@ -39,6 +39,9 @@
     "nickname": "Apodo",
     "nicknamePlaceholder": "Tu apodo",
     "language": "Idioma",
+    "sound": "Sonido",
+    "soundOn": "Activado",
+    "soundOff": "Desactivado",
     "save": "Guardar"
   },
   "joinPrivate": {

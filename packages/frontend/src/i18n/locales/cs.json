@@ -39,6 +39,9 @@
     "nickname": "Přezdívka",
     "nicknamePlaceholder": "Tvoje přezdívka",
     "language": "Jazyk",
+    "sound": "Zvuky",
+    "soundOn": "Zapnuto",
+    "soundOff": "Vypnuto",
     "save": "Uložit"
   },
   "joinPrivate": {

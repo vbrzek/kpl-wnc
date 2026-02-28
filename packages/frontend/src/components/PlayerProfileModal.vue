@@ -3,12 +3,14 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useProfileStore } from '../stores/profileStore';
 import type { SupportedLocale } from '../stores/profileStore';
+import { useSound } from '../composables/useSound';
 
 const props = withDefaults(defineProps<{ isEdit?: boolean }>(), { isEdit: false });
 const emit = defineEmits<{ close: [] }>();
 
 const { t } = useI18n();
 const profileStore = useProfileStore();
+const { muted, toggleMute } = useSound();
 
 const nicknameInput = ref(profileStore.nickname);
 const selectedLocale = ref<SupportedLocale>(profileStore.locale);
@@ -95,6 +97,22 @@ function onBackdropClick() {
               {{ lang.flag }} {{ lang.label }}
             </button>
           </div>
+        </div>
+
+        <!-- Zvuk -->
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-300">{{ t('profile.sound') }}</span>
+          <button
+            type="button"
+            @click="toggleMute"
+            :class="[
+              'flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors',
+              muted ? 'bg-gray-700 text-gray-400' : 'bg-indigo-600/20 text-indigo-300'
+            ]"
+          >
+            <span>{{ muted ? '🔇' : '🔊' }}</span>
+            <span>{{ muted ? t('profile.soundOff') : t('profile.soundOn') }}</span>
+          </button>
         </div>
 
         <button

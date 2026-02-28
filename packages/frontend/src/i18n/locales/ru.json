@@ -39,6 +39,9 @@
     "nickname": "Псевдоним",
     "nicknamePlaceholder": "Твой псевдоним",
     "language": "Язык",
+    "sound": "Звук",
+    "soundOn": "Вкл",
+    "soundOff": "Выкл",
     "save": "Сохранить"
   },
   "joinPrivate": {
