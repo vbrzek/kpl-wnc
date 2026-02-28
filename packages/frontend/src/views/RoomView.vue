@@ -21,9 +21,10 @@ const profileStore = useProfileStore();
 const roomCode = route.params.token as string;
 
 const stopKickedWatch = watch(
-  () => roomStore.room,
-  (newRoom, oldRoom) => {
-    if (oldRoom !== null && newRoom === null) {
+  [() => roomStore.room, () => roomStore.finishedState],
+  ([newRoom, newFinished], [oldRoom]) => {
+    // Naviguj pryč jen když room zmizí A finishedState není nastaven
+    if (oldRoom !== null && newRoom === null && newFinished === null) {
       router.push('/');
     }
   }
@@ -54,14 +55,17 @@ onUnmounted(() => {
 
 <template>
   <div class="flex-1 flex flex-col min-h-0 h-full">
-    <template v-if="roomStore.room">
+    <template v-if="roomStore.room || roomStore.finishedState">
       <div class="flex-1 flex flex-col min-h-0 overflow-hidden relative">
         <Transition name="phase-slide" mode="out-in">
-          <LobbyPanel    v-if="roomStore.room.status === 'LOBBY'"         key="LOBBY"     :room="roomStore.room" />
-          <SelectionPhase v-else-if="roomStore.room.status === 'SELECTION'" key="SELECTION" />
-          <JudgingPhase  v-else-if="roomStore.room.status === 'JUDGING'"   key="JUDGING" />
-          <ResultsPhase  v-else-if="roomStore.room.status === 'RESULTS'"   key="RESULTS" />
-          <FinishedPhase v-else-if="roomStore.room.status === 'FINISHED'"  key="FINISHED" />
+          <!-- Pódium má prioritu — overlay přes libovolný stav -->
+          <div v-if="roomStore.finishedState" key="FINISHED" class="flex-1 flex flex-col min-h-0">
+            <FinishedPhase />
+          </div>
+          <div v-else-if="roomStore.room?.status === 'LOBBY'"      key="LOBBY"     class="flex-1 flex flex-col min-h-0"><LobbyPanel     :room="roomStore.room!" /></div>
+          <div v-else-if="roomStore.room?.status === 'SELECTION'" key="SELECTION" class="flex-1 flex flex-col min-h-0"><SelectionPhase /></div>
+          <div v-else-if="roomStore.room?.status === 'JUDGING'"   key="JUDGING"   class="flex-1 flex flex-col min-h-0"><JudgingPhase  /></div>
+          <div v-else-if="roomStore.room?.status === 'RESULTS'"   key="RESULTS"   class="flex-1 flex flex-col min-h-0"><ResultsPhase  /></div>
         </Transition>
       </div>
     </template>
