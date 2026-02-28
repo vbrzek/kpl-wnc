@@ -56,9 +56,9 @@ describe('GET /api/rooms/:code/preview', () => {
     });
   });
 
-  it('normalises code to uppercase before lookup', async () => {
+  it('normalises code to lowercase before lookup', async () => {
     (roomManager.getRoom as ReturnType<typeof vi.fn>).mockReturnValue(null);
     await app.inject({ method: 'GET', url: '/api/rooms/ABC123/preview' });
-    expect(roomManager.getRoom).toHaveBeenCalledWith('ABC123');
+    expect(roomManager.getRoom).toHaveBeenCalledWith('abc123');
   });
 });

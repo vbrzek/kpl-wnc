@@ -4,7 +4,7 @@ import { roomManager } from '../game/RoomManager.js';
 const roomsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/rooms/:code/preview', async (request, reply) => {
     const { code } = request.params as { code: string };
-    const room = roomManager.getRoom(code.toUpperCase());
+    const room = roomManager.getRoom(code.toLowerCase());
     if (!room) {
       return reply.status(404).send({ error: 'Room not found' });
     }

@@ -31,39 +31,28 @@ function setNamesForRoom(room: PublicRoomSummary): string {
       <li
         v-for="room in rooms"
         :key="room.code"
-        class="group bg-slate-900/40 border border-white/5 hover:border-white/20 rounded-2xl transition-all duration-300 overflow-hidden shadow-sm"
+        @click="emit('preview', room.code)"
+        class="group bg-slate-900/40 border border-white/5 hover:border-white/20 rounded-2xl transition-all duration-300 overflow-hidden shadow-sm cursor-pointer"
       >
-        <div class="flex flex-col p-5">
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex flex-col gap-0.5">
-              <h3 class="font-black text-white text-xl tracking-tight leading-tight group-hover:text-yellow-500 transition-colors">
-                {{ room.name }}
-              </h3>
-              <div class="flex items-center gap-2">
-                 <span class="text-[10px] font-mono text-slate-500">#{{ room.code }}</span>
-                 <span class="w-1 h-1 bg-slate-700 rounded-full"></span>
-                 <span v-if="setNamesForRoom(room)" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ setNamesForRoom(room) }}</span>
-              </div>
-            </div>
-
-            <div 
-              class="flex flex-col items-end"
-              :class="room.playerCount >= room.maxPlayers ? 'text-red-500' : 'text-green-500'"
-            >
-              <span class="text-lg font-black leading-none">{{ room.playerCount }}</span>
-              <span class="text-[9px] font-black uppercase opacity-50">/ {{ room.maxPlayers }}</span>
+        <div class="flex items-center justify-between p-5">
+          <div class="flex flex-col gap-0.5">
+            <h3 class="font-black text-white text-xl tracking-tight leading-tight group-hover:text-yellow-500 transition-colors">
+              {{ room.name }}
+            </h3>
+            <div class="flex items-center gap-2">
+               <span class="text-[10px] font-mono text-slate-500">#{{ room.code }}</span>
+               <span class="w-1 h-1 bg-slate-700 rounded-full"></span>
+               <span v-if="setNamesForRoom(room)" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ setNamesForRoom(room) }}</span>
             </div>
           </div>
 
-          <button
-            @click="emit('preview', room.code)"
-            :disabled="room.playerCount >= room.maxPlayers"
-            class="w-full py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.1em] transition-all
-                   disabled:bg-slate-800 disabled:text-slate-600 disabled:opacity-50
-                   bg-white text-black hover:bg-yellow-500 active:scale-95 shadow-lg shadow-black/20"
+          <div
+            class="flex flex-col items-end"
+            :class="room.playerCount >= room.maxPlayers ? 'text-red-500' : 'text-green-500'"
           >
-            {{ room.playerCount >= room.maxPlayers ? 'Plno' : t('publicRooms.joinTable') }}
-          </button>
+            <span class="text-lg font-black leading-none">{{ room.playerCount }}</span>
+            <span class="text-[9px] font-black uppercase opacity-50">/ {{ room.maxPlayers }}</span>
+          </div>
         </div>
       </li>
     </ul>
