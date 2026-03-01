@@ -20,33 +20,61 @@ function submit() {
 
 <template>
   <Teleport to="body">
-  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 text-white">
-    <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm space-y-4">
-      <h2 class="text-xl font-bold">{{ t('joinPrivate.title') }}</h2>
-      <label class="block">
-        <span class="text-sm text-gray-300">{{ t('joinPrivate.codeLabel') }}</span>
-        <input
-          v-model="code"
-          maxlength="6"
-          class="mt-1 w-full bg-gray-700 px-3 py-2 rounded font-mono tracking-widest text-center text-lg"
-          placeholder="a3f9c1"
-          @keyup.enter="submit"
-          autofocus
-        />
-      </label>
-      <p v-if="errorMsg" class="text-red-400 text-sm">{{ errorMsg }}</p>
-      <div class="flex gap-3">
-        <button
-          @click="submit"
-          class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded flex-1 font-semibold"
-        >
-          {{ t('common.join') }}
-        </button>
-        <button @click="$emit('close')" class="text-gray-400 hover:text-white px-4 py-2">
-          {{ t('common.cancel') }}
-        </button>
+    <div
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      @click.self="$emit('close')"
+    >
+      <div class="bg-[#0d1117] border border-white/10 rounded-2xl w-full max-w-sm">
+        <div class="p-6 space-y-5">
+
+          <!-- Header -->
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black tracking-tighter uppercase italic text-white">
+              {{ t('joinPrivate.title') }}
+            </h2>
+            <button @click="$emit('close')" class="text-slate-500 hover:text-white transition-colors p-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Code input -->
+          <div>
+            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+              {{ t('joinPrivate.codeLabel') }}
+            </label>
+            <input
+              v-model="code"
+              maxlength="6"
+              class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 font-mono tracking-widest text-center text-lg focus:outline-none focus:border-white/30 transition-colors"
+              placeholder="a3f9c1"
+              @keyup.enter="submit"
+              autofocus
+            />
+            <p v-if="errorMsg" class="text-red-400 text-xs mt-2 font-bold uppercase tracking-wider">
+              {{ errorMsg }}
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3">
+            <button
+              @click="$emit('close')"
+              class="flex-1 py-3.5 bg-slate-800 border border-white/10 text-slate-300 text-sm font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all"
+            >
+              {{ t('common.cancel') }}
+            </button>
+            <button
+              @click="submit"
+              class="flex-1 py-3.5 bg-white text-black text-sm font-black uppercase tracking-widest rounded-2xl shadow-[0_4px_0_rgb(60,60,60)] active:shadow-none active:translate-y-1 transition-all"
+            >
+              {{ t('common.join') }}
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
-  </div>
   </Teleport>
 </template>

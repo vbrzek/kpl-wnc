@@ -43,86 +43,103 @@ function onBackdropClick() {
 <template>
   <Teleport to="body">
     <div
-      class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 text-white"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click.self="onBackdropClick"
     >
-      <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm space-y-5">
+      <div class="bg-[#0d1117] border border-white/10 rounded-2xl w-full max-w-sm">
+        <div class="p-6 space-y-5">
 
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-bold">
-            {{ isEdit ? t('profile.editTitle') : t('profile.setupTitle') }}
-          </h2>
-          <button
-            v-if="isEdit"
-            @click="emit('close')"
-            class="text-gray-400 hover:text-white text-lg leading-none"
-          >✕</button>
-        </div>
-
-        <!-- Live avatar náhled -->
-        <div class="flex justify-center">
-          <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-700">
-            <img :src="previewAvatarUrl" alt="avatar" class="w-full h-full object-cover" />
-          </div>
-        </div>
-
-        <!-- Přezdívka -->
-        <label class="block">
-          <span class="text-sm text-gray-300">{{ t('profile.nickname') }}</span>
-          <input
-            v-model="nicknameInput"
-            maxlength="24"
-            autofocus
-            class="mt-1 w-full bg-gray-700 px-3 py-2 rounded"
-            :placeholder="t('profile.nicknamePlaceholder')"
-            @keyup.enter="submit"
-          />
-        </label>
-
-        <!-- Výběr jazyka -->
-        <div>
-          <span class="text-sm text-gray-300">{{ t('profile.language') }}</span>
-          <div class="mt-2 flex flex-wrap gap-2">
+          <!-- Header -->
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black tracking-tighter uppercase italic text-white">
+              {{ isEdit ? t('profile.editTitle') : t('profile.setupTitle') }}
+            </h2>
             <button
-              v-for="lang in languages"
-              :key="lang.code"
-              @click="selectedLocale = lang.code"
-              :class="[
-                'px-3 py-1.5 rounded text-sm transition-colors',
-                selectedLocale === lang.code
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600',
-              ]"
+              v-if="isEdit"
+              @click="emit('close')"
+              class="text-slate-500 hover:text-white transition-colors p-1"
             >
-              {{ lang.flag }} {{ lang.label }}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
-        </div>
 
-        <!-- Zvuk -->
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-gray-300">{{ t('profile.sound') }}</span>
+          <!-- Avatar preview -->
+          <div class="flex justify-center">
+            <div class="w-20 h-20 rounded-full overflow-hidden bg-slate-900 border border-white/10">
+              <img :src="previewAvatarUrl" alt="avatar" class="w-full h-full object-cover" />
+            </div>
+          </div>
+
+          <!-- Nickname -->
+          <div>
+            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+              {{ t('profile.nickname') }}
+            </label>
+            <input
+              v-model="nicknameInput"
+              maxlength="24"
+              autofocus
+              class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 transition-colors"
+              :placeholder="t('profile.nicknamePlaceholder')"
+              @keyup.enter="submit"
+            />
+          </div>
+
+          <!-- Language -->
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+              {{ t('profile.language') }}
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="lang in languages"
+                :key="lang.code"
+                type="button"
+                @click="selectedLocale = lang.code"
+                :class="[
+                  'px-3 py-1.5 rounded-xl text-sm font-bold transition-all border',
+                  selectedLocale === lang.code
+                    ? 'bg-white/10 border-white/30 text-white'
+                    : 'bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/15 hover:text-slate-300',
+                ]"
+              >
+                {{ lang.flag }} {{ lang.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Sound toggle -->
+          <div class="flex items-center justify-between">
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+              {{ t('profile.sound') }}
+            </p>
+            <button
+              type="button"
+              @click="toggleMute"
+              :class="[
+                'flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold border transition-all',
+                muted
+                  ? 'bg-slate-900/40 border-white/5 text-slate-500'
+                  : 'bg-white/10 border-white/30 text-white',
+              ]"
+            >
+              <span>{{ muted ? '🔇' : '🔊' }}</span>
+              <span>{{ muted ? t('profile.soundOff') : t('profile.soundOn') }}</span>
+            </button>
+          </div>
+
+          <!-- Save -->
           <button
-            type="button"
-            @click="toggleMute"
-            :class="[
-              'flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors',
-              muted ? 'bg-gray-700 text-gray-400' : 'bg-indigo-600/20 text-indigo-300'
-            ]"
+            @click="submit"
+            :disabled="!canSave"
+            class="w-full py-3.5 bg-white text-black text-sm font-black uppercase tracking-widest rounded-2xl shadow-[0_4px_0_rgb(60,60,60)] active:shadow-none active:translate-y-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <span>{{ muted ? '🔇' : '🔊' }}</span>
-            <span>{{ muted ? t('profile.soundOff') : t('profile.soundOn') }}</span>
+            {{ t('profile.save') }}
           </button>
+
         </div>
-
-        <button
-          @click="submit"
-          :disabled="!canSave"
-          class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed py-2 rounded font-semibold"
-        >
-          {{ t('profile.save') }}
-        </button>
-
       </div>
     </div>
   </Teleport>
