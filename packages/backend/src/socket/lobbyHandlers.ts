@@ -6,6 +6,7 @@ import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
 import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, validate } from './validation.js';
+import { checkRateLimit, cleanupSocket } from './rateLimiter.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -25,6 +26,10 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
   // Create room
   socket.on('lobby:create', (settings, callback) => {
+    if (!checkRateLimit(socket.id, 'lobby:create')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
     const data = validate(CreateRoomSchema, settings, callback);
     if (!data) return;
     const { room, playerToken } = roomManager.createRoom(data);
@@ -44,6 +49,10 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
   // Join room (also handles reconnect when playerToken provided)
   socket.on('lobby:join', (input, callback) => {
+    if (!checkRateLimit(socket.id, 'lobby:join')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
     const data = validate(JoinRoomSchema, input, callback);
     if (!data) return;
     const result = roomManager.joinRoom(data.code, data.nickname, data.playerToken);
@@ -111,6 +120,10 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
   // Update settings (host only)
   socket.on('lobby:updateSettings', (input, callback) => {
+    if (!checkRateLimit(socket.id, 'lobby:updateSettings')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) { callback({ error: 'Nejsi přihlášen' }); return; }
 
@@ -204,6 +217,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
   // Disconnect — start AFK timer, emit state update
   socket.on('disconnect', () => {
+    cleanupSocket(socket.id);
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) return;
 

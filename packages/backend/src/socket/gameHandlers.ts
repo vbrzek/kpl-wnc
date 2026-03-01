@@ -4,6 +4,7 @@ import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
 import { PlayCardsSchema, JudgeSelectSchema, validate } from './validation.js';
+import { checkRateLimit } from './rateLimiter.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -13,6 +14,10 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
   // Player submits white cards during SELECTION
   socket.on('game:playCards', (cardIds) => {
+    if (!checkRateLimit(socket.id, 'game:playCards')) {
+      socket.emit('game:error', 'Příliš mnoho požadavků. Zkus to za chvíli.');
+      return;
+    }
     const ids = validate(PlayCardsSchema, cardIds);
     if (!ids) { socket.emit('game:error', 'Neplatná data karet.'); return; }
 
@@ -75,6 +80,10 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
   // Card Czar selects winner during JUDGING
   socket.on('game:judgeSelect', (submissionId) => {
+    if (!checkRateLimit(socket.id, 'game:judgeSelect')) {
+      socket.emit('game:error', 'Příliš mnoho požadavků. Zkus to za chvíli.');
+      return;
+    }
     const id = validate(JudgeSelectSchema, submissionId);
     if (!id) { socket.emit('game:error', 'Neplatné submissionId.'); return; }
 
