@@ -4,15 +4,11 @@ import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
-import { startNewRound, startJudgingPhase } from './roundUtils.js';
+import { startNewRound, startJudgingPhase, broadcastPublicRooms } from './roundUtils.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
-
-function broadcastPublicRooms(io: IO) {
-  io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
-}
 
 export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 

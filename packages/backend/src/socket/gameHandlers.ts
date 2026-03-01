@@ -2,15 +2,11 @@ import type { Server, Socket } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
-import { startNewRound, startJudgingPhase } from './roundUtils.js';
+import { startNewRound, startJudgingPhase, broadcastPublicRooms } from './roundUtils.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 const SKIP_DELAY_MS = 3_000;
-
-function broadcastPublicRooms(io: IO) {
-  io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
-}
 
 export function registerGameHandlers(io: IO, socket: AppSocket) {
 

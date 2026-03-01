@@ -61,3 +61,7 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
     // Timer vypršel — čeká se na game:czarForceAdvance od Card Czara
   }, SELECTION_TIMEOUT_MS);
 }
+
+export function broadcastPublicRooms(io: IO): void {
+  io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
+}
