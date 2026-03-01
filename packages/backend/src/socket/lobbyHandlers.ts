@@ -4,7 +4,7 @@ import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
-import { startNewRound, startJudgingPhase, broadcastPublicRooms } from './roundUtils.js';
+import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -79,7 +79,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     }
 
     // Notify rest of room
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     broadcastPublicRooms(io);
     callback({ room, playerToken, playerId });
   });
@@ -97,7 +97,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
       socket.leave(`room:${roomCode}`);
       const roomAfter = roomManager.getRoom(roomCode);
       if (roomAfter) {
-        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', roomAfter);
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(roomAfter));
       }
     }
 
@@ -112,7 +112,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const result = roomManager.updateSettings(playerToken, settings);
     if ('error' in result) { callback(result); return; }
 
-    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
     broadcastPublicRooms(io);
     callback({ room: result.room });
   });
@@ -137,7 +137,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
       }
     }
 
-    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
     broadcastPublicRooms(io);
     callback({ ok: true });
   });
@@ -204,7 +204,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const room = roomManager.getRoomByPlayerToken(playerToken);
     if (room) {
       // Immediate emit — player.socketId is now null
-      io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
 
       // Emit again after AFK timer fires (31s = 1s after the 30s AFK timer)
       const roomCode = room.code;
@@ -212,7 +212,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
         const updated = roomManager.getRoom(roomCode);
         if (!updated) return;
 
-        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', updated);
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(updated));
 
         // If in SELECTION, check if remaining active players have all submitted
         // (triggered when a non-submitted player goes AFK)

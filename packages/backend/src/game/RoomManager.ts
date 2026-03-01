@@ -77,6 +77,7 @@ export class RoomManager {
     const host: Player = {
       id: playerId,
       socketId: null,
+      isOnline: true,
       nickname: settings.nickname,
       score: 0,
       isCardCzar: false,
@@ -147,6 +148,7 @@ export class RoomManager {
     const player: Player = {
       id: playerId,
       socketId: null,
+      isOnline: true,
       nickname,
       score: 0,
       isCardCzar: false,
@@ -184,6 +186,7 @@ export class RoomManager {
     }
 
     player.socketId = socketId;
+    player.isOnline = true;
     player.isAfk = false;
 
     return room;
@@ -205,6 +208,7 @@ export class RoomManager {
     if (!player) return;
 
     player.socketId = null;
+    player.isOnline = false;
 
     // Clear any existing timer first
     const existing = this.afkTimers.get(playerToken);

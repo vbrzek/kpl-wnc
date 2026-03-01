@@ -2,7 +2,7 @@ import type { Server, Socket } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
-import { startNewRound, startJudgingPhase, broadcastPublicRooms } from './roundUtils.js';
+import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -39,7 +39,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       roomManager.clearRoundTimer(room.code);
       startJudgingPhase(room, engine, io);
     } else {
-      io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     }
   });
 
@@ -65,7 +65,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       return;
     }
 
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     socket.emit('game:handUpdate', engine.getPlayerHand(playerId));
   });
 
@@ -97,7 +97,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
     room.status = 'RESULTS';
     room.roundDeadline = null;
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     io.to(`room:${room.code}`).emit('game:roundEnd', result);
 
     // Auto-win: zkontroluj jestli vítěz dosáhl targetScore
@@ -113,7 +113,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
             socketToToken.delete(sid);
           }
         }
-        io.to(`room:${room.code}`).emit('lobby:stateUpdate', finishResult.room);
+        io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(finishResult.room));
         broadcastPublicRooms(io);
       }
       return; // nepokračuj na setTimeout pro startNewRound
@@ -148,7 +148,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       socket.leave(`room:${roomCode}`);
       const roomAfter = roomManager.getRoom(roomCode);
       if (roomAfter) {
-        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', roomAfter);
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(roomAfter));
       }
     }
   });
@@ -182,7 +182,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     }
 
     // Informuj hosta o novém stavu místnosti (LOBBY)
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', result.room);
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
     broadcastPublicRooms(io);
     callback({ ok: true });
   });
@@ -225,7 +225,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       startJudgingPhase(room, engine, io);
     } else {
       room.roundDeadline = null;
-      io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
       io.to(`room:${room.code}`).emit('game:roundSkipped');
       const roomCode = room.code;
       setTimeout(() => {
@@ -268,7 +268,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     if (czar && !czar.isAfk) czar.isAfk = true;
 
     room.roundDeadline = null;
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     io.to(`room:${room.code}`).emit('game:roundSkipped');
 
     const roomCode = room.code;
