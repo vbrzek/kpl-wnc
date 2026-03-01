@@ -17,14 +17,14 @@ describe('RoomManager', () => {
 
   it('creates a room with a 6-char hex code', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     expect(room.code).toMatch(/^[a-f0-9]{6}$/);
   });
 
   it('creates a room with the host as first player', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     expect(room.players).toHaveLength(1);
     expect(room.players[0].nickname).toBe('Alice');
@@ -36,7 +36,7 @@ describe('RoomManager', () => {
 
   it('joins an existing room and returns playerToken', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const result = rm.joinRoom(room.code, 'Bob');
     expect('error' in result).toBe(false);
@@ -53,7 +53,7 @@ describe('RoomManager', () => {
 
   it('returns error when room is full', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 2, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 2, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     const result = rm.joinRoom(room.code, 'Charlie');
@@ -63,7 +63,7 @@ describe('RoomManager', () => {
 
   it('returns error on duplicate nickname', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const result = rm.joinRoom(room.code, 'Alice');
     expect('error' in result).toBe(true);
@@ -71,7 +71,7 @@ describe('RoomManager', () => {
 
   it('returns error when game already started', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const r = rm.getRoom(room.code)!;
     r.status = 'SELECTION';
@@ -81,7 +81,7 @@ describe('RoomManager', () => {
 
   it('joinRoom returns wasReconnect: false on a fresh join', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const result = rm.joinRoom(room.code, 'Bob');
     expect('error' in result).toBe(false);
@@ -92,7 +92,7 @@ describe('RoomManager', () => {
 
   it('joinRoom returns wasReconnect: true when playerToken matches the room', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.handleDisconnect(playerToken);
     const result = rm.joinRoom(room.code, '', playerToken);
@@ -104,7 +104,7 @@ describe('RoomManager', () => {
 
   it('joinRoom ignores invalid playerToken and treats join as fresh (wasReconnect: false)', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const result = rm.joinRoom(room.code, 'Bob', 'non-existent-token');
     expect('error' in result).toBe(false);
@@ -115,7 +115,7 @@ describe('RoomManager', () => {
 
   it('reconnects player by playerToken, restores socketId', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.handleDisconnect(playerToken);
     const reconnected = rm.reconnect(playerToken, 'socket-new-123');
@@ -128,7 +128,7 @@ describe('RoomManager', () => {
 
   it('marks player AFK after 30s of disconnect', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.handleDisconnect(playerToken);
     expect(room.players[0].isAfk).toBe(false);
@@ -138,7 +138,7 @@ describe('RoomManager', () => {
 
   it('does not mark AFK if player reconnects before 30s', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.handleDisconnect(playerToken);
     vi.advanceTimersByTime(10_000);
@@ -151,7 +151,7 @@ describe('RoomManager', () => {
 
   it('host can kick another player', () => {
     const { room, playerToken: hostToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     const bobId = rm.getRoom(room.code)!.players.find(p => p.nickname === 'Bob')!.id;
@@ -165,7 +165,7 @@ describe('RoomManager', () => {
 
   it('non-host cannot kick', () => {
     const { room } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const { playerToken: bobToken } = rm.joinRoom(room.code, 'Bob') as { room: any; playerToken: string };
     const aliceId = room.players[0].id;
@@ -177,7 +177,7 @@ describe('RoomManager', () => {
 
   it('transfers host to next non-AFK player when host leaves', () => {
     const { room, playerToken: hostToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     rm.leaveRoom(hostToken);
@@ -189,7 +189,7 @@ describe('RoomManager', () => {
 
   it('deletes room when last player leaves', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.leaveRoom(playerToken);
     expect(rm.getRoom(room.code)).toBeNull();
@@ -199,7 +199,7 @@ describe('RoomManager', () => {
 
   it('host can update settings', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const result = rm.updateSettings(playerToken, { name: 'Nova', maxPlayers: 8 });
     expect('error' in result).toBe(false);
@@ -211,7 +211,7 @@ describe('RoomManager', () => {
 
   it('rejects maxPlayers below current player count', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     rm.joinRoom(room.code, 'Charlie');
@@ -223,7 +223,7 @@ describe('RoomManager', () => {
 
   it('rejects startGame with fewer than 3 players', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     const result = rm.startGame(playerToken);
@@ -232,7 +232,7 @@ describe('RoomManager', () => {
 
   it('starts game with 3+ players', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     rm.joinRoom(room.code, 'Charlie');
@@ -245,7 +245,7 @@ describe('RoomManager', () => {
 
   it('rejects startGame when no card sets selected', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'Test', isPublic: true, selectedSetIds: [], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'Test', isPublic: true, selectedSetIds: [], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     rm.joinRoom(room.code, 'Charlie');
@@ -257,8 +257,8 @@ describe('RoomManager', () => {
   // --- getPublicRooms ---
 
   it('lists only public rooms with status LOBBY', () => {
-    rm.createRoom({ name: 'Public', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'A' });
-    rm.createRoom({ name: 'Private', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'B' });
+    rm.createRoom({ name: 'Public', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'A', targetScore: 8 });
+    rm.createRoom({ name: 'Private', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'B', targetScore: 8 });
     const list = rm.getPublicRooms();
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe('Public');
@@ -268,7 +268,7 @@ describe('RoomManager', () => {
 
   it('endGame returns error for non-host', () => {
     const { room } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const bobResult = rm.joinRoom(room.code, 'Bob');
     if ('error' in bobResult) throw new Error('join failed');
@@ -279,7 +279,7 @@ describe('RoomManager', () => {
 
   it('endGame returns error when game is in LOBBY', () => {
     const { playerToken } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     const result = rm.endGame(playerToken);
     expect('error' in result).toBe(true);
@@ -287,7 +287,7 @@ describe('RoomManager', () => {
 
   it('endGame sets status to FINISHED and clears engine', () => {
     const { room, playerToken } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.joinRoom(room.code, 'Bob');
     rm.joinRoom(room.code, 'Charlie');
@@ -304,45 +304,12 @@ describe('RoomManager', () => {
     }
   });
 
-  // --- returnToLobby ---
-
-  it('returnToLobby returns error when not FINISHED', () => {
-    const { playerToken } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
-    );
-    const result = rm.returnToLobby(playerToken);
-    expect('error' in result).toBe(true);
-  });
-
-  it('returnToLobby resets room state', () => {
-    const { room, playerToken } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
-    );
-    rm.joinRoom(room.code, 'Bob');
-    rm.joinRoom(room.code, 'Charlie');
-    rm.startGame(playerToken);
-    rm.endGame(playerToken);
-
-    // Give players some score to verify reset
-    room.players[0].score = 5;
-    room.players[1].score = 3;
-
-    const result = rm.returnToLobby(playerToken);
-    expect('error' in result).toBe(false);
-    if (!('error' in result)) {
-      expect(result.room.status).toBe('LOBBY');
-      expect(result.room.roundNumber).toBe(0);
-      expect(result.room.currentBlackCard).toBeNull();
-      expect(result.room.players.every(p => p.score === 0)).toBe(true);
-    }
-  });
-
   // --- timer methods ---
 
   it('setRoundTimer fires callback after delay', () => {
     const cb = vi.fn();
     const { room } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.setRoundTimer(room.code, cb, 45_000);
     vi.advanceTimersByTime(44_999);
@@ -354,7 +321,7 @@ describe('RoomManager', () => {
   it('clearRoundTimer cancels callback', () => {
     const cb = vi.fn();
     const { room } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.setRoundTimer(room.code, cb, 45_000);
     rm.clearRoundTimer(room.code);
@@ -365,7 +332,7 @@ describe('RoomManager', () => {
   it('setJudgingTimer fires callback after delay', () => {
     const cb = vi.fn();
     const { room } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.setJudgingTimer(room.code, cb, 60_000);
     vi.advanceTimersByTime(60_000);
@@ -376,7 +343,7 @@ describe('RoomManager', () => {
     const cbR = vi.fn();
     const cbJ = vi.fn();
     const { room } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice' }
+      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.setRoundTimer(room.code, cbR, 45_000);
     rm.setJudgingTimer(room.code, cbJ, 60_000);

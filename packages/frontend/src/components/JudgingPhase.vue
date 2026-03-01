@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { useCardTranslations } from '../composables/useCardTranslations.js';
 import { useSound } from '../composables/useSound';
+import { socket } from '../socket/index.js';
 import CzarJudgingLayout from './game/layouts/CzarJudgingLayout.vue';
 import WaitingForCzarLayout from './game/layouts/WaitingForCzarLayout.vue';
 
@@ -74,6 +75,7 @@ watch(
 onUnmounted(() => {
   if (countdownInterval) clearInterval(countdownInterval);
   flipTimers.forEach(t => clearTimeout(t));
+  socket.off('game:error', onGameError);
 });
 
 function pickWinner(submissionId: string) {
@@ -87,6 +89,10 @@ const czarNickname = computed(() =>
 function skipCzarJudging() {
   roomStore.skipCzarJudging();
 }
+
+const gameError = ref('');
+function onGameError(msg: string) { gameError.value = msg; }
+socket.on('game:error', onGameError);
 
 const endingGame = ref(false);
 async function onEndGame() {
@@ -119,6 +125,9 @@ async function onEndGame() {
     :revealedCount="revealedCount"
     @skipJudging="skipCzarJudging"
   />
+  <p v-if="gameError" class="mt-4 bg-red-500/10 text-red-400 p-4 rounded-2xl border border-red-500/20 text-sm font-bold">
+    {{ gameError }}
+  </p>
   <div v-if="roomStore.isHost" class="mt-4 text-center">
     <button
       @click="onEndGame"

@@ -28,7 +28,7 @@ const { t } = useI18n();
         <span v-if="player.id === myPlayerId" class="text-xs text-green-400">({{ t('player.you') }})</span>
         <span v-if="player.isAfk" class="text-xs text-gray-400 bg-gray-600 px-1 rounded">{{ t('player.afk') }}</span>
         <span
-          v-else-if="!player.socketId"
+          v-else-if="!player.isOnline"
           class="text-xs text-orange-400"
         >{{ t('player.offline') }}</span>
       </span>

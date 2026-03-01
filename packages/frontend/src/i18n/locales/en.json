@@ -12,7 +12,8 @@
     "createTable": "Create table",
     "joinWithCode": "Join with code",
     "publicRooms": "Public tables",
-    "activeRooms": "Your games"
+    "activeRooms": "Your games",
+    "roomNotFound": "Room not found."
   },
   "createTable": {
     "title": "Create new table",

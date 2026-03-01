@@ -77,6 +77,7 @@ export class RoomManager {
     const host: Player = {
       id: playerId,
       socketId: null,
+      isOnline: true,
       nickname: settings.nickname,
       score: 0,
       isCardCzar: false,
@@ -147,6 +148,7 @@ export class RoomManager {
     const player: Player = {
       id: playerId,
       socketId: null,
+      isOnline: true,
       nickname,
       score: 0,
       isCardCzar: false,
@@ -184,6 +186,7 @@ export class RoomManager {
     }
 
     player.socketId = socketId;
+    player.isOnline = true;
     player.isAfk = false;
 
     return room;
@@ -205,6 +208,7 @@ export class RoomManager {
     if (!player) return;
 
     player.socketId = null;
+    player.isOnline = false;
 
     // Clear any existing timer first
     const existing = this.afkTimers.get(playerToken);
@@ -431,42 +435,6 @@ export class RoomManager {
     this.engines.delete(code);
     room.status = 'FINISHED';
     room.roundDeadline = null;
-
-    return { room };
-  }
-
-  // ------------------------------------------------------------------ returnToLobby
-
-  returnToLobby(hostToken: string): ActionResult {
-    const code = this.playerRooms.get(hostToken);
-    if (!code) return { error: 'Nejsi v žádné místnosti.' };
-
-    const room = this.rooms.get(code);
-    if (!room) return { error: 'Místnost nebyla nalezena.' };
-
-    const hostPlayerId = this.tokenToPlayerId.get(hostToken);
-    if (hostPlayerId !== room.hostId) {
-      return { error: 'Pouze hostitel může vrátit hru do lobby.' };
-    }
-
-    if (room.status !== 'FINISHED') {
-      return { error: 'Hru lze vrátit do lobby pouze ze stavu FINISHED.' };
-    }
-
-    room.status = 'LOBBY';
-    room.roundDeadline = null;
-    room.currentBlackCard = null;
-    room.roundNumber = 0;
-
-    for (const player of room.players) {
-      player.score = 0;
-      player.isCardCzar = false;
-      player.hasPlayed = false;
-      // Zachováme isAfk pro odpojené hráče, resetujeme pro připojené
-      if (player.socketId !== null) {
-        player.isAfk = false;
-      }
-    }
 
     return { room };
   }

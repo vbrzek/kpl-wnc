@@ -31,7 +31,7 @@ async function startGame() {
     
     <div class="flex items-center justify-between gap-4 border-b border-white/5 pt-2 pb-6">
       <div class="flex flex-col">
-        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Název stolu</span>
+        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">{{ t('createTable.tableName') }}</span>
         <h1 class="text-3xl font-black tracking-tighter uppercase italic text-white leading-none">
           {{ room.name }}
         </h1>

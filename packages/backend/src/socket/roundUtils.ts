@@ -13,7 +13,7 @@ export function startJudgingPhase(room: GameRoom, engine: GameEngine, io: IO): v
   const roomCode = room.code;
   room.status = 'JUDGING';
   room.roundDeadline = Date.now() + JUDGING_TIMEOUT_MS;
-  io.to(`room:${roomCode}`).emit('lobby:stateUpdate', room);
+  io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
   io.to(`room:${roomCode}`).emit('game:judging', engine.getAnonymousSubmissions());
 
   roomManager.setJudgingTimer(roomCode, () => {
@@ -41,7 +41,7 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
   room.roundNumber = engine.roundNumber;
   room.roundDeadline = Date.now() + SELECTION_TIMEOUT_MS;
 
-  io.to(`room:${roomCode}`).emit('lobby:stateUpdate', room);
+  io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
 
   for (const player of room.players) {
     if (!player.socketId) continue;
@@ -60,4 +60,16 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
   roomManager.setRoundTimer(roomCode, () => {
     // Timer vypršel — čeká se na game:czarForceAdvance od Card Czara
   }, SELECTION_TIMEOUT_MS);
+}
+
+export function broadcastPublicRooms(io: IO): void {
+  io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
+}
+
+/** Vrátí kopii místnosti s odstraněnými socketId hráčů (pro broadcast klientům). */
+export function toPublicRoom(room: GameRoom): GameRoom {
+  return {
+    ...room,
+    players: room.players.map(p => ({ ...p, socketId: null })),
+  };
 }

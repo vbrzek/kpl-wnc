@@ -4,15 +4,13 @@ import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
-import { startNewRound, startJudgingPhase } from './roundUtils.js';
+import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
+import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, validate } from './validation.js';
+import { checkRateLimit, cleanupSocket } from './rateLimiter.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
-
-function broadcastPublicRooms(io: IO) {
-  io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
-}
 
 export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
@@ -28,7 +26,13 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
   // Create room
   socket.on('lobby:create', (settings, callback) => {
-    const { room, playerToken } = roomManager.createRoom(settings);
+    if (!checkRateLimit(socket.id, 'lobby:create')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
+    const data = validate(CreateRoomSchema, settings, callback);
+    if (!data) return;
+    const { room, playerToken } = roomManager.createRoom(data);
 
     // Attach socket to the host player
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
@@ -44,7 +48,13 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
   });
 
   // Join room (also handles reconnect when playerToken provided)
-  socket.on('lobby:join', (data, callback) => {
+  socket.on('lobby:join', (input, callback) => {
+    if (!checkRateLimit(socket.id, 'lobby:join')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
+    const data = validate(JoinRoomSchema, input, callback);
+    if (!data) return;
     const result = roomManager.joinRoom(data.code, data.nickname, data.playerToken);
 
     if ('error' in result) {
@@ -83,7 +93,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     }
 
     // Notify rest of room
-    io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     broadcastPublicRooms(io);
     callback({ room, playerToken, playerId });
   });
@@ -101,7 +111,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
       socket.leave(`room:${roomCode}`);
       const roomAfter = roomManager.getRoom(roomCode);
       if (roomAfter) {
-        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', roomAfter);
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(roomAfter));
       }
     }
 
@@ -109,14 +119,20 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
   });
 
   // Update settings (host only)
-  socket.on('lobby:updateSettings', (settings, callback) => {
+  socket.on('lobby:updateSettings', (input, callback) => {
+    if (!checkRateLimit(socket.id, 'lobby:updateSettings')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) { callback({ error: 'Nejsi přihlášen' }); return; }
 
-    const result = roomManager.updateSettings(playerToken, settings);
+    const data = validate(UpdateSettingsSchema, input, callback);
+    if (!data) return;
+    const result = roomManager.updateSettings(playerToken, data);
     if ('error' in result) { callback(result); return; }
 
-    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
     broadcastPublicRooms(io);
     callback({ room: result.room });
   });
@@ -126,7 +142,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) { callback({ error: 'Nejsi přihlášen' }); return; }
 
-    const result = roomManager.kickPlayer(playerToken, targetPlayerId);
+    const validId = validate(KickPlayerSchema, targetPlayerId, callback);
+    if (!validId) return;
+    const result = roomManager.kickPlayer(playerToken, validId);
     if ('error' in result) { callback(result); return; }
 
     // Notify kicked player's socket
@@ -141,7 +159,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
       }
     }
 
-    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', result.room);
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
     broadcastPublicRooms(io);
     callback({ ok: true });
   });
@@ -199,6 +217,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
   // Disconnect — start AFK timer, emit state update
   socket.on('disconnect', () => {
+    cleanupSocket(socket.id);
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) return;
 
@@ -208,7 +227,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const room = roomManager.getRoomByPlayerToken(playerToken);
     if (room) {
       // Immediate emit — player.socketId is now null
-      io.to(`room:${room.code}`).emit('lobby:stateUpdate', room);
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
 
       // Emit again after AFK timer fires (31s = 1s after the 30s AFK timer)
       const roomCode = room.code;
@@ -216,7 +235,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
         const updated = roomManager.getRoom(roomCode);
         if (!updated) return;
 
-        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', updated);
+        io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(updated));
 
         // If in SELECTION, check if remaining active players have all submitted
         // (triggered when a non-submitted player goes AFK)
