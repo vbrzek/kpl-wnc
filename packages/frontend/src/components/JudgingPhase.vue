@@ -3,12 +3,14 @@ import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { useCardTranslations } from '../composables/useCardTranslations.js';
+import { useSound } from '../composables/useSound';
 import CzarJudgingLayout from './game/layouts/CzarJudgingLayout.vue';
 import WaitingForCzarLayout from './game/layouts/WaitingForCzarLayout.vue';
 
 const { t, locale } = useI18n();
 const roomStore = useRoomStore();
 const cardTranslations = useCardTranslations();
+const { play } = useSound();
 
 watch(
   [() => roomStore.currentBlackCard, () => roomStore.submissions, locale],
@@ -45,6 +47,7 @@ onMounted(() => {
   roomStore.submissions.forEach((_, i) => {
     const timer = setTimeout(() => {
       revealedCount.value = i + 1
+      play('card-submit')
     }, i * FLIP_STAGGER_MS)
     flipTimers.push(timer)
   })
