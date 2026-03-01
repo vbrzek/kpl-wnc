@@ -304,39 +304,6 @@ describe('RoomManager', () => {
     }
   });
 
-  // --- returnToLobby ---
-
-  it('returnToLobby returns error when not FINISHED', () => {
-    const { playerToken } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
-    );
-    const result = rm.returnToLobby(playerToken);
-    expect('error' in result).toBe(true);
-  });
-
-  it('returnToLobby resets room state', () => {
-    const { room, playerToken } = rm.createRoom(
-      { name: 'T', isPublic: false, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
-    );
-    rm.joinRoom(room.code, 'Bob');
-    rm.joinRoom(room.code, 'Charlie');
-    rm.startGame(playerToken);
-    rm.endGame(playerToken);
-
-    // Give players some score to verify reset
-    room.players[0].score = 5;
-    room.players[1].score = 3;
-
-    const result = rm.returnToLobby(playerToken);
-    expect('error' in result).toBe(false);
-    if (!('error' in result)) {
-      expect(result.room.status).toBe('LOBBY');
-      expect(result.room.roundNumber).toBe(0);
-      expect(result.room.currentBlackCard).toBeNull();
-      expect(result.room.players.every(p => p.score === 0)).toBe(true);
-    }
-  });
-
   // --- timer methods ---
 
   it('setRoundTimer fires callback after delay', () => {

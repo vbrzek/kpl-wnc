@@ -439,42 +439,6 @@ export class RoomManager {
     return { room };
   }
 
-  // ------------------------------------------------------------------ returnToLobby
-
-  returnToLobby(hostToken: string): ActionResult {
-    const code = this.playerRooms.get(hostToken);
-    if (!code) return { error: 'Nejsi v žádné místnosti.' };
-
-    const room = this.rooms.get(code);
-    if (!room) return { error: 'Místnost nebyla nalezena.' };
-
-    const hostPlayerId = this.tokenToPlayerId.get(hostToken);
-    if (hostPlayerId !== room.hostId) {
-      return { error: 'Pouze hostitel může vrátit hru do lobby.' };
-    }
-
-    if (room.status !== 'FINISHED') {
-      return { error: 'Hru lze vrátit do lobby pouze ze stavu FINISHED.' };
-    }
-
-    room.status = 'LOBBY';
-    room.roundDeadline = null;
-    room.currentBlackCard = null;
-    room.roundNumber = 0;
-
-    for (const player of room.players) {
-      player.score = 0;
-      player.isCardCzar = false;
-      player.hasPlayed = false;
-      // Zachováme isAfk pro odpojené hráče, resetujeme pro připojené
-      if (player.socketId !== null) {
-        player.isAfk = false;
-      }
-    }
-
-    return { room };
-  }
-
   // ------------------------------------------------------------------ finishGame
 
   finishGame(code: string): FinishGameResult | ErrorResult {
