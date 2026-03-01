@@ -12,7 +12,8 @@
     "createTable": "Створити стіл",
     "joinWithCode": "Увійти за кодом",
     "publicRooms": "Публічні столи",
-    "activeRooms": "Ваші ігри"
+    "activeRooms": "Ваші ігри",
+    "roomNotFound": "Стіл не знайдено."
   },
   "createTable": {
     "title": "Створити новий стіл",

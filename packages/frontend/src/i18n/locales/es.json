@@ -12,7 +12,8 @@
     "createTable": "Crear mesa",
     "joinWithCode": "Unirse con código",
     "publicRooms": "Mesas públicas",
-    "activeRooms": "Tus partidas"
+    "activeRooms": "Tus partidas",
+    "roomNotFound": "Mesa no encontrada."
   },
   "createTable": {
     "title": "Crear nueva mesa",

@@ -84,7 +84,7 @@ async function openPreview(code: string) {
   const preview = await fetchRoomPreview(code);
   previewLoading.value = false;
   if (!preview) {
-    errorMsg.value = 'Room not found.';
+    errorMsg.value = t('home.roomNotFound');
     return;
   }
   previewRoom.value = preview;

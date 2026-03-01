@@ -12,7 +12,8 @@
     "createTable": "Vytvořit stůl",
     "joinWithCode": "Připojit se (kód)",
     "publicRooms": "Veřejné stoly",
-    "activeRooms": "Tvoje hry"
+    "activeRooms": "Tvoje hry",
+    "roomNotFound": "Stůl nebyl nalezen."
   },
   "createTable": {
     "title": "Vytvořit nový stůl",
