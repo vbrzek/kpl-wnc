@@ -17,8 +17,9 @@ const myScore = computed(() => roomStore.me?.score ?? 0);
 </script>
 
 <template>
-  <header class="fixed top-0 inset-x-0 h-16 bg-gray-900/80 backdrop-blur-xl border-b border-white/5 z-50">
-    <div class="max-w-6xl mx-auto h-full px-6 flex items-center justify-between">
+  <header class="fixed top-0 inset-x-0 bg-gray-900/80 backdrop-blur-xl border-b border-white/5 z-50"
+          style="padding-top: env(safe-area-inset-top, 0px)">
+    <div class="h-16 max-w-6xl mx-auto px-6 flex items-center justify-between">
 
       <div class="flex flex-col">
         <h1 class="text-lg md:text-xl font-black text-white uppercase tracking-tighter leading-none">

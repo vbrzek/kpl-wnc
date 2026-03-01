@@ -10,7 +10,7 @@ const showEditProfile = ref(false);
   <div class="h-[100dvh] flex flex-col bg-gray-900 text-white font-sans overflow-hidden">
     <AppHeader @edit-profile="showEditProfile = true" />
 
-    <main class="pt-16 flex-1 flex flex-col overflow-hidden">
+    <main class="flex-1 flex flex-col overflow-hidden" style="padding-top: calc(4rem + env(safe-area-inset-top, 0px))">
       <div class="max-w-6xl mx-auto w-full px-4 md:px-6 flex-1 flex flex-col min-h-0">
         <slot></slot>
       </div>
