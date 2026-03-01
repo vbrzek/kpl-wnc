@@ -3,6 +3,7 @@ import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
+import { PlayCardsSchema, JudgeSelectSchema, validate } from './validation.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -12,6 +13,9 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
   // Player submits white cards during SELECTION
   socket.on('game:playCards', (cardIds) => {
+    const ids = validate(PlayCardsSchema, cardIds);
+    if (!ids) { socket.emit('game:error', 'Neplatná data karet.'); return; }
+
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) return;
 
@@ -27,7 +31,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     if (!engine) { socket.emit('game:error', 'Herní engine nenalezen.'); return; }
 
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
-    const result = engine.submitCards(playerId, cardIds);
+    const result = engine.submitCards(playerId, ids);
 
     if ('error' in result) {
       socket.emit('game:error', result.error);
@@ -71,6 +75,9 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
   // Card Czar selects winner during JUDGING
   socket.on('game:judgeSelect', (submissionId) => {
+    const id = validate(JudgeSelectSchema, submissionId);
+    if (!id) { socket.emit('game:error', 'Neplatné submissionId.'); return; }
+
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) return;
 
@@ -84,7 +91,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     if (!engine) { socket.emit('game:error', 'Herní engine nenalezen.'); return; }
 
     const czarId = roomManager.getPlayerIdByToken(playerToken)!;
-    const result = engine.selectWinner(czarId, submissionId);
+    const result = engine.selectWinner(czarId, id);
 
     if ('error' in result) {
       socket.emit('game:error', result.error);

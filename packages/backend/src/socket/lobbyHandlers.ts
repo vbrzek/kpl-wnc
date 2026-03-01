@@ -5,6 +5,7 @@ import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
+import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, validate } from './validation.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -24,7 +25,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
   // Create room
   socket.on('lobby:create', (settings, callback) => {
-    const { room, playerToken } = roomManager.createRoom(settings);
+    const data = validate(CreateRoomSchema, settings, callback);
+    if (!data) return;
+    const { room, playerToken } = roomManager.createRoom(data);
 
     // Attach socket to the host player
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
@@ -40,7 +43,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
   });
 
   // Join room (also handles reconnect when playerToken provided)
-  socket.on('lobby:join', (data, callback) => {
+  socket.on('lobby:join', (input, callback) => {
+    const data = validate(JoinRoomSchema, input, callback);
+    if (!data) return;
     const result = roomManager.joinRoom(data.code, data.nickname, data.playerToken);
 
     if ('error' in result) {
@@ -105,11 +110,13 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
   });
 
   // Update settings (host only)
-  socket.on('lobby:updateSettings', (settings, callback) => {
+  socket.on('lobby:updateSettings', (input, callback) => {
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) { callback({ error: 'Nejsi přihlášen' }); return; }
 
-    const result = roomManager.updateSettings(playerToken, settings);
+    const data = validate(UpdateSettingsSchema, input, callback);
+    if (!data) return;
+    const result = roomManager.updateSettings(playerToken, data);
     if ('error' in result) { callback(result); return; }
 
     io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
@@ -122,7 +129,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) { callback({ error: 'Nejsi přihlášen' }); return; }
 
-    const result = roomManager.kickPlayer(playerToken, targetPlayerId);
+    const validId = validate(KickPlayerSchema, targetPlayerId, callback);
+    if (!validId) return;
+    const result = roomManager.kickPlayer(playerToken, validId);
     if ('error' in result) { callback(result); return; }
 
     // Notify kicked player's socket
