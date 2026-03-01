@@ -17,7 +17,7 @@ Card Czar vybírá vítěze každého kola.
 - 👤 Profil hráče s DiceBear avatarem
 - 🃏 Více sad karet (česká sada, Liberecká banda 2026)
 - 🔗 Veřejné i soukromé stoly, sdílitelný odkaz
-- 📱 Responzivní design
+- 📱 Responzivní design + PWA (offline fallback, instalovatelné)
 
 ---
 
@@ -28,7 +28,7 @@ Monorepo se třemi balíčky (npm workspaces):
 | Balíček | Tech | Port |
 |---|---|---|
 | `@kpl/shared` | TypeScript typy | — |
-| `@kpl/backend` | Fastify · Socket.io · Knex · MySQL2 · Zod | 3000 |
+| `@kpl/backend` | Fastify · Socket.io · Knex · MySQL2 | 3000 |
 | `@kpl/frontend` | Vue 3 · Vite · Tailwind v4 · Pinia · Vue Router | 5173 |
 
 **Infrastruktura:** Linux VPS + Apache (reverse proxy + WebSocket tunel) + PM2
@@ -108,7 +108,7 @@ Aplikace bude dostupná na `http://localhost:5173`.
 ### Testy
 
 ```bash
-npm test --workspace=packages/backend   # 57 unit testů (Vitest)
+npm test --workspace=packages/backend   # 66 unit testů (Vitest)
 ```
 
 ---
@@ -169,6 +169,8 @@ systemctl reload apache2
 - [x] Globální profil hráče — přezdívka + DiceBear avatar
 - [x] Vícejazyčná verze — 5 jazyků, překlad karet přes REST
 - [x] Finální design (responzivní layout)
+- [x] PWA — offline fallback, instalovatelné na mobil
+- [x] Zvukové efekty při herních událostech
 - [ ] OAuth přihlášení (Google, Facebook)
 - [ ] Admin rozhraní — CRUD pro správu sad a karet
 
