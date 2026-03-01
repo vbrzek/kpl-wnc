@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline — Karty proti lidskosti</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        background: #0f0f0f;
+        color: #ffffff;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100dvh;
+        gap: 1.5rem;
+        text-align: center;
+        padding: 2rem;
+      }
+      svg { width: 80px; height: 80px; }
+      h1 { font-size: 1.5rem; font-weight: 700; }
+      p { color: #9ca3af; font-size: 1rem; max-width: 280px; line-height: 1.5; }
+      button {
+        margin-top: 0.5rem;
+        padding: 0.75rem 2rem;
+        background: #ffffff;
+        color: #0f0f0f;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover { background: #e5e7eb; }
+    </style>
+  </head>
+  <body>
+    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="5" fill="#0f0f0f" stroke="#ffffff" stroke-width="1.5"/>
+      <text x="16" y="23" text-anchor="middle" fill="white" font-size="20" font-family="serif">♠</text>
+    </svg>
+    <h1>Jsi offline</h1>
+    <p>Karty proti lidskosti vyžadují připojení k internetu.</p>
+    <button onclick="location.reload()">Zkusit znovu</button>
+  </body>
+</html>
