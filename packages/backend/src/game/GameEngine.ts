@@ -17,6 +17,7 @@ export class GameEngine {
   private playerHands = new Map<string, WhiteCard[]>();
   private submissions = new Map<string, { submissionId: string; cards: WhiteCard[] }>();
   private czarPointer = -1;
+  private usedWhiteCards: WhiteCard[] = [];
 
   currentBlackCard: BlackCard | null = null;
   roundNumber = 0;
@@ -34,6 +35,11 @@ export class GameEngine {
 
   startRound(): { czarId: string } {
     this.roundNumber++;
+
+    // Move last round's submitted cards to the used pile before clearing
+    for (const sub of this.submissions.values()) {
+      this.usedWhiteCards.push(...sub.cards);
+    }
     this.submissions.clear();
 
     for (const p of this.players) {
@@ -48,6 +54,11 @@ export class GameEngine {
     for (const p of this.players.filter(p => !p.isAfk)) {
       const hand = this.playerHands.get(p.id) ?? [];
       while (hand.length < HAND_SIZE) {
+        // Reshuffle used cards into deck if current deck is empty
+        if (this.whiteDeck.length === 0 && this.usedWhiteCards.length > 0) {
+          this.whiteDeck = shuffle(this.usedWhiteCards);
+          this.usedWhiteCards = [];
+        }
         const card = this.whiteDeck.pop();
         if (!card) break;
         hand.push(card);

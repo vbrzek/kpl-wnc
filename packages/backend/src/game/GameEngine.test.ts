@@ -230,4 +230,40 @@ describe('GameEngine', () => {
     const result = engine.selectWinner(nonCzars[0].id, subs[0].submissionId);
     expect(result).toHaveProperty('error');
   });
+
+  // --- Reshuffle mechanic ---
+
+  it('moves submitted cards to used pile and reshuffles when deck depletes', () => {
+    // 3 players × 10 = 30 cards needed for first deal; deck has exactly 30
+    // After round 1: 2 non-czar players each submit 1 card → 2 cards in usedPile
+    // Round 2 needs to replenish 2 cards but deck is empty → must reshuffle
+    const players3 = [makePlayer('a', 'A'), makePlayer('b', 'B'), makePlayer('c', 'C')];
+    const eng = new GameEngine(players3, makeBlackCards(20), makeWhiteCards(30));
+    eng.startRound();
+    const nonCzars = players3.filter(p => !p.isCardCzar);
+    for (const p of nonCzars) {
+      eng.submitCards(p.id, [eng.getPlayerHand(p.id)[0].id]);
+    }
+    // Round 2: should NOT throw even though deck is exhausted
+    expect(() => eng.startRound()).not.toThrow();
+    // All non-AFK players should have hands replenished to 10
+    for (const p of players3.filter(p => !p.isAfk)) {
+      expect(eng.getPlayerHand(p.id)).toHaveLength(10);
+    }
+  });
+
+  it('does not reshuffle when deck still has enough cards', () => {
+    // 100 white cards for 3 players — deck will not deplete in one round
+    const players3 = [makePlayer('a', 'A'), makePlayer('b', 'B'), makePlayer('c', 'C')];
+    const eng = new GameEngine(players3, makeBlackCards(20), makeWhiteCards(100));
+    eng.startRound();
+    const nonCzars = players3.filter(p => !p.isCardCzar);
+    for (const p of nonCzars) {
+      eng.submitCards(p.id, [eng.getPlayerHand(p.id)[0].id]);
+    }
+    expect(() => eng.startRound()).not.toThrow();
+    for (const p of players3) {
+      expect(eng.getPlayerHand(p.id)).toHaveLength(10);
+    }
+  });
 });
