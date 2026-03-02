@@ -105,7 +105,7 @@ npm run dev:frontend    # Vite dev server
 npm run build           # Build všech balíčků
 npm run migrate --workspace=packages/backend   # Spustí DB migrace
 npm run seed --workspace=packages/backend      # Naplní DB seed daty (destruktivní!)
-npm test --workspace=packages/backend          # Vitest unit testy — 66 testů
+npm test --workspace=packages/backend          # Vitest unit testy — 71 testů
 ```
 
 ## 🗄️ Databázové schéma
@@ -203,6 +203,7 @@ Globální profil hráče uložený v `localStorage['playerProfile']` (JSON: `{n
 | `PORT` | Backend (Fastify) | `3000` |
 | `FRONTEND_URL` | Backend CORS + Socket.io CORS | `http://10.5.10.150:5173` |
 | `VITE_BACKEND_URL` | Frontend (socket + fetch) | `http://10.5.10.150:3000` |
+| `SNAPSHOT_PATH` | Backend — cesta k souboru snapshotu stavu her | `/tmp/kpl-snapshot.json` |
 
 > **Pozor:** Vite načítá `.env` z kořene monorepa díky `envDir: '../../'` v `vite.config.ts`. Pro LAN/mobilní dev nastav obě URL na IP adresy (ne localhost).
 
@@ -225,6 +226,9 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 - `socketId` je součástí `Player` a je broadcastován všem hráčům v místnosti — informace nutná jen pro server
 - Zvuky: `useSound.ts` přehrává efekty při herních událostech (výhra kola, výběr karty, …)
 
+**Perzistence stavu her (SIGTERM snapshot):**
+Na `SIGTERM` (PM2 deploy) se celý stav `RoomManager` + `GameEngine` serializuje do JSON souboru (`SNAPSHOT_PATH`). Při dalším startu server soubor načte, smaže a obnoví stav před `app.listen()`. Timery kol se neobnovují (callbacky jsou no-op, `roundDeadline` klientům postačí). Klienti po restartu dostanou `server:hello` s novým `startupId` — pokud se liší od uloženého v `localStorage['kpl-startup-id']`, prohlížeč se automaticky obnoví (nový FE build). `ecosystem.config.js` má `kill_timeout: 5000`.
+
 ## 🚀 Roadmap
 
 - [x] Monorepo setup — npm workspaces, TypeScript, Fastify server, Vue 3 + Tailwind v4
@@ -237,5 +241,6 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 - [x] Globální profil hráče — nickname + DiceBear avatar + locale (localStorage, bez OAuth)
 - [x] Vícejazyčná verze — 5 jazyků (cs, en, ru, uk, es), překlad karet přes REST
 - [x] Finální vzhled (layout, design)
+- [x] Perzistence stavu her — rozehrané hry přežijí restart serveru (SIGTERM snapshot + client reload)
 - [ ] Profily hráčů — OAuth (Google, Facebook)
 - [ ] REST API — CRUD pro správu sad a karet (admin)

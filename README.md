@@ -79,6 +79,9 @@ PORT=3000
 
 FRONTEND_URL=http://localhost:5173
 VITE_BACKEND_URL=http://localhost:3000
+
+# Cesta pro snapshot stavu her při restartu (výchozí: /tmp/kpl-snapshot.json)
+# SNAPSHOT_PATH=/tmp/kpl-snapshot.json
 ```
 
 > **Pro LAN / mobilní testování:** Nastav obě URL na IP adresu místo `localhost`.
@@ -108,7 +111,7 @@ Aplikace bude dostupná na `http://localhost:5173`.
 ### Testy
 
 ```bash
-npm test --workspace=packages/backend   # 66 unit testů (Vitest)
+npm test --workspace=packages/backend   # 71 unit testů (Vitest)
 ```
 
 ---
@@ -123,11 +126,15 @@ npm run build
 
 ### PM2 — správce procesů
 
+Použij připravený `ecosystem.config.js` v kořeni repozitáře:
+
 ```bash
-pm2 start packages/backend/dist/index.js --name kpl-backend
+pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 ```
+
+Konfigurace zahrnuje `kill_timeout: 5000` — PM2 dá procesu 5 sekund na uložení snapshotu před vynuceným ukončením.
 
 ### Apache — reverse proxy
 
@@ -171,6 +178,7 @@ systemctl reload apache2
 - [x] Finální design (responzivní layout)
 - [x] PWA — offline fallback, instalovatelné na mobil
 - [x] Zvukové efekty při herních událostech
+- [x] Perzistence stavu her — rozehrané hry přežijí restart serveru (SIGTERM snapshot)
 - [ ] OAuth přihlášení (Google, Facebook)
 - [ ] Admin rozhraní — CRUD pro správu sad a karet
 
