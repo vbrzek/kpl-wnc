@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useLobbyStore, loadPlayerToken } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
 import { useProfileStore } from '../stores/profileStore';
+import { socket } from '../socket';
 import LobbyPanel from '../components/LobbyPanel.vue';
 import SelectionPhase from '../components/SelectionPhase.vue';
 import JudgingPhase from '../components/JudgingPhase.vue';
@@ -30,9 +31,7 @@ const stopKickedWatch = watch(
   }
 );
 
-onMounted(async () => {
-  roomStore.init();
-
+async function doJoin() {
   const existingToken = loadPlayerToken(roomCode);
   // Pokud má hráč token: reconnect s prázdnou přezdívkou (server použije token)
   // Pokud ne: připoj se s přezdívkou z globálního profilu
@@ -45,10 +44,25 @@ onMounted(async () => {
   }
   roomStore.setRoom(result.room);
   roomStore.setMyPlayerId(result.playerId);
+}
+
+// Po reconnectu socketu (např. probuzení telefonu ze spánku) se znovu připojíme
+// do místnosti — server má nový socket.id a bez toho ignoruje všechny herní akce.
+let hasJoined = false;
+function onSocketReconnect() {
+  if (hasJoined) doJoin();
+}
+
+onMounted(async () => {
+  roomStore.init();
+  socket.on('connect', onSocketReconnect);
+  await doJoin();
+  hasJoined = true;
 });
 
 onUnmounted(() => {
   stopKickedWatch();
+  socket.off('connect', onSocketReconnect);
   roomStore.cleanup();
 });
 </script>
