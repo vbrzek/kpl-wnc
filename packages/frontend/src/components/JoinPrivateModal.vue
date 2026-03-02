@@ -1,19 +1,28 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { fetchRoomPreview } from '../stores/lobbyStore';
 
 const emit = defineEmits<{ close: []; join: [code: string] }>();
 const code = ref('');
 const errorMsg = ref('');
+const loading = ref(false);
 const { t } = useI18n();
 
-function submit() {
+async function submit() {
   const normalized = code.value.trim().toUpperCase();
   if (!/^[A-Z2-9]{6}$/.test(normalized)) {
     errorMsg.value = t('joinPrivate.codeError');
     return;
   }
   errorMsg.value = '';
+  loading.value = true;
+  const preview = await fetchRoomPreview(normalized);
+  loading.value = false;
+  if (!preview) {
+    errorMsg.value = t('home.roomNotFound');
+    return;
+  }
   emit('join', normalized);
 }
 </script>
@@ -67,9 +76,10 @@ function submit() {
             </button>
             <button
               @click="submit"
-              class="flex-1 py-3.5 bg-white text-black text-sm font-black uppercase tracking-widest rounded-2xl shadow-[0_4px_0_rgb(60,60,60)] active:shadow-none active:translate-y-1 transition-all"
+              :disabled="loading"
+              class="flex-1 py-3.5 bg-white text-black text-sm font-black uppercase tracking-widest rounded-2xl shadow-[0_4px_0_rgb(60,60,60)] active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {{ t('common.join') }}
+              {{ loading ? t('common.loading') : t('common.join') }}
             </button>
           </div>
 
