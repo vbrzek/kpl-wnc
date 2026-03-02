@@ -1,8 +1,9 @@
 import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-
-config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
+import fs from 'fs';
+import { roomManager } from './game/RoomManager.js';
+import type { ManagerSnapshot } from './game/RoomManager.js';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { Server } from 'socket.io';
@@ -13,6 +14,10 @@ import { startGarbageCollector } from './game/GarbageCollector.js';
 import cardSetsRoutes from './routes/cardSets.js';
 import cardTranslationsRoute from './routes/cardTranslations.js';
 import roomsRoutes from './routes/rooms.js';
+
+config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
+
+const SNAPSHOT_PATH = process.env.SNAPSHOT_PATH ?? '/tmp/kpl-snapshot.json';
 
 const app = Fastify({ logger: true });
 
@@ -45,6 +50,26 @@ io.on('connection', (socket) => {
   });
 });
 
+if (fs.existsSync(SNAPSHOT_PATH)) {
+  try {
+    const raw = fs.readFileSync(SNAPSHOT_PATH, 'utf8');
+    const snapshot = JSON.parse(raw) as ManagerSnapshot;
+    fs.unlinkSync(SNAPSHOT_PATH); // smazat před restore — při pádu se neopakuje
+    roomManager.restore(snapshot);
+    app.log.info(`Restored ${snapshot.rooms.length} room(s) from snapshot.`);
+  } catch (err) {
+    app.log.error({ err }, 'Failed to restore snapshot — starting fresh.');
+  }
+}
+
 const port = Number(process.env.PORT ?? 3000);
 await app.listen({ port, host: '0.0.0.0' });
 startGarbageCollector(io);
+
+process.on('SIGTERM', () => {
+  app.log.info('SIGTERM received — saving snapshot...');
+  const snapshot = roomManager.serialize();
+  fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(snapshot));
+  app.log.info(`Snapshot saved to ${SNAPSHOT_PATH}`);
+  app.close().then(() => process.exit(0));
+});
