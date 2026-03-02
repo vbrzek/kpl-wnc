@@ -3,6 +3,7 @@ module.exports = {
     name: "kpl-backend",
     script: "./dist/index.js", // Cesta k buildu
     cwd: "./packages/backend",
+    kill_timeout: 5000,
     env: {
       NODE_ENV: "production",
       PORT: 3000,
