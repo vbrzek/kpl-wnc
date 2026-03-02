@@ -8,13 +8,13 @@ const errorMsg = ref('');
 const { t } = useI18n();
 
 function submit() {
-  const trimmed = code.value.trim().toLowerCase();
-  if (!/^[a-f0-9]{6}$/.test(trimmed)) {
+  const normalized = code.value.trim().toUpperCase();
+  if (!/^[A-Z2-9]{6}$/.test(normalized)) {
     errorMsg.value = t('joinPrivate.codeError');
     return;
   }
   errorMsg.value = '';
-  emit('join', trimmed);
+  emit('join', normalized);
 }
 </script>
 
@@ -48,7 +48,7 @@ function submit() {
               v-model="code"
               maxlength="6"
               class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 font-mono tracking-widest text-center text-lg focus:outline-none focus:border-white/30 transition-colors"
-              placeholder="a3f9c1"
+              placeholder="AB2G4K"
               @keyup.enter="submit"
               autofocus
             />
