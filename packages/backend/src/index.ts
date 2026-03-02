@@ -68,8 +68,8 @@ const port = Number(process.env.PORT ?? 3000);
 await app.listen({ port, host: '0.0.0.0' });
 startGarbageCollector(io);
 
-process.on('SIGTERM', () => {
-  app.log.info('SIGTERM received — saving snapshot...');
+function gracefulShutdown(signal: string) {
+  app.log.info(`${signal} received — saving snapshot...`);
   try {
     const snapshot = roomManager.serialize();
     fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(snapshot));
@@ -78,4 +78,7 @@ process.on('SIGTERM', () => {
     app.log.error({ err }, 'Failed to write snapshot — state will be lost on restart.');
   }
   app.close().then(() => process.exit(0)).catch(() => process.exit(1));
-});
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
