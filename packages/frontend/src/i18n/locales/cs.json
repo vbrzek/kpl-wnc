@@ -86,7 +86,12 @@
       "waiting": "Čeká se"
     },
     "selection": {
-      "submit": "Odeslat {current}/{total} karet"
+      "submit": "Odeslat {current}/{total} karet",
+      "trade": "Vyměnit karty (1 bod)",
+      "tradeConfirmTitle": "Vyměnit karty?",
+      "tradeConfirmText": "Odhodíš svou ruku do odhazovacího balíčku a lízneš si 10 nových karet. Stojí to 1 bod.",
+      "tradeConfirm": "Vyměnit",
+      "tradeCancel": "Zrušit"
     },
     "submitted": {
       "waiting": "Karty odeslány — čekáme na ostatní...",

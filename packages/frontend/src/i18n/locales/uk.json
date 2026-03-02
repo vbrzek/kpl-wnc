@@ -86,7 +86,12 @@
       "waiting": "Очікування"
     },
     "selection": {
-      "submit": "Надіслати {current}/{total} карт"
+      "submit": "Надіслати {current}/{total} карт",
+      "trade": "Замінити карти (1 очко)",
+      "tradeConfirmTitle": "Замінити карти?",
+      "tradeConfirmText": "Твої карти будуть скинуті, і ти візьмеш 10 нових. Це коштує 1 очко.",
+      "tradeConfirm": "Замінити",
+      "tradeCancel": "Скасувати"
     },
     "submitted": {
       "waiting": "Карти надіслано — чекаємо на інших...",

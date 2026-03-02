@@ -86,7 +86,12 @@
       "waiting": "Esperando"
     },
     "selection": {
-      "submit": "Enviar {current}/{total} cartas"
+      "submit": "Enviar {current}/{total} cartas",
+      "trade": "Cambiar cartas (1 punto)",
+      "tradeConfirmTitle": "¿Cambiar tus cartas?",
+      "tradeConfirmText": "Tus cartas serán descartadas y robarás 10 nuevas. Cuesta 1 punto.",
+      "tradeConfirm": "Cambiar",
+      "tradeCancel": "Cancelar"
     },
     "submitted": {
       "waiting": "Cartas enviadas — esperando a los demás...",

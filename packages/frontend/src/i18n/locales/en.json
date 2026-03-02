@@ -86,7 +86,12 @@
       "waiting": "Waiting"
     },
     "selection": {
-      "submit": "Submit {current}/{total} cards"
+      "submit": "Submit {current}/{total} cards",
+      "trade": "Trade hand (1 point)",
+      "tradeConfirmTitle": "Trade your hand?",
+      "tradeConfirmText": "Your hand will be discarded and you will draw 10 new cards. This costs 1 point.",
+      "tradeConfirm": "Trade",
+      "tradeCancel": "Cancel"
     },
     "submitted": {
       "waiting": "Cards submitted — waiting for others...",

@@ -86,7 +86,12 @@
       "waiting": "Ожидание"
     },
     "selection": {
-      "submit": "Отправить {current}/{total} карт"
+      "submit": "Отправить {current}/{total} карт",
+      "trade": "Обменять карты (1 очко)",
+      "tradeConfirmTitle": "Обменять карты?",
+      "tradeConfirmText": "Твои карты будут сброшены, и ты возьмёшь 10 новых. Это стоит 1 очко.",
+      "tradeConfirm": "Обменять",
+      "tradeCancel": "Отмена"
     },
     "submitted": {
       "waiting": "Карты отправлены — ждём остальных...",
