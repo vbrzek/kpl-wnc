@@ -11,6 +11,7 @@ export interface EngineSnapshot {
   czarPointer: number;
   usedWhiteCards: WhiteCard[];
   roundNumber: number;
+  tradedThisRound: string[];
   currentBlackCard: BlackCard | null;
 }
 
@@ -223,6 +224,7 @@ export class GameEngine {
       czarPointer: this.czarPointer,
       usedWhiteCards: [...this.usedWhiteCards],
       roundNumber: this.roundNumber,
+      tradedThisRound: Array.from(this.tradedThisRound),
       currentBlackCard: this.currentBlackCard,
     };
   }
@@ -237,6 +239,7 @@ export class GameEngine {
     engine.czarPointer = snap.czarPointer;
     engine.usedWhiteCards = snap.usedWhiteCards;
     engine.roundNumber = snap.roundNumber;
+    engine.tradedThisRound = new Set(snap.tradedThisRound ?? []);
     engine.currentBlackCard = snap.currentBlackCard;
     return engine;
   }

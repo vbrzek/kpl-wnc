@@ -78,6 +78,37 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     socket.emit('game:handUpdate', engine.getPlayerHand(playerId));
   });
 
+  // Player trades entire hand for 1 point (once per round, SELECTION only)
+  socket.on('game:tradeCards', () => {
+    if (!checkRateLimit(socket.id, 'game:tradeCards')) {
+      socket.emit('game:error', 'Příliš mnoho požadavků. Zkus to za chvíli.');
+      return;
+    }
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'SELECTION') {
+      socket.emit('game:error', 'Výměna karet je možná jen ve fázi výběru karet.');
+      return;
+    }
+
+    const engine = roomManager.getGameEngine(room.code);
+    if (!engine) { socket.emit('game:error', 'Herní engine nenalezen.'); return; }
+
+    const playerId = roomManager.getPlayerIdByToken(playerToken)!;
+    const result = engine.tradeHand(playerId);
+
+    if ('error' in result) {
+      socket.emit('game:error', result.error);
+      return;
+    }
+
+    roomManager.updateActivity(room.code);
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
+    socket.emit('game:handUpdate', result.newHand);
+  });
+
   // Card Czar selects winner during JUDGING
   socket.on('game:judgeSelect', (submissionId) => {
     if (!checkRateLimit(socket.id, 'game:judgeSelect')) {
