@@ -47,10 +47,10 @@ const { t } = useI18n();
         :pick="blackCard.pick"
         @toggle="emit('toggleCard', $event)"
       />
-      <div v-if="canTrade" class="px-1 mt-3 text-center">
+      <div v-if="canTrade" class="px-1 mt-4 text-center">
         <button
           @click="emit('trade')"
-          class="text-sm text-gray-400 underline underline-offset-2 hover:text-yellow-400 transition-colors"
+          class="px-4 py-2 rounded-xl text-sm font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 transition-colors"
         >
           {{ t('game.selection.trade') }}
         </button>

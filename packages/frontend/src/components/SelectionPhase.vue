@@ -154,7 +154,7 @@ async function onEndGame() {
   <Teleport to="body">
     <div
       v-if="showTradeConfirm"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       @click.self="cancelTrade"
     >
       <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl">
