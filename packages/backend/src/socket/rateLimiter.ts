@@ -14,6 +14,7 @@ const LIMITS: Record<string, Limit> = {
   'lobby:updateSettings': { max: 10, windowMs: 5_000  },
   'game:playCards':       { max: 10, windowMs: 5_000  },
   'game:judgeSelect':     { max: 10, windowMs: 5_000  },
+  'game:tradeCards':      { max: 3,  windowMs: 10_000 },
 };
 
 /**

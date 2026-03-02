@@ -540,6 +540,7 @@ export class RoomManager {
       p.score = 0;
       p.isCardCzar = false;
       p.hasPlayed = false;
+      p.tradedThisRound = false;
       if (p.socketId !== null) p.isAfk = false;
     }
 
