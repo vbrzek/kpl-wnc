@@ -70,8 +70,12 @@ startGarbageCollector(io);
 
 process.on('SIGTERM', () => {
   app.log.info('SIGTERM received — saving snapshot...');
-  const snapshot = roomManager.serialize();
-  fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(snapshot));
-  app.log.info(`Snapshot saved to ${SNAPSHOT_PATH}`);
+  try {
+    const snapshot = roomManager.serialize();
+    fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(snapshot));
+    app.log.info(`Snapshot saved to ${SNAPSHOT_PATH}`);
+  } catch (err) {
+    app.log.error({ err }, 'Failed to write snapshot — state will be lost on restart.');
+  }
   app.close().then(() => process.exit(0)).catch(() => process.exit(1));
 });
