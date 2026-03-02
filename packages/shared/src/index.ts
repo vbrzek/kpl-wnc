@@ -158,6 +158,7 @@ export interface ClientToServerEvents {
   'game:playCards': (cardIds: number[]) => void;
   'game:judgeSelect': (submissionId: string) => void;
   'game:retractCards': () => void;
+  'game:tradeCards': () => void;
   'game:czarForceAdvance': () => void;
   'game:skipCzarJudging': () => void;
 }

@@ -173,6 +173,11 @@ export const useRoomStore = defineStore('room', () => {
     selectedCards.value = [];
   }
 
+  function tradeCards() {
+    socket.emit('game:tradeCards');
+    selectedCards.value = [];
+  }
+
   function judgeSelect(submissionId: string) {
     socket.emit('game:judgeSelect', submissionId);
   }
@@ -227,6 +232,6 @@ export const useRoomStore = defineStore('room', () => {
     roundSkipped, finishedState,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, endGame, updateNickname, clearFinishedState, cleanup,
-    playCards, judgeSelect, toggleCardSelection, retractCards, czarForceAdvance, skipCzarJudging,
+    playCards, judgeSelect, toggleCardSelection, retractCards, tradeCards, czarForceAdvance, skipCzarJudging,
   };
 });
