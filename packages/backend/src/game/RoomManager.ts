@@ -136,6 +136,11 @@ export class RoomManager {
       }
     }
 
+    // Reject empty nickname for new player (only reconnects may pass empty nickname)
+    if (!nickname.trim()) {
+      return { error: 'Přezdívka nesmí být prázdná.' };
+    }
+
     if (room.status !== 'LOBBY') {
       return { error: 'Hra již začala.' };
     }
@@ -307,6 +312,33 @@ export class RoomManager {
     if (settings.selectedSetIds !== undefined) room.selectedSetIds = settings.selectedSetIds;
     if (settings.maxPlayers !== undefined) room.maxPlayers = settings.maxPlayers;
 
+    return { room };
+  }
+
+  // ------------------------------------------------------------------ updateNickname
+
+  updateNickname(playerToken: string, newNickname: string): ActionResult {
+    const code = this.playerRooms.get(playerToken);
+    if (!code) return { error: 'Nejsi v žádné místnosti.' };
+
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Místnost nebyla nalezena.' };
+
+    const playerId = this.tokenToPlayerId.get(playerToken);
+    if (!playerId) return { error: 'Hráč nenalezen.' };
+
+    const player = room.players.find(p => p.id === playerId);
+    if (!player) return { error: 'Hráč nenalezen.' };
+
+    const trimmed = newNickname.trim();
+    if (trimmed === player.nickname) return { room }; // no change
+
+    const duplicate = room.players.some(
+      p => p.id !== playerId && p.nickname.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (duplicate) return { error: 'Přezdívka je již obsazena.' };
+
+    player.nickname = trimmed;
     return { room };
   }
 

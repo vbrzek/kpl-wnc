@@ -37,6 +37,8 @@ export const JudgeSelectSchema = z.string().uuid('Neplatné submissionId');
 
 export const KickPlayerSchema = z.string().uuid('Neplatné playerId');
 
+export const UpdateNicknameSchema = z.string().min(1).max(24).trim();
+
 // --- Helper ---
 
 /** Zvaliduje data. Pokud selže, zavolá callback (pokud existuje) a vrátí null. */

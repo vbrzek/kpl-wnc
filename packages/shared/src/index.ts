@@ -149,6 +149,10 @@ export interface ClientToServerEvents {
   'lobby:endGame': (
     callback: (result: { ok: true } | { error: string }) => void
   ) => void;
+  'lobby:updateNickname': (
+    nickname: string,
+    callback: (result: { ok: true } | { error: string }) => void
+  ) => void;
   'game:leave': () => void;
   'game:playCards': (cardIds: number[]) => void;
   'game:judgeSelect': (submissionId: string) => void;

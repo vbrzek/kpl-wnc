@@ -5,7 +5,7 @@ import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { GameEngine } from '../game/GameEngine.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
-import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, validate } from './validation.js';
+import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, validate } from './validation.js';
 import { checkRateLimit, cleanupSocket } from './rateLimiter.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 
@@ -213,6 +213,25 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     } catch {
       io.to(`room:${room.code}`).emit('game:error', 'Chyba při inicializaci hry — zkontroluj sady karet.');
     }
+  });
+
+  // Update nickname (while in room)
+  socket.on('lobby:updateNickname', (newNickname, callback) => {
+    if (!checkRateLimit(socket.id, 'lobby:updateNickname')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) { callback({ error: 'Nejsi přihlášen' }); return; }
+
+    const validated = validate(UpdateNicknameSchema, newNickname, callback);
+    if (!validated) return;
+
+    const result = roomManager.updateNickname(playerToken, validated);
+    if ('error' in result) { callback(result); return; }
+
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
+    callback({ ok: true });
   });
 
   // Disconnect — start AFK timer, emit state update

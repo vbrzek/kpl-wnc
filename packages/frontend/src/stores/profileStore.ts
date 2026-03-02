@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { i18n } from '../i18n';
+import { useRoomStore } from './roomStore';
 
 const SUPPORTED_LOCALES = ['cs', 'en', 'ru', 'uk', 'es'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
@@ -35,13 +36,23 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  function save(newNickname: string, newLocale: SupportedLocale) {
-    nickname.value = newNickname.trim();
+  async function save(newNickname: string, newLocale: SupportedLocale): Promise<string | null> {
+    const trimmed = newNickname.trim();
     locale.value = newLocale;
-    const profile: PlayerProfile = { nickname: nickname.value, locale: newLocale };
-    localStorage.setItem('playerProfile', JSON.stringify(profile));
     localStorage.setItem('locale', newLocale);
     (i18n.global.locale as { value: string }).value = newLocale;
+
+    // Sync nickname to room if currently in one and nickname changed
+    const roomStore = useRoomStore();
+    if (roomStore.room && trimmed !== nickname.value) {
+      const error = await roomStore.updateNickname(trimmed);
+      if (error) return error.error; // nickname taken — don't update local store
+    }
+
+    nickname.value = trimmed;
+    const profile: PlayerProfile = { nickname: trimmed, locale: newLocale };
+    localStorage.setItem('playerProfile', JSON.stringify(profile));
+    return null; // success
   }
 
   function toggleSoundMuted() {

@@ -150,6 +150,14 @@ export const useRoomStore = defineStore('room', () => {
     });
   }
 
+  async function updateNickname(newNickname: string): Promise<{ error: string } | null> {
+    return new Promise((resolve) => {
+      socket.emit('lobby:updateNickname', newNickname, (result) => {
+        resolve('error' in result ? result : null);
+      });
+    });
+  }
+
   function clearFinishedState() {
     finishedState.value = null;
   }
@@ -218,7 +226,7 @@ export const useRoomStore = defineStore('room', () => {
     hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
     roundSkipped, finishedState,
     init, setRoom, setMyPlayerId, leave,
-    updateSettings, kickPlayer, startGame, endGame, clearFinishedState, cleanup,
+    updateSettings, kickPlayer, startGame, endGame, updateNickname, clearFinishedState, cleanup,
     playCards, judgeSelect, toggleCardSelection, retractCards, czarForceAdvance, skipCzarJudging,
   };
 });

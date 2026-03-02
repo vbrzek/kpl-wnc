@@ -14,6 +14,7 @@ const { muted, toggleMute } = useSound();
 
 const nicknameInput = ref(profileStore.nickname);
 const selectedLocale = ref<SupportedLocale>(profileStore.locale);
+const saveError = ref('');
 
 const previewAvatarUrl = computed(() =>
   `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(nicknameInput.value || 'default')}`
@@ -29,9 +30,14 @@ const languages: { code: SupportedLocale; label: string; flagClass: string }[] =
   { code: 'es', label: 'Español', flagClass: 'fi fi-es' },
 ];
 
-function submit() {
+async function submit() {
   if (!canSave.value) return;
-  profileStore.save(nicknameInput.value.trim(), selectedLocale.value);
+  const error = await profileStore.save(nicknameInput.value.trim(), selectedLocale.value);
+  if (error) {
+    saveError.value = error;
+    return;
+  }
+  saveError.value = '';
   emit('close');
 }
 
@@ -131,6 +137,7 @@ function onBackdropClick() {
           </div>
 
           <!-- Save -->
+          <p v-if="saveError" class="text-red-400 text-sm text-center">{{ saveError }}</p>
           <button
             @click="submit"
             :disabled="!canSave"
