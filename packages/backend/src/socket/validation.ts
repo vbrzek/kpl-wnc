@@ -49,7 +49,7 @@ export function validate<T>(
 ): T | null {
   const result = schema.safeParse(data);
   if (!result.success) {
-    const msg = result.error.errors[0]?.message ?? 'Neplatná data.';
+    const msg = result.error.issues[0]?.message ?? 'Neplatná data.';
     if (callback) callback({ error: msg });
     return null;
   }
