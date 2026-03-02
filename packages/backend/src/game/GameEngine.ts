@@ -29,6 +29,7 @@ export class GameEngine {
   private submissions = new Map<string, { submissionId: string; cards: WhiteCard[] }>();
   private czarPointer = -1;
   private usedWhiteCards: WhiteCard[] = [];
+  private tradedThisRound = new Set<string>();
 
   currentBlackCard: BlackCard | null = null;
   roundNumber = 0;
@@ -52,6 +53,7 @@ export class GameEngine {
       this.usedWhiteCards.push(...sub.cards);
     }
     this.submissions.clear();
+    this.tradedThisRound.clear();
 
     for (const p of this.players) {
       p.hasPlayed = false;
@@ -142,6 +144,34 @@ export class GameEngine {
 
     player.hasPlayed = false;
     return { ok: true };
+  }
+
+  tradeHand(playerId: string): { ok: true; newHand: WhiteCard[] } | { error: string } {
+    const player = this.players.find(p => p.id === playerId);
+    if (!player) return { error: 'Hráč nenalezen.' };
+    if (player.isCardCzar) return { error: 'Card Czar nemůže vyměňovat karty.' };
+    if (player.hasPlayed) return { error: 'Nelze vyměnit karty po odevzdání.' };
+    if (player.score < 1) return { error: 'Nemáš dostatek bodů pro výměnu karet.' };
+    if (this.tradedThisRound.has(playerId)) return { error: 'V tomto kole jsi už karty vyměnil.' };
+
+    const oldHand = this.playerHands.get(playerId) ?? [];
+    this.usedWhiteCards.push(...oldHand);
+    this.playerHands.set(playerId, []);
+
+    const newHand: WhiteCard[] = [];
+    while (newHand.length < HAND_SIZE) {
+      if (this.whiteDeck.length === 0 && this.usedWhiteCards.length > 0) {
+        this.whiteDeck = shuffle(this.usedWhiteCards);
+        this.usedWhiteCards = [];
+      }
+      const card = this.whiteDeck.pop();
+      if (!card) break;
+      newHand.push(card);
+    }
+    this.playerHands.set(playerId, newHand);
+    player.score--;
+    this.tradedThisRound.add(playerId);
+    return { ok: true, newHand: [...newHand] };
   }
 
   getAnonymousSubmissions(): AnonymousSubmission[] {

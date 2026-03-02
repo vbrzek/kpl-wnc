@@ -301,4 +301,85 @@ describe('GameEngine', () => {
       expect('error' in result).toBe(false);
     });
   });
+
+  // --- tradeHand ---
+
+  describe('tradeHand', () => {
+    it('returns error if player not found', () => {
+      engine.startRound();
+      const result = engine.tradeHand('nonexistent');
+      expect(result).toHaveProperty('error');
+    });
+
+    it('returns error if player is card czar', () => {
+      engine.startRound();
+      const czar = players.find(p => p.isCardCzar)!;
+      const result = engine.tradeHand(czar.id);
+      expect(result).toHaveProperty('error');
+    });
+
+    it('returns error if player has already played', () => {
+      engine.startRound();
+      const nonCzar = players.find(p => !p.isCardCzar)!;
+      const cardId = engine.getPlayerHand(nonCzar.id)[0].id;
+      engine.submitCards(nonCzar.id, [cardId]);
+      const result = engine.tradeHand(nonCzar.id);
+      expect(result).toHaveProperty('error');
+    });
+
+    it('returns error if player score is 0', () => {
+      engine.startRound();
+      const nonCzar = players.find(p => !p.isCardCzar)!;
+      nonCzar.score = 0;
+      const result = engine.tradeHand(nonCzar.id);
+      expect(result).toHaveProperty('error');
+    });
+
+    it('returns error if player already traded this round', () => {
+      engine.startRound();
+      const nonCzar = players.find(p => !p.isCardCzar)!;
+      nonCzar.score = 2;
+      engine.tradeHand(nonCzar.id); // první výměna OK
+      const result = engine.tradeHand(nonCzar.id); // druhá — chyba
+      expect(result).toHaveProperty('error');
+    });
+
+    it('deducts 1 point from player on successful trade', () => {
+      engine.startRound();
+      const nonCzar = players.find(p => !p.isCardCzar)!;
+      nonCzar.score = 3;
+      engine.tradeHand(nonCzar.id);
+      expect(nonCzar.score).toBe(2);
+    });
+
+    it('returns new hand of 10 cards', () => {
+      engine.startRound();
+      const nonCzar = players.find(p => !p.isCardCzar)!;
+      nonCzar.score = 1;
+      const result = engine.tradeHand(nonCzar.id);
+      expect('newHand' in result && result.newHand).toHaveLength(10);
+    });
+
+    it('new hand cards are different from old hand', () => {
+      engine.startRound();
+      const nonCzar = players.find(p => !p.isCardCzar)!;
+      nonCzar.score = 1;
+      const oldHand = engine.getPlayerHand(nonCzar.id).map(c => c.id);
+      const result = engine.tradeHand(nonCzar.id) as { newHand: import('@kpl/shared').WhiteCard[] };
+      const newIds = result.newHand.map(c => c.id);
+      expect(newIds.some(id => !oldHand.includes(id))).toBe(true);
+    });
+
+    it('resets traded flag at start of new round', () => {
+      engine.startRound();
+      const nonCzar = players.find(p => !p.isCardCzar)!;
+      nonCzar.score = 2;
+      engine.tradeHand(nonCzar.id); // kolo 1 — vyměněno
+      engine.startRound(); // kolo 2 — reset
+      const nonCzar2 = players.find(p => !p.isCardCzar)!;
+      nonCzar2.score = 1;
+      const result = engine.tradeHand(nonCzar2.id);
+      expect(result).not.toHaveProperty('error');
+    });
+  });
 });
