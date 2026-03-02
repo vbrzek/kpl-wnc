@@ -21,12 +21,12 @@ const previewAvatarUrl = computed(() =>
 
 const canSave = computed(() => nicknameInput.value.trim().length > 0);
 
-const languages: { code: SupportedLocale; label: string; flag: string }[] = [
-  { code: 'cs', label: 'Čeština', flag: '🇨🇿' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-  { code: 'uk', label: 'Українська', flag: '🇺🇦' },
-  { code: 'es', label: 'Español', flag: '🇪🇸' },
+const languages: { code: SupportedLocale; label: string; flagClass: string }[] = [
+  { code: 'cs', label: 'Čeština', flagClass: 'fi fi-cz' },
+  { code: 'en', label: 'English', flagClass: 'fi fi-gb' },
+  { code: 'ru', label: 'Русский', flagClass: 'fi fi-ru' },
+  { code: 'uk', label: 'Українська', flagClass: 'fi fi-ua' },
+  { code: 'es', label: 'Español', flagClass: 'fi fi-es' },
 ];
 
 function submit() {
@@ -105,7 +105,7 @@ function onBackdropClick() {
                     : 'bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/15 hover:text-slate-300',
                 ]"
               >
-                {{ lang.flag }} {{ lang.label }}
+                <span :class="lang.flagClass"></span> {{ lang.label }}
               </button>
             </div>
           </div>
