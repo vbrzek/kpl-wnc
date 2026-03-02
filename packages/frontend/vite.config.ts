@@ -39,8 +39,8 @@ export default defineConfig({
       workbox: {
         // Cachuj statické assety (JS, CSS, obrázky, zvuky)
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3,ogg,woff,woff2}'],
-        // Navigační requesty: NetworkFirst s fallbackem na offline.html
-        navigateFallback: '/offline.html',
+        // Navigační requesty: SPA shell — Vue Router zpracuje cestu
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api\//,       // REST API — vždy na server
           /^\/socket\.io/,  // Socket.io — vždy na server
