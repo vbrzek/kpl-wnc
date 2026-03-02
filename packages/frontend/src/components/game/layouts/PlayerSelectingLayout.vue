@@ -15,6 +15,7 @@ const props = defineProps<{
   hand: WhiteCard[]
   selectedCards: WhiteCard[]
   canSubmit: boolean
+  canTrade: boolean
   roundSkipped: boolean
   czarNickname: string
 }>()
@@ -22,6 +23,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   toggleCard: [card: WhiteCard]
   submit: []
+  trade: []
 }>()
 
 const { t } = useI18n();
@@ -45,6 +47,14 @@ const { t } = useI18n();
         :pick="blackCard.pick"
         @toggle="emit('toggleCard', $event)"
       />
+      <div v-if="canTrade" class="px-1 mt-3 text-center">
+        <button
+          @click="emit('trade')"
+          class="text-sm text-gray-400 underline underline-offset-2 hover:text-yellow-400 transition-colors"
+        >
+          {{ t('game.selection.trade') }}
+        </button>
+      </div>
     </div>
 
     <div class="fixed bottom-0 inset-x-0 p-4 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent z-20">

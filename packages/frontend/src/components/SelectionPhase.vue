@@ -37,6 +37,24 @@ const translatedHand = computed(() =>
 const pick = computed(() => roomStore.currentBlackCard?.pick ?? 1);
 const canSubmit = computed(() => roomStore.selectedCards.length === pick.value);
 const retracting = ref(false);
+const showTradeConfirm = ref(false);
+
+const canTrade = computed(
+  () => (roomStore.me?.score ?? 0) >= 1 && !roomStore.me?.hasPlayed && !roomStore.isCardCzar
+);
+
+function onTradeRequest() {
+  showTradeConfirm.value = true;
+}
+
+function confirmTrade() {
+  showTradeConfirm.value = false;
+  roomStore.tradeCards();
+}
+
+function cancelTrade() {
+  showTradeConfirm.value = false;
+}
 
 // --- Countdown ---
 const secondsLeft = ref(0);
@@ -125,11 +143,40 @@ async function onEndGame() {
     :hand="translatedHand"
     :selectedCards="roomStore.selectedCards"
     :canSubmit="canSubmit"
+    :canTrade="canTrade"
     :roundSkipped="roomStore.roundSkipped"
     @toggleCard="roomStore.toggleCardSelection"
     :czarNickname="czarNickname"
     @submit="submit"
+    @trade="onTradeRequest"
   />
+  <!-- Trade confirm modal -->
+  <Teleport to="body">
+    <div
+      v-if="showTradeConfirm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+      @click.self="cancelTrade"
+    >
+      <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl">
+        <h2 class="text-lg font-bold text-white mb-2">{{ t('game.selection.tradeConfirmTitle') }}</h2>
+        <p class="text-gray-400 text-sm mb-6">{{ t('game.selection.tradeConfirmText') }}</p>
+        <div class="flex gap-3">
+          <button
+            @click="cancelTrade"
+            class="flex-1 py-3 rounded-xl font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors"
+          >
+            {{ t('game.selection.tradeCancel') }}
+          </button>
+          <button
+            @click="confirmTrade"
+            class="flex-1 py-3 rounded-xl font-black text-black bg-yellow-500 hover:bg-yellow-400 transition-colors shadow-[0_4px_0_rgb(161,98,7)] active:shadow-none active:translate-y-0.5"
+          >
+            {{ t('game.selection.tradeConfirm') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
   <div v-if="roomStore.isHost" class="mt-4 text-center">
     <button
       @click="onEndGame"
