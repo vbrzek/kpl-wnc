@@ -111,7 +111,7 @@ function onJoinPrivate(code: string) {
     <header class="mb-6 flex items-end justify-between">
       <div>
         <h1 class="text-3xl font-black tracking-tighter leading-none uppercase italic">
-          {{ titleStart }} <span class="text-white/40">{{ titleEnd }}</span>
+          {{ titleStart }} <span class="text-white/40">{{ titleEnd }}</span> 2
         </h1>
         <div class="h-1 w-12 bg-yellow-500 rounded-full mt-2"></div>
       </div>
