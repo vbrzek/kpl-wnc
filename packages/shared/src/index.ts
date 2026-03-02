@@ -10,6 +10,7 @@ export interface Player {
   score: number;
   isCardCzar: boolean;
   hasPlayed: boolean;
+  tradedThisRound: boolean;
   isAfk: boolean;
 }
 

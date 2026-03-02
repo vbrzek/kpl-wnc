@@ -59,6 +59,7 @@ export class GameEngine {
     for (const p of this.players) {
       p.hasPlayed = false;
       p.isCardCzar = false;
+      p.tradedThisRound = false;
     }
 
     const blackCard = this.blackDeck.pop();
@@ -172,6 +173,7 @@ export class GameEngine {
     this.playerHands.set(playerId, newHand);
     player.score--;
     this.tradedThisRound.add(playerId);
+    player.tradedThisRound = true;
     return { ok: true, newHand: [...newHand] };
   }
 

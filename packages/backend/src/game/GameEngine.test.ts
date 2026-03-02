@@ -3,7 +3,7 @@ import { GameEngine } from './GameEngine.js';
 import type { Player, BlackCard, WhiteCard } from '@kpl/shared';
 
 function makePlayer(id: string, nickname: string): Player {
-  return { id, socketId: 'socket-' + id, nickname, score: 0, isCardCzar: false, hasPlayed: false, isAfk: false };
+  return { id, socketId: 'socket-' + id, nickname, score: 0, isCardCzar: false, hasPlayed: false, tradedThisRound: false, isAfk: false };
 }
 
 function makeBlackCards(n: number, pick = 1): BlackCard[] {

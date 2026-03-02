@@ -98,6 +98,7 @@ export class RoomManager {
       score: 0,
       isCardCzar: false,
       hasPlayed: false,
+      tradedThisRound: false,
       isAfk: false,
     };
 
@@ -174,6 +175,7 @@ export class RoomManager {
       score: 0,
       isCardCzar: false,
       hasPlayed: false,
+      tradedThisRound: false,
       isAfk: false,
     };
 
