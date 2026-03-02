@@ -71,5 +71,5 @@ process.on('SIGTERM', () => {
   const snapshot = roomManager.serialize();
   fs.writeFileSync(SNAPSHOT_PATH, JSON.stringify(snapshot));
   app.log.info(`Snapshot saved to ${SNAPSHOT_PATH}`);
-  app.close().then(() => process.exit(0));
+  app.close().then(() => process.exit(0)).catch(() => process.exit(1));
 });
