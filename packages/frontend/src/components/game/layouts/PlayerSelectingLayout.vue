@@ -38,12 +38,14 @@ const { t } = useI18n();
       <CzarBadge :czarNickname="czarNickname" :isMe="false" />
     </div>
 
-     <CardHand
-      :cards="hand"
-      :selectedCards="selectedCards"
-      :pick="blackCard.pick"
-      @toggle="emit('toggleCard', $event)"
-    />
+    <div class="flex-1 min-h-0 overflow-y-auto pb-24">
+      <CardHand
+        :cards="hand"
+        :selectedCards="selectedCards"
+        :pick="blackCard.pick"
+        @toggle="emit('toggleCard', $event)"
+      />
+    </div>
 
     <div class="fixed bottom-0 inset-x-0 p-4 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent z-20">
       <div class="max-w-6xl mx-auto">
