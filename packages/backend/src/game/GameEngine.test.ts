@@ -270,8 +270,6 @@ describe('GameEngine', () => {
   describe('snapshot', () => {
     it('round-trips player hands and deck state', () => {
       engine.startRound();
-      // p1 je czar, p2+p3 hrají karty
-      const czar = players.find(p => p.isCardCzar)!;
       const nonCzars = players.filter(p => !p.isCardCzar);
       for (const p of nonCzars) {
         engine.submitCards(p.id, [engine.getPlayerHand(p.id)[0].id]);
