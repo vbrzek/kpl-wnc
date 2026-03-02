@@ -3,6 +3,17 @@ import type { BlackCard, WhiteCard, Player, AnonymousSubmission, RoundResult } f
 
 const HAND_SIZE = 10;
 
+export interface EngineSnapshot {
+  blackDeck: BlackCard[];
+  whiteDeck: WhiteCard[];
+  playerHands: Record<string, WhiteCard[]>;
+  submissions: Record<string, { submissionId: string; cards: WhiteCard[] }>;
+  czarPointer: number;
+  usedWhiteCards: WhiteCard[];
+  roundNumber: number;
+  currentBlackCard: BlackCard | null;
+}
+
 function shuffle<T>(arr: T[]): T[] {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -169,5 +180,34 @@ export class GameEngine {
 
   getPlayerHand(playerId: string): WhiteCard[] {
     return [...(this.playerHands.get(playerId) ?? [])];
+  }
+
+  toSnapshot(): EngineSnapshot {
+    return {
+      blackDeck: [...this.blackDeck],
+      whiteDeck: [...this.whiteDeck],
+      playerHands: Object.fromEntries(
+        Array.from(this.playerHands.entries()).map(([k, v]) => [k, [...v]])
+      ),
+      submissions: Object.fromEntries(this.submissions),
+      czarPointer: this.czarPointer,
+      usedWhiteCards: [...this.usedWhiteCards],
+      roundNumber: this.roundNumber,
+      currentBlackCard: this.currentBlackCard,
+    };
+  }
+
+  static fromSnapshot(snap: EngineSnapshot, players: Player[]): GameEngine {
+    // Prázdné decky — hned přepíšeme ze snapshotu
+    const engine = new GameEngine(players, [], []);
+    engine.blackDeck = snap.blackDeck;
+    engine.whiteDeck = snap.whiteDeck;
+    engine.playerHands = new Map(Object.entries(snap.playerHands));
+    engine.submissions = new Map(Object.entries(snap.submissions));
+    engine.czarPointer = snap.czarPointer;
+    engine.usedWhiteCards = snap.usedWhiteCards;
+    engine.roundNumber = snap.roundNumber;
+    engine.currentBlackCard = snap.currentBlackCard;
+    return engine;
   }
 }

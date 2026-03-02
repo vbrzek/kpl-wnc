@@ -266,4 +266,41 @@ describe('GameEngine', () => {
       expect(eng.getPlayerHand(p.id)).toHaveLength(10);
     }
   });
+
+  describe('snapshot', () => {
+    it('round-trips player hands and deck state', () => {
+      engine.startRound();
+      // p1 je czar, p2+p3 hrají karty
+      const czar = players.find(p => p.isCardCzar)!;
+      const nonCzars = players.filter(p => !p.isCardCzar);
+      for (const p of nonCzars) {
+        engine.submitCards(p.id, [engine.getPlayerHand(p.id)[0].id]);
+      }
+
+      const snap = engine.toSnapshot();
+      const restored = GameEngine.fromSnapshot(snap, players);
+
+      for (const p of players) {
+        expect(restored.getPlayerHand(p.id)).toEqual(engine.getPlayerHand(p.id));
+      }
+      expect(restored.roundNumber).toBe(engine.roundNumber);
+      expect(restored.currentBlackCard).toEqual(engine.currentBlackCard);
+    });
+
+    it('fromSnapshot engine can continue play — selectWinner works', () => {
+      engine.startRound();
+      const czar = players.find(p => p.isCardCzar)!;
+      const nonCzars = players.filter(p => !p.isCardCzar);
+      for (const p of nonCzars) {
+        engine.submitCards(p.id, [engine.getPlayerHand(p.id)[0].id]);
+      }
+
+      const snap = engine.toSnapshot();
+      const restored = GameEngine.fromSnapshot(snap, players);
+
+      const subs = restored.getAnonymousSubmissions();
+      const result = restored.selectWinner(czar.id, subs[0].submissionId);
+      expect('error' in result).toBe(false);
+    });
+  });
 });
