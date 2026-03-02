@@ -605,7 +605,10 @@ export class RoomManager {
     this.tokenToPlayerId.clear();
 
     for (const { room, engine: engineSnap } of snapshot.rooms) {
-      // Sockety nepřežijí restart — všichni offline
+      // Sockety nepřežijí restart — všichni offline.
+      // isAfk se záměrně zachovává: reconnect() ho vymaže při návratu hráče.
+      // roundDeadline se záměrně zachovává: hodnota v minulosti je přijatelná,
+      // klienti zobrazí nulu a hra pokračuje přes standardní flow (czarForceAdvance apod.).
       for (const player of room.players) {
         player.socketId = null;
         player.isOnline = false;
