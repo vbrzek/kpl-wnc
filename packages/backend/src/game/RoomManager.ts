@@ -2,6 +2,15 @@ import { randomBytes, randomUUID } from 'crypto';
 import type { GameRoom, GameOverPayload, Player, PublicRoomSummary } from '@kpl/shared';
 import { GameEngine } from './GameEngine.js';
 
+// --- Room code generator ---
+
+const ROOM_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 31 chars: A-Z + 2-9, no 0/O/1/I/L
+
+function generateRoomCode(length = 6): string {
+  const bytes = randomBytes(length);
+  return Array.from(bytes, b => ROOM_CODE_CHARS[b % ROOM_CODE_CHARS.length]).join('');
+}
+
 // --- Result types ---
 
 export interface JoinSuccess {
@@ -70,7 +79,7 @@ export class RoomManager {
   // ------------------------------------------------------------------ createRoom
 
   createRoom(settings: CreateRoomSettings): { room: GameRoom; playerToken: string } {
-    const code = randomBytes(3).toString('hex');
+    const code = generateRoomCode();
     const playerId = randomUUID();
     const playerToken = randomUUID();
 

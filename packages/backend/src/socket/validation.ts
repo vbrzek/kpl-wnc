@@ -3,7 +3,7 @@ import { z } from 'zod';
 // --- Sdílené schémata ---
 
 const nickname = z.string().min(1).max(24).trim();
-const roomCode = z.string().regex(/^[a-f0-9]{6}$/, 'Neplatný kód místnosti');
+const roomCode = z.string().toUpperCase().regex(/^[A-Z2-9]{6}$/, 'Neplatný kód místnosti');
 
 // --- Schémata pro jednotlivé eventy ---
 

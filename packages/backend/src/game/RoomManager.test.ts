@@ -15,11 +15,11 @@ describe('RoomManager', () => {
 
   // --- createRoom ---
 
-  it('creates a room with a 6-char hex code', () => {
+  it('creates a room with a 6-char alfanumeric code', () => {
     const { room } = rm.createRoom(
       { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
-    expect(room.code).toMatch(/^[a-f0-9]{6}$/);
+    expect(room.code).toMatch(/^[A-Z2-9]{6}$/);
   });
 
   it('creates a room with the host as first player', () => {
