@@ -1,6 +1,13 @@
 import { randomBytes, randomUUID } from 'crypto';
 import type { GameRoom, GameOverPayload, Player, PublicRoomSummary } from '@kpl/shared';
-import { GameEngine } from './GameEngine.js';
+import { GameEngine, type EngineSnapshot } from './GameEngine.js';
+
+export interface ManagerSnapshot {
+  savedAt: number;
+  rooms: Array<{ room: GameRoom; engine: EngineSnapshot | null }>;
+  playerRooms: Record<string, string>;
+  tokenToPlayerId: Record<string, string>;
+}
 
 // --- Room code generator ---
 
@@ -570,6 +577,49 @@ export class RoomManager {
     this.clearAllGameTimers(code);
     this.engines.delete(code);
     this.rooms.delete(code);
+  }
+
+  // ------------------------------------------------------------------ serialize / restore
+
+  serialize(): ManagerSnapshot {
+    const rooms: ManagerSnapshot['rooms'] = [];
+    for (const room of this.rooms.values()) {
+      const engine = this.engines.get(room.code);
+      rooms.push({
+        room: { ...room, players: room.players.map(p => ({ ...p })) },
+        engine: engine ? engine.toSnapshot() : null,
+      });
+    }
+    return {
+      savedAt: Date.now(),
+      rooms,
+      playerRooms: Object.fromEntries(this.playerRooms),
+      tokenToPlayerId: Object.fromEntries(this.tokenToPlayerId),
+    };
+  }
+
+  restore(snapshot: ManagerSnapshot): void {
+    this.rooms.clear();
+    this.engines.clear();
+    this.playerRooms.clear();
+    this.tokenToPlayerId.clear();
+
+    for (const { room, engine: engineSnap } of snapshot.rooms) {
+      // Sockety nepřežijí restart — všichni offline
+      for (const player of room.players) {
+        player.socketId = null;
+        player.isOnline = false;
+      }
+      this.rooms.set(room.code, room);
+
+      if (engineSnap) {
+        const engine = GameEngine.fromSnapshot(engineSnap, room.players);
+        this.engines.set(room.code, engine);
+      }
+    }
+
+    this.playerRooms = new Map(Object.entries(snapshot.playerRooms));
+    this.tokenToPlayerId = new Map(Object.entries(snapshot.tokenToPlayerId));
   }
 
   // ------------------------------------------------------------------ private helpers

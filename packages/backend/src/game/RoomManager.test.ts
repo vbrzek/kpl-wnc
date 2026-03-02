@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { RoomManager } from './RoomManager.js';
+import { GameEngine } from './GameEngine.js';
 
 describe('RoomManager', () => {
   let rm: RoomManager;
@@ -429,5 +430,65 @@ describe('updateActivity', () => {
     rm.updateActivity(room.code);
     expect(room.lastActivityAt).toBeGreaterThan(before);
     vi.useRealTimers();
+  });
+});
+
+describe('serialize / restore', () => {
+  it('restores rooms and player token maps from snapshot', () => {
+    const rm = new RoomManager();
+    const { room, playerToken } = rm.createRoom({
+      name: 'Test', isPublic: true, selectedSetIds: [1],
+      maxPlayers: 6, nickname: 'Alice', targetScore: 8,
+    });
+    const joinResult = rm.joinRoom(room.code, 'Bob');
+    expect('error' in joinResult).toBe(false);
+
+    const snapshot = rm.serialize();
+    const rm2 = new RoomManager();
+    rm2.restore(snapshot);
+
+    expect(rm2.getRoom(room.code)).not.toBeNull();
+    expect(rm2.getRoomByPlayerToken(playerToken)).not.toBeNull();
+    expect(rm2.getPlayerIdByToken(playerToken)).toBeTruthy();
+  });
+
+  it('marks all restored players as offline', () => {
+    const rm = new RoomManager();
+    const { room } = rm.createRoom({
+      name: 'Test', isPublic: true, selectedSetIds: [1],
+      maxPlayers: 6, nickname: 'Alice', targetScore: 8,
+    });
+    // Simuluj online stav před snapshotem
+    room.players[0].isOnline = true;
+    room.players[0].socketId = 'fake-socket-id';
+
+    const snapshot = rm.serialize();
+    const rm2 = new RoomManager();
+    rm2.restore(snapshot);
+
+    const restored = rm2.getRoom(room.code)!;
+    expect(restored.players[0].isOnline).toBe(false);
+    expect(restored.players[0].socketId).toBeNull();
+  });
+
+  it('restores game engine for rooms with active game', () => {
+    const rm = new RoomManager();
+    const { room } = rm.createRoom({
+      name: 'Test', isPublic: true, selectedSetIds: [1],
+      maxPlayers: 6, nickname: 'Alice', targetScore: 8,
+    });
+    const fakeEngine = new GameEngine(
+      room.players,
+      [{ id: 1, text: 'Black ____', pick: 1 }],
+      [{ id: 1, text: 'White 1' }, { id: 2, text: 'White 2' }],
+    );
+    rm.setGameEngine(room.code, fakeEngine);
+    room.status = 'SELECTION';
+
+    const snapshot = rm.serialize();
+    const rm2 = new RoomManager();
+    rm2.restore(snapshot);
+
+    expect(rm2.getGameEngine(room.code)).not.toBeNull();
   });
 });
