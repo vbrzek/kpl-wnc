@@ -100,6 +100,7 @@ export interface PublicRoomSummary {
 
 // Socket.io eventy — server → klient
 export interface ServerToClientEvents {
+  'server:hello': (startupId: number) => void;
   'server:clientCount': (count: number) => void;
   'lobby:stateUpdate': (room: GameRoom) => void;
   'lobby:kicked': () => void;

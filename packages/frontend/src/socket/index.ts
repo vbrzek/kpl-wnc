@@ -14,3 +14,13 @@ socket.on('connect', () => {
 socket.on('disconnect', (reason) => {
   console.log(`[Socket] Disconnected: ${reason}`);
 });
+
+const STARTUP_ID_KEY = 'kpl-startup-id';
+
+socket.on('server:hello', (startupId) => {
+  const stored = localStorage.getItem(STARTUP_ID_KEY);
+  localStorage.setItem(STARTUP_ID_KEY, String(startupId));
+  if (stored !== null && stored !== String(startupId)) {
+    window.location.reload();
+  }
+});

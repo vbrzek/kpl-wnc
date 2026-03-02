@@ -18,6 +18,7 @@ import roomsRoutes from './routes/rooms.js';
 config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
 
 const SNAPSHOT_PATH = process.env.SNAPSHOT_PATH ?? '/tmp/kpl-snapshot.json';
+const STARTUP_ID = Date.now();
 
 const app = Fastify({ logger: true });
 
@@ -38,6 +39,7 @@ await app.register(cardTranslationsRoute, { prefix: '/api' });
 await app.register(roomsRoutes, { prefix: '/api' });
 
 io.on('connection', (socket) => {
+  socket.emit('server:hello', STARTUP_ID);
   app.log.info(`Client connected: ${socket.id}`);
   io.emit('server:clientCount', io.engine.clientsCount);
 
