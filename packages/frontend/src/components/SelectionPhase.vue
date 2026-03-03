@@ -8,6 +8,7 @@ import { useCardTranslations } from '../composables/useCardTranslations.js';
 import PlayerSelectingLayout from './game/layouts/PlayerSelectingLayout.vue';
 import PlayerSubmittedLayout from './game/layouts/PlayerSubmittedLayout.vue';
 import CzarWaitingSelectionLayout from './game/layouts/CzarWaitingSelectionLayout.vue';
+import BlackCard from './game/atoms/BlackCard.vue';
 
 const { t, locale } = useI18n();
 const roomStore = useRoomStore();
@@ -110,46 +111,118 @@ async function onEndGame() {
   await roomStore.endGame();
   endingGame.value = false;
 }
+
+// --- Wheaton's Law ---
+const waitingForBlackCard = computed(() => !!roomStore.blackCardCandidates && !roomStore.isCardCzar);
+const czarPickingBlackCard = computed(() => !!roomStore.blackCardCandidates && roomStore.isCardCzar);
+
+// --- High Stakes ---
+const betAmount = ref(0);
+const betPlaced = ref(false);
+const betError = ref('');
+const maxBet = computed(() => roomStore.me?.score ?? 0);
+const showBetUI = computed(() =>
+  roomStore.hasRule('high_stakes') && !roomStore.isCardCzar && !betPlaced.value && !roomStore.me?.hasPlayed
+);
+
+async function confirmBet() {
+  betError.value = '';
+  const err = await roomStore.placeBet(betAmount.value);
+  if (err) betError.value = err.error;
+  else { betPlaced.value = true; roomStore.myBet = betAmount.value; }
+}
+
+watch(() => roomStore.room?.status, () => {
+  betPlaced.value = false;
+  betAmount.value = 0;
+  betError.value = '';
+});
 </script>
 
 <template>
-  <CzarWaitingSelectionLayout
-    v-if="roomStore.isCardCzar"
-    :blackCard="translatedBlackCard!"
-    :secondsLeft="secondsLeft"
-    :totalSeconds="45"
-    :players="players"
-    :roundSkipped="roomStore.roundSkipped"
-    :czarNickname="czarNickname"
-    @forceAdvance="czarForceAdvance"
-  />
-  <PlayerSubmittedLayout
-    v-else-if="roomStore.me?.hasPlayed"
-    :blackCard="translatedBlackCard!"
-    :secondsLeft="secondsLeft"
-    :totalSeconds="45"
-    :players="players"
-    :retracting="retracting"
-    :roundSkipped="roomStore.roundSkipped"
-    :czarNickname="czarNickname"
-    @retract="retract"
-  />
-  <PlayerSelectingLayout
-    v-else
-    :blackCard="translatedBlackCard!"
-    :secondsLeft="secondsLeft"
-    :totalSeconds="45"
-    :players="players"
-    :hand="translatedHand"
-    :selectedCards="roomStore.selectedCards"
-    :canSubmit="canSubmit"
-    :canTrade="canTrade"
-    :roundSkipped="roomStore.roundSkipped"
-    @toggleCard="roomStore.toggleCardSelection"
-    :czarNickname="czarNickname"
-    @submit="submit"
-    @trade="onTradeRequest"
-  />
+  <!-- Wheaton's Law: non-czar waiting for czar to pick black card -->
+  <div v-if="waitingForBlackCard" class="flex flex-col items-center justify-center min-h-[300px] text-center px-6">
+    <div class="text-5xl mb-4">🃏</div>
+    <p class="text-slate-400 font-semibold text-lg">{{ t('specialRules.czarPicksBlackCard') }}</p>
+  </div>
+
+  <!-- Wheaton's Law: czar picks black card -->
+  <div v-else-if="czarPickingBlackCard" class="p-6 space-y-4">
+    <h2 class="text-sm font-black uppercase tracking-[0.15em] text-yellow-400">{{ t('specialRules.pickBlackCardTitle') }}</h2>
+    <div class="grid gap-3">
+      <button
+        v-for="card in roomStore.blackCardCandidates"
+        :key="card.id"
+        @click="roomStore.chooseBlackCard(card.id)"
+        class="text-left p-1 border-2 border-white/10 rounded-2xl hover:border-white/40 transition-colors"
+      >
+        <BlackCard :text="card.text" :pick="card.pick" />
+      </button>
+    </div>
+  </div>
+
+  <!-- Normal selection flow -->
+  <template v-else>
+    <!-- High Stakes: bet UI -->
+    <div v-if="showBetUI" class="px-4 pt-4">
+      <div class="bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-4 space-y-3">
+        <p class="text-xs font-black uppercase tracking-[0.15em] text-yellow-400">{{ t('specialRules.placeBet') }}</p>
+        <div class="flex items-center gap-3">
+          <input
+            v-model.number="betAmount"
+            type="range" min="0" :max="maxBet" step="1"
+            class="flex-1 accent-yellow-400"
+          />
+          <span class="text-white font-black text-lg w-8 text-right">{{ betAmount }}</span>
+        </div>
+        <button
+          @click="confirmBet"
+          class="w-full py-2 bg-yellow-400 text-black font-black text-sm rounded-xl"
+        >
+          {{ t('specialRules.betConfirm') }}
+        </button>
+        <p v-if="betError" class="text-red-400 text-xs">{{ betError }}</p>
+      </div>
+    </div>
+
+    <CzarWaitingSelectionLayout
+      v-if="roomStore.isCardCzar"
+      :blackCard="translatedBlackCard!"
+      :secondsLeft="secondsLeft"
+      :totalSeconds="45"
+      :players="players"
+      :roundSkipped="roomStore.roundSkipped"
+      :czarNickname="czarNickname"
+      @forceAdvance="czarForceAdvance"
+    />
+    <PlayerSubmittedLayout
+      v-else-if="roomStore.me?.hasPlayed"
+      :blackCard="translatedBlackCard!"
+      :secondsLeft="secondsLeft"
+      :totalSeconds="45"
+      :players="players"
+      :retracting="retracting"
+      :roundSkipped="roomStore.roundSkipped"
+      :czarNickname="czarNickname"
+      @retract="retract"
+    />
+    <PlayerSelectingLayout
+      v-else
+      :blackCard="translatedBlackCard!"
+      :secondsLeft="secondsLeft"
+      :totalSeconds="45"
+      :players="players"
+      :hand="translatedHand"
+      :selectedCards="roomStore.selectedCards"
+      :canSubmit="canSubmit"
+      :canTrade="canTrade"
+      :roundSkipped="roomStore.roundSkipped"
+      @toggleCard="roomStore.toggleCardSelection"
+      :czarNickname="czarNickname"
+      @submit="submit"
+      @trade="onTradeRequest"
+    />
+  </template>
   <!-- Trade confirm modal -->
   <Teleport to="body">
     <div

@@ -2,8 +2,8 @@ import type { Server, Socket } from 'socket.io';
 import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
-import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
-import { PlayCardsSchema, JudgeSelectSchema, validate } from './validation.js';
+import { startNewRound, startJudgingPhase, finalizeRoundStart, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
+import { PlayCardsSchema, JudgeSelectSchema, ChooseBlackCardSchema, PlaceBetSchema, validate } from './validation.js';
 import { checkRateLimit } from './rateLimiter.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -286,6 +286,55 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
         }
       }, SKIP_DELAY_MS);
     }
+  });
+
+  // Czar picks black card (Wheaton's Law)
+  socket.on('game:chooseBlackCard', (cardId) => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'SELECTION' || !room.blackCardCandidates) {
+      socket.emit('game:error', 'Výběr černé karty není aktuálně možný.');
+      return;
+    }
+
+    const engine = roomManager.getGameEngine(room.code);
+    if (!engine) { socket.emit('game:error', 'Herní engine nenalezen.'); return; }
+
+    const id = validate(ChooseBlackCardSchema, cardId);
+    if (!id) { socket.emit('game:error', 'Neplatné ID karty.'); return; }
+
+    const czarId = roomManager.getPlayerIdByToken(playerToken)!;
+    const result = engine.chooseBlackCard(czarId, id);
+    if ('error' in result) { socket.emit('game:error', result.error); return; }
+
+    roomManager.updateActivity(room.code);
+    finalizeRoundStart(room, engine, io);
+  });
+
+  // Player places a bet (High Stakes)
+  socket.on('game:placeBet', (amount, callback) => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) { callback({ error: 'Nejsi přihlášen.' }); return; }
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'SELECTION') {
+      callback({ error: 'Sázky jsou možné jen ve fázi výběru karet.' });
+      return;
+    }
+
+    const engine = roomManager.getGameEngine(room.code);
+    if (!engine) { callback({ error: 'Herní engine nenalezen.' }); return; }
+
+    const bet = validate(PlaceBetSchema, amount, callback);
+    if (bet === null) return;
+
+    const playerId = roomManager.getPlayerIdByToken(playerToken)!;
+    const result = engine.placeBet(playerId, bet);
+    if ('error' in result) { callback(result); return; }
+
+    callback({ ok: true });
   });
 
   // Non-Czar hráč manuálně přeskočí hodnocení (po vypršení timeru)

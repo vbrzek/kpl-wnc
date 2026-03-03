@@ -492,3 +492,42 @@ describe('serialize / restore', () => {
     expect(rm2.getGameEngine(room.code)).not.toBeNull();
   });
 });
+
+// --- specialRules ---
+
+describe('specialRules', () => {
+  let manager: RoomManager;
+
+  beforeEach(() => {
+    manager = new RoomManager();
+  });
+
+  it('createRoom stores specialRules on room', () => {
+    const { room } = manager.createRoom({
+      name: 'Test', isPublic: false, selectedSetIds: [1],
+      maxPlayers: 5, nickname: 'Host', targetScore: 8,
+      specialRules: ['god_mode', 'meritocracy'],
+    });
+    expect(room.specialRules).toEqual(['god_mode', 'meritocracy']);
+  });
+
+  it('createRoom defaults specialRules to []', () => {
+    const { room } = manager.createRoom({
+      name: 'Test', isPublic: false, selectedSetIds: [1],
+      maxPlayers: 5, nickname: 'Host', targetScore: 8,
+      specialRules: [],
+    });
+    expect(room.specialRules).toEqual([]);
+  });
+
+  it('updateSettings can change specialRules', () => {
+    const { playerToken, room } = manager.createRoom({
+      name: 'Test', isPublic: false, selectedSetIds: [1],
+      maxPlayers: 5, nickname: 'Host', targetScore: 8,
+      specialRules: [],
+    });
+    const result = manager.updateSettings(playerToken, { specialRules: ['high_stakes'] });
+    expect('error' in result).toBe(false);
+    expect(room.specialRules).toEqual(['high_stakes']);
+  });
+});

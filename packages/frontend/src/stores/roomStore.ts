@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { socket } from '../socket';
-import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult, SpecialRule } from '@kpl/shared';
 
 export const useRoomStore = defineStore('room', () => {
   const room = ref<GameRoom | null>(null);
@@ -17,11 +17,17 @@ export const useRoomStore = defineStore('room', () => {
   const roundSkipped = ref(false);
   const finishedState = ref<GameOverPayload | null>(null);
 
+  const myBet = ref<number | null>(null);
+
   const isHost = computed(() =>
     room.value !== null && myPlayerId.value !== null
       ? room.value.hostId === myPlayerId.value
       : false
   );
+
+  const specialRules = computed(() => room.value?.specialRules ?? []);
+  const hasRule = (rule: SpecialRule) => specialRules.value.includes(rule);
+  const blackCardCandidates = computed(() => room.value?.blackCardCandidates ?? null);
 
   const me = computed(() =>
     room.value && myPlayerId.value
@@ -97,6 +103,10 @@ export const useRoomStore = defineStore('room', () => {
       finishedState.value = null;
       room.value = null;
       myPlayerId.value = null;
+    });
+
+    socket.on('game:blackCardCandidates', (cards) => {
+      if (room.value) room.value.blackCardCandidates = cards;
     });
   }
 
@@ -190,6 +200,19 @@ export const useRoomStore = defineStore('room', () => {
     socket.emit('game:skipCzarJudging');
   }
 
+  function chooseBlackCard(cardId: number) {
+    socket.emit('game:chooseBlackCard', cardId);
+  }
+
+  async function placeBet(amount: number): Promise<{ error: string } | null> {
+    return new Promise(resolve => {
+      socket.emit('game:placeBet', amount, (result) => {
+        if ('error' in result) resolve(result);
+        else resolve(null);
+      });
+    });
+  }
+
   function toggleCardSelection(card: WhiteCard) {
     const idx = selectedCards.value.findIndex(c => c.id === card.id);
     if (idx === -1) {
@@ -212,6 +235,7 @@ export const useRoomStore = defineStore('room', () => {
     socket.off('game:roundSkipped');
     socket.off('game:gameOver');
     socket.off('room:deleted');
+    socket.off('game:blackCardCandidates');
     finishedState.value = null;
     room.value = null;
     myPlayerId.value = null;
@@ -230,8 +254,10 @@ export const useRoomStore = defineStore('room', () => {
     room, myPlayerId, isHost, me,
     hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
     roundSkipped, finishedState,
+    specialRules, hasRule, blackCardCandidates, myBet,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, endGame, updateNickname, clearFinishedState, cleanup,
     playCards, judgeSelect, toggleCardSelection, retractCards, tradeCards, czarForceAdvance, skipCzarJudging,
+    chooseBlackCard, placeBet,
   };
 });

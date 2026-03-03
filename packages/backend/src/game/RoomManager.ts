@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
-import type { GameRoom, GameOverPayload, Player, PublicRoomSummary } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, Player, PublicRoomSummary, SpecialRule } from '@kpl/shared';
 import { GameEngine, type EngineSnapshot } from './GameEngine.js';
 
 export interface ManagerSnapshot {
@@ -54,6 +54,7 @@ export interface CreateRoomSettings {
   maxPlayers: number;
   nickname: string;
   targetScore: number;
+  specialRules: SpecialRule[];
 }
 
 export interface FinishGameResult {
@@ -67,6 +68,7 @@ export interface UpdateSettingsData {
   isPublic?: boolean;
   selectedSetIds?: number[];
   maxPlayers?: number;
+  specialRules?: SpecialRule[];
 }
 
 // --- RoomManager ---
@@ -112,9 +114,11 @@ export class RoomManager {
       maxPlayers: settings.maxPlayers,
       players: [host],
       currentBlackCard: null,
+      blackCardCandidates: null,
       roundNumber: 0,
       roundDeadline: null,
       targetScore: settings.targetScore,
+      specialRules: settings.specialRules,
       lastActivityAt: Date.now(),
     };
 
@@ -320,6 +324,7 @@ export class RoomManager {
     if (settings.isPublic !== undefined) room.isPublic = settings.isPublic;
     if (settings.selectedSetIds !== undefined) room.selectedSetIds = settings.selectedSetIds;
     if (settings.maxPlayers !== undefined) room.maxPlayers = settings.maxPlayers;
+    if (settings.specialRules !== undefined) room.specialRules = settings.specialRules;
 
     return { room };
   }
@@ -390,6 +395,7 @@ export class RoomManager {
           playerCount: room.players.length,
           maxPlayers: room.maxPlayers,
           selectedSetIds: room.selectedSetIds,
+          specialRules: room.specialRules,
         });
       }
     }
@@ -534,6 +540,7 @@ export class RoomManager {
     room.status = 'LOBBY';
     room.roundDeadline = null;
     room.currentBlackCard = null;
+    room.blackCardCandidates = null;
     room.roundNumber = 0;
     room.lastActivityAt = Date.now();
     for (const p of room.players) {

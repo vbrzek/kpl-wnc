@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { GameRoom } from '@kpl/shared';
+import type { GameRoom, SpecialRule } from '@kpl/shared';
 import { useRoomStore } from '../stores/roomStore';
 import PlayerList from './PlayerList.vue';
 import InviteLink from './InviteLink.vue';
+
+const RULE_ICONS: Record<SpecialRule, string> = {
+  rando_cardrissian: '🎲',
+  god_mode: '👑',
+  wheatons_law: '🃏',
+  rebooting_universe: '♻️',
+  meritocracy: '🏆',
+  high_stakes: '💰',
+};
 
 const props = defineProps<{ room: GameRoom }>();
 
@@ -43,6 +52,17 @@ async function startGame() {
       {{ errorMsg }}
     </p>
 
+    <!-- Active special rules chips -->
+    <div v-if="roomStore.specialRules.length > 0" class="flex flex-wrap gap-1.5 pb-4 border-b border-white/5">
+      <span
+        v-for="rule in roomStore.specialRules"
+        :key="rule"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-xs font-bold"
+      >
+        {{ RULE_ICONS[rule] }} {{ t(`specialRules.${rule}.name`) }}
+      </span>
+    </div>
+
     <section>
       <div class="flex items-center justify-between mb-4 px-1">
         <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500">
@@ -59,6 +79,7 @@ async function startGame() {
           :host-id="room.hostId"
           :my-player-id="roomStore.myPlayerId"
           :is-host="roomStore.isHost"
+          :has-rando="roomStore.hasRule('rando_cardrissian')"
           @kick="kick"
         />
       </div>
