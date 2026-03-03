@@ -8,6 +8,7 @@ defineProps<{
   hostId: string;
   myPlayerId: string | null;
   isHost: boolean;
+  hasRando?: boolean;
 }>();
 
 const emit = defineEmits<{ kick: [playerId: string] }>();
@@ -39,6 +40,17 @@ const { t } = useI18n();
       >
         {{ t('player.kick') }}
       </button>
+    </li>
+    <!-- Rando Cardrissian virtual player -->
+    <li
+      v-if="hasRando"
+      class="flex items-center justify-between bg-gray-700 px-4 py-2 rounded"
+    >
+      <span class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-base shrink-0">🎲</div>
+        <span class="text-slate-400 font-bold">Rando Cardrissian</span>
+        <span class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">BOT</span>
+      </span>
     </li>
   </ul>
 </template>

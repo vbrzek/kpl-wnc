@@ -79,6 +79,7 @@ async function startGame() {
           :host-id="room.hostId"
           :my-player-id="roomStore.myPlayerId"
           :is-host="roomStore.isHost"
+          :has-rando="roomStore.hasRule('rando_cardrissian')"
           @kick="kick"
         />
       </div>
