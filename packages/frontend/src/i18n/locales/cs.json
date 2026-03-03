@@ -149,11 +149,11 @@
     },
     "god_mode": {
       "name": "God Mode",
-      "desc": "Hostitel zůstává Czarem po celou dobu hry a ostatní ho baví."
+      "desc": "Hostitel zůstává karetním králem po celou dobu hry a ostatní ho baví."
     },
     "wheatons_law": {
       "name": "Wheaton's Law",
-      "desc": "Před každým kolem si Card Czar vybere, která ze dvou černých karet se bude hrát."
+      "desc": "Před každým kolem si karetní král vybere, která ze dvou černých karet se bude hrát."
     },
     "rebooting_universe": {
       "name": "Rebooting the Universe",
@@ -161,14 +161,14 @@
     },
     "meritocracy": {
       "name": "Meritocracy",
-      "desc": "Czarem se vždy stává vítěz minulého kola. Pokud vyhraje Rando, czar zůstane stejný."
+      "desc": "Karetním králem se vždy stává vítěz minulého kola. Pokud vyhraje Rando, karetní král zůstane stejný."
     },
     "high_stakes": {
       "name": "High Stakes",
       "desc": "Před výběrem karty lze vsadit body. Výhra přináší vsazené body navíc, prohra je bere."
     },
     "randoWon": "Rando Cardrissian vyhrál — všichni prohráli!",
-    "czarPicksBlackCard": "Card Czar vybírá černou kartu...",
+    "czarPicksBlackCard": "Karetní král vybírá černou kartu...",
     "pickBlackCardTitle": "Vyber černou kartu pro toto kolo",
     "placeBet": "Vsadit body",
     "betLabel": "Vaše sázka",

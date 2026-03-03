@@ -21,6 +21,7 @@ export interface RoomPreview {
   maxPlayers: number;
   players: { nickname: string; isAfk: boolean }[];
   selectedSetIds: number[];
+  specialRules?: SpecialRule[];
 }
 
 export async function fetchRoomPreview(code: string): Promise<RoomPreview | null> {
