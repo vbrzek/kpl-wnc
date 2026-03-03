@@ -70,6 +70,22 @@ const isFull = computed(() => props.preview.playerCount >= props.preview.maxPlay
         <p class="text-sm font-bold text-slate-300">{{ setNames }}</p>
       </div>
 
+      <!-- Special rules -->
+      <div v-if="preview.specialRules?.length" class="mb-4">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">
+          {{ t('specialRules.button') }}
+        </p>
+        <div class="flex flex-wrap gap-1.5">
+          <span
+            v-for="rule in preview.specialRules"
+            :key="rule"
+            class="text-xs px-2 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 font-bold"
+          >
+            {{ t(`specialRules.${rule}.name`) }}
+          </span>
+        </div>
+      </div>
+
       <!-- Players -->
       <div class="mb-6">
         <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
