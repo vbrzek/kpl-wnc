@@ -56,8 +56,14 @@ async function onEndGame() {
 
 <template>
   <div class="space-y-8 text-center">
+    <!-- Rando Cardrissian win -->
+    <div v-if="roomStore.roundResult?.winnerId === 'rando_cardrissian'" class="winner-entrance space-y-3">
+      <div class="text-5xl">🎲</div>
+      <p class="text-2xl font-black text-red-400">{{ t('specialRules.randoWon') }}</p>
+    </div>
+
     <!-- Vítěz kola -->
-    <div class="winner-entrance">
+    <div v-else class="winner-entrance">
       <p class="text-gray-400 text-lg mb-2">{{ t('game.results.roundWinner') }}</p>
       <h2 class="text-4xl font-bold winner-name">
         {{ roomStore.roundResult?.winnerNickname ?? '...' }}
