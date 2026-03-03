@@ -41,7 +41,7 @@ const retracting = ref(false);
 const showTradeConfirm = ref(false);
 
 const canTrade = computed(
-  () => !roomStore.me?.tradedThisRound && (roomStore.me?.score ?? 0) >= 1 && !roomStore.me?.hasPlayed && !roomStore.isCardCzar
+  () => roomStore.hasRule('rebooting_universe') && !roomStore.me?.tradedThisRound && (roomStore.me?.score ?? 0) >= 1 && !roomStore.me?.hasPlayed && !roomStore.isCardCzar
 );
 
 function onTradeRequest() {
