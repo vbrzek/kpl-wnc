@@ -161,8 +161,10 @@ watch(() => roomStore.room?.status, () => {
     </div>
   </div>
 
-  <!-- Normal selection flow -->
-  <template v-else>
+  <!-- Normal selection flow: guard against null translatedBlackCard between
+       lobby:stateUpdate (clears blackCardCandidates) and game:roundStart (sets card).
+       Without this guard the layouts crash accessing blackCard.text on null. -->
+  <template v-else-if="translatedBlackCard">
     <!-- High Stakes: bet UI -->
     <div v-if="showBetUI" class="px-4 pt-4">
       <div class="bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-4 space-y-3">
