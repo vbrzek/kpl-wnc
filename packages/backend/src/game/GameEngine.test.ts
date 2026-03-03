@@ -600,6 +600,12 @@ describe('high_stakes', () => {
     expect('error' in result).toBe(true);
   });
 
+  it('placeBet allows updating an existing bet', () => {
+    eng.placeBet(nonCzar1.id, 2);
+    const result = eng.placeBet(nonCzar1.id, 1);
+    expect('error' in result).toBe(false);
+  });
+
   it('winner gains bet points, loser loses them', () => {
     eng.placeBet(nonCzar1.id, 2); // bets 2
     eng.placeBet(nonCzar2.id, 1); // bets 1

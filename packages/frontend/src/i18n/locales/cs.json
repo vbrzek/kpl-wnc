@@ -173,6 +173,7 @@
     "placeBet": "Vsadit body",
     "betLabel": "Vaše sázka",
     "betConfirm": "Potvrdit sázku",
+    "betActive": "Vsazeno: {amount}",
     "betPlaced": "Sázka {amount} bodů uložena"
   }
 }

@@ -117,25 +117,24 @@ const waitingForBlackCard = computed(() => !!roomStore.blackCardCandidates && !r
 const czarPickingBlackCard = computed(() => !!roomStore.blackCardCandidates && roomStore.isCardCzar);
 
 // --- High Stakes ---
-const betAmount = ref(0);
 const betPlaced = ref(false);
 const betError = ref('');
 const maxBet = computed(() => roomStore.me?.score ?? 0);
 const showBetUI = computed(() =>
-  roomStore.hasRule('high_stakes') && !roomStore.isCardCzar && !betPlaced.value && !roomStore.me?.hasPlayed
+  roomStore.hasRule('high_stakes') && !roomStore.isCardCzar && !roomStore.me?.hasPlayed
 );
 
-async function confirmBet() {
+async function onPlaceBet(amount: number) {
   betError.value = '';
-  const err = await roomStore.placeBet(betAmount.value);
+  const err = await roomStore.placeBet(amount);
   if (err) betError.value = err.error;
-  else { betPlaced.value = true; roomStore.myBet = betAmount.value; }
+  else { betPlaced.value = true; roomStore.myBet = amount; }
 }
 
 watch(() => roomStore.room?.status, () => {
   betPlaced.value = false;
-  betAmount.value = 0;
   betError.value = '';
+  roomStore.myBet = null;
 });
 </script>
 
@@ -165,28 +164,6 @@ watch(() => roomStore.room?.status, () => {
        lobby:stateUpdate (clears blackCardCandidates) and game:roundStart (sets card).
        Without this guard the layouts crash accessing blackCard.text on null. -->
   <template v-else-if="translatedBlackCard">
-    <!-- High Stakes: bet UI -->
-    <div v-if="showBetUI" class="px-4 pt-4">
-      <div class="bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-4 space-y-3">
-        <p class="text-xs font-black uppercase tracking-[0.15em] text-yellow-400">{{ t('specialRules.placeBet') }}</p>
-        <div class="flex items-center gap-3">
-          <input
-            v-model.number="betAmount"
-            type="range" min="0" :max="maxBet" step="1"
-            class="flex-1 accent-yellow-400"
-          />
-          <span class="text-white font-black text-lg w-8 text-right">{{ betAmount }}</span>
-        </div>
-        <button
-          @click="confirmBet"
-          class="w-full py-2 bg-yellow-400 text-black font-black text-sm rounded-xl"
-        >
-          {{ t('specialRules.betConfirm') }}
-        </button>
-        <p v-if="betError" class="text-red-400 text-xs">{{ betError }}</p>
-      </div>
-    </div>
-
     <CzarWaitingSelectionLayout
       v-if="roomStore.isCardCzar"
       :blackCard="translatedBlackCard!"
@@ -218,11 +195,17 @@ watch(() => roomStore.room?.status, () => {
       :selectedCards="roomStore.selectedCards"
       :canSubmit="canSubmit"
       :canTrade="canTrade"
+      :canBet="showBetUI"
+      :betPlaced="betPlaced"
+      :currentBet="roomStore.myBet ?? 0"
+      :maxBet="maxBet"
+      :betError="betError"
       :roundSkipped="roomStore.roundSkipped"
       @toggleCard="roomStore.toggleCardSelection"
       :czarNickname="czarNickname"
       @submit="submit"
       @trade="onTradeRequest"
+      @placeBet="onPlaceBet"
     />
   </template>
   <!-- Trade confirm modal -->

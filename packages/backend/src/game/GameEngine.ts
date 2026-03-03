@@ -265,7 +265,6 @@ export class GameEngine {
     if (player.isCardCzar) return { error: 'Card Czar nemůže sázet.' };
     if (amount < 0) return { error: 'Sázka nesmí být záporná.' };
     if (amount > player.score) return { error: 'Nemáš dostatek bodů pro tuto sázku.' };
-    if (this.bets.has(playerId)) return { error: 'Už jsi v tomto kole sázku podal.' };
     this.bets.set(playerId, amount);
     return { ok: true };
   }

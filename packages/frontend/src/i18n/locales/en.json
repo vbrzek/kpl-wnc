@@ -173,6 +173,7 @@
     "placeBet": "Place a bet",
     "betLabel": "Your bet",
     "betConfirm": "Confirm bet",
+    "betActive": "Bet: {amount}",
     "betPlaced": "{amount} point bet placed"
   }
 }

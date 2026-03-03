@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { BlackCard, WhiteCard, Player } from '@kpl/shared'
 import Countdown from '../atoms/Countdown.vue'
@@ -18,15 +19,35 @@ const props = defineProps<{
   canTrade: boolean
   roundSkipped: boolean
   czarNickname: string
+  canBet?: boolean
+  betPlaced?: boolean
+  currentBet?: number
+  maxBet?: number
+  betError?: string
 }>()
 
 const emit = defineEmits<{
   toggleCard: [card: WhiteCard]
   submit: []
   trade: []
+  placeBet: [amount: number]
 }>()
 
 const { t } = useI18n();
+
+const showBetSlider = ref(false);
+const localBetAmount = ref(0);
+
+watch(() => props.canBet, (newVal) => {
+  if (!newVal) { showBetSlider.value = false; localBetAmount.value = 0; }
+});
+
+function toggleBetSlider() {
+  showBetSlider.value = !showBetSlider.value;
+  if (showBetSlider.value && props.betPlaced) {
+    localBetAmount.value = props.currentBet ?? 0;
+  }
+}
 </script>
 
 <template>
@@ -47,13 +68,46 @@ const { t } = useI18n();
         :pick="blackCard.pick"
         @toggle="emit('toggleCard', $event)"
       />
-      <div v-if="canTrade" class="px-1 mt-4 text-center">
+      <div v-if="canTrade || canBet" class="px-1 mt-4 flex gap-2 justify-center">
         <button
+          v-if="canTrade"
           @click="emit('trade')"
           class="px-4 py-2 rounded-xl text-sm font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-500 transition-colors"
         >
           {{ t('game.selection.trade') }}
         </button>
+        <button
+          v-if="canBet"
+          @click="toggleBetSlider"
+          :class="[
+            'px-4 py-2 rounded-xl text-sm font-semibold border transition-colors',
+            showBetSlider
+              ? 'bg-yellow-400/10 border-yellow-400/40 text-yellow-400'
+              : 'text-gray-300 bg-gray-800 hover:bg-gray-700 border-gray-700 hover:border-gray-500',
+          ]"
+        >
+          {{ betPlaced ? t('specialRules.betActive', { amount: currentBet }) : t('specialRules.placeBet') }}
+        </button>
+      </div>
+
+      <div v-if="canBet && showBetSlider" class="px-1 mt-3">
+        <div class="bg-yellow-400/5 border border-yellow-400/20 rounded-xl p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <input
+              v-model.number="localBetAmount"
+              type="range" min="0" :max="maxBet ?? 0" step="1"
+              class="flex-1 accent-yellow-400"
+            />
+            <span class="text-white font-black text-lg w-8 text-right">{{ localBetAmount }}</span>
+          </div>
+          <button
+            @click="emit('placeBet', localBetAmount)"
+            class="w-full py-2 bg-yellow-400 text-black font-black text-sm rounded-xl"
+          >
+            {{ t('specialRules.betConfirm') }}
+          </button>
+          <p v-if="betError" class="text-red-400 text-xs">{{ betError }}</p>
+        </div>
       </div>
     </div>
 
