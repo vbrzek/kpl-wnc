@@ -69,12 +69,12 @@ onMounted(async () => {
     >
       <div :class="[
         'bg-[#0d1117] border border-white/10 rounded-2xl w-full max-h-[90vh] overflow-hidden',
-        'md:flex md:max-w-4xl',
+        'flex flex-col md:flex-row md:max-w-4xl',
         'max-w-md',
       ]">
 
         <!-- Main content (step 1 on mobile, left column on desktop) -->
-        <div v-show="step === 'main' || isDesktop()" class="overflow-y-auto md:flex-1 md:border-r md:border-white/5">
+        <div v-show="step === 'main' || isDesktop()" class="overflow-y-auto flex-1 min-h-0 md:border-r md:border-white/5">
           <div class="p-6 space-y-5">
 
             <!-- Header -->
@@ -217,7 +217,7 @@ onMounted(async () => {
         </div>
 
         <!-- Right column / step 2: House Rules -->
-        <div v-show="step === 'rules' || isDesktop()" class="overflow-y-auto md:flex-1">
+        <div v-show="step === 'rules' || isDesktop()" class="overflow-y-auto flex-1 min-h-0">
           <div class="p-6">
             <!-- Mobile header (back arrow) -->
             <div class="flex items-center gap-3 mb-4 md:hidden">
