@@ -36,7 +36,10 @@ export const useRoomStore = defineStore('room', () => {
   );
 
   const isCardCzar = computed(() =>
-    myPlayerId.value !== null && czarId.value === myPlayerId.value
+    // czarId is set by game:roundStart (deferred in Wheaton's Law); fall back to
+    // me.isCardCzar from lobby:stateUpdate which arrives immediately on round start.
+    (myPlayerId.value !== null && czarId.value === myPlayerId.value) ||
+    !!me.value?.isCardCzar
   );
 
   let initialised = false;
