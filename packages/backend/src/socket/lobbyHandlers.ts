@@ -195,7 +195,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     // Init GameEngine
     let engine: GameEngine;
     try {
-      engine = new GameEngine(room.players, blackCards, whiteCards);
+      engine = new GameEngine(room.players, blackCards, whiteCards, room.specialRules, room.hostId);
       roomManager.setGameEngine(room.code, engine);
       roomManager.updateActivity(room.code);
     } catch {

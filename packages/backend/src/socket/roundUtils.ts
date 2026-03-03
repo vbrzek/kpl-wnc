@@ -35,10 +35,28 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
     }
   }
 
-  const { czarId } = engine.startRound();
+  const { czarId, blackCardCandidates } = engine.startRound();
   room.status = 'SELECTION';
-  room.currentBlackCard = engine.currentBlackCard;
   room.roundNumber = engine.roundNumber;
+
+  // Wheaton's Law: czar picks black card first
+  if (blackCardCandidates) {
+    room.currentBlackCard = null;
+    room.blackCardCandidates = blackCardCandidates;
+    room.roundDeadline = null;
+    io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
+    // Send candidates only to czar
+    const czar = room.players.find(p => p.id === czarId);
+    if (czar?.socketId) {
+      const czarSocket = io.sockets.sockets.get(czar.socketId);
+      if (czarSocket) czarSocket.emit('game:blackCardCandidates', blackCardCandidates);
+    }
+    return; // roundStart sent after chooseBlackCard
+  }
+
+  // Normal flow
+  room.currentBlackCard = engine.currentBlackCard;
+  room.blackCardCandidates = null;
   room.roundDeadline = Date.now() + SELECTION_TIMEOUT_MS;
 
   io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
@@ -57,6 +75,34 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
   }
 
   // Spusť 45s timer pro výběr karet
+  roomManager.setRoundTimer(roomCode, () => {
+    // Timer vypršel — čeká se na game:czarForceAdvance od Card Czara
+  }, SELECTION_TIMEOUT_MS);
+}
+
+// Called after czar chooses black card (Wheaton's Law) — sends game:roundStart to all
+export function finalizeRoundStart(room: GameRoom, engine: GameEngine, io: IO): void {
+  const roomCode = room.code;
+  const czarId = room.players.find(p => p.isCardCzar)?.id ?? '';
+  room.blackCardCandidates = null;
+  room.currentBlackCard = engine.currentBlackCard;
+  room.roundDeadline = Date.now() + SELECTION_TIMEOUT_MS;
+
+  io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
+
+  for (const player of room.players) {
+    if (!player.socketId) continue;
+    const playerSocket = io.sockets.sockets.get(player.socketId);
+    if (playerSocket) {
+      playerSocket.emit('game:roundStart', {
+        blackCard: engine.currentBlackCard!,
+        hand: engine.getPlayerHand(player.id),
+        czarId,
+        roundNumber: engine.roundNumber,
+      });
+    }
+  }
+
   roomManager.setRoundTimer(roomCode, () => {
     // Timer vypršel — čeká se na game:czarForceAdvance od Card Czara
   }, SELECTION_TIMEOUT_MS);

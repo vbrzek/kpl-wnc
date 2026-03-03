@@ -46,7 +46,10 @@ export const PlaceBetSchema = z.number().int().min(0).max(100);
 
 export const PlayCardsSchema = z.array(z.number().int().positive()).min(1).max(3);
 
-export const JudgeSelectSchema = z.string().uuid('Neplatné submissionId');
+export const JudgeSelectSchema = z.union([
+  z.string().uuid(),
+  z.literal('rando_cardrissian'),
+]);
 
 export const KickPlayerSchema = z.string().uuid('Neplatné playerId');
 
