@@ -494,3 +494,57 @@ describe('wheatons_law', () => {
     expect(eng.currentBlackCard).not.toBeNull();
   });
 });
+
+// --- rando_cardrissian ---
+
+describe('rando_cardrissian', () => {
+  let players: Player[];
+
+  beforeEach(() => {
+    players = [
+      makePlayer('p1', 'Alice'),
+      makePlayer('p2', 'Bob'),
+      makePlayer('p3', 'Charlie'),
+    ];
+  });
+
+  it('startRound auto-submits a card for Rando', () => {
+    const eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), ['rando_cardrissian'], 'p1');
+    eng.startRound();
+    const nonCzar = players.filter(p => !p.isCardCzar);
+    for (const p of nonCzar) {
+      eng.submitCards(p.id, [eng.getPlayerHand(p.id)[0].id]);
+    }
+    const subs = eng.getAnonymousSubmissions();
+    // 2 normal non-czar players + 1 Rando
+    expect(subs.length).toBe(3);
+  });
+
+  it('Rando submission has submissionId rando_cardrissian', () => {
+    const eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), ['rando_cardrissian'], 'p1');
+    eng.startRound();
+    const nonCzar = players.filter(p => !p.isCardCzar);
+    for (const p of nonCzar) {
+      eng.submitCards(p.id, [eng.getPlayerHand(p.id)[0].id]);
+    }
+    const subs = eng.getAnonymousSubmissions();
+    expect(subs.some(s => s.submissionId === 'rando_cardrissian')).toBe(true);
+  });
+
+  it('selectWinner with rando submissionId returns winnerId rando_cardrissian', () => {
+    const eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), ['rando_cardrissian'], 'p1');
+    eng.startRound();
+    const nonCzar = players.filter(p => !p.isCardCzar);
+    for (const p of nonCzar) {
+      eng.submitCards(p.id, [eng.getPlayerHand(p.id)[0].id]);
+    }
+    const czar = players.find(p => p.isCardCzar)!;
+    const result = eng.selectWinner(czar.id, 'rando_cardrissian');
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.winnerId).toBe('rando_cardrissian');
+      // No real player gains a point
+      expect(Object.values(result.scores).every(s => s === 0)).toBe(true);
+    }
+  });
+});
