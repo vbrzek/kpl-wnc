@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { socket } from '../socket';
-import type { PublicRoomSummary, GameRoom } from '@kpl/shared';
+import type { PublicRoomSummary, GameRoom, SpecialRule } from '@kpl/shared';
 
 export interface CardSetSummary {
   id: number;
@@ -68,6 +68,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     maxPlayers: number;
     nickname: string;
     targetScore: number;
+    specialRules: SpecialRule[];
   }): Promise<{ room: GameRoom; code: string; playerToken: string; playerId: string } | { error: string }> {
     return new Promise((resolve) => {
       socket.emit('lobby:create', settings, (result) => {
