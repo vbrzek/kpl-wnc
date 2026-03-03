@@ -139,5 +139,40 @@
     "inLobby": "Lobby",
     "inGame": "Ve hře",
     "finished": "Skončeno"
+  },
+  "specialRules": {
+    "active": "Aktivní",
+    "button": "Rozšířená pravidla",
+    "rando_cardrissian": {
+      "name": "Rando Cardrissian",
+      "desc": "Bot přidává náhodnou bílou kartu do každého kola. Pokud vyhraje, všichni prohrají."
+    },
+    "god_mode": {
+      "name": "God Mode",
+      "desc": "Hostitel zůstává Czarem po celou dobu hry a ostatní ho baví."
+    },
+    "wheatons_law": {
+      "name": "Wheaton's Law",
+      "desc": "Před každým kolem si Card Czar vybere, která ze dvou černých karet se bude hrát."
+    },
+    "rebooting_universe": {
+      "name": "Rebooting the Universe",
+      "desc": "Hráč může zahodit celou ruku a dobrat 10 nových karet za cenu 1 bodu."
+    },
+    "meritocracy": {
+      "name": "Meritocracy",
+      "desc": "Czarem se vždy stává vítěz minulého kola. Pokud vyhraje Rando, czar zůstane stejný."
+    },
+    "high_stakes": {
+      "name": "High Stakes",
+      "desc": "Před výběrem karty lze vsadit body. Výhra přináší vsazené body navíc, prohra je bere."
+    },
+    "randoWon": "Rando Cardrissian vyhrál — všichni prohráli!",
+    "czarPicksBlackCard": "Card Czar vybírá černou kartu...",
+    "pickBlackCardTitle": "Vyber černou kartu pro toto kolo",
+    "placeBet": "Vsadit body",
+    "betLabel": "Vaše sázka",
+    "betConfirm": "Potvrdit sázku",
+    "betPlaced": "Sázka {amount} bodů uložena"
   }
 }

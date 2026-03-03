@@ -139,5 +139,40 @@
     "inLobby": "Lobby",
     "inGame": "In game",
     "finished": "Finished"
+  },
+  "specialRules": {
+    "active": "Active",
+    "button": "House Rules",
+    "rando_cardrissian": {
+      "name": "Rando Cardrissian",
+      "desc": "A bot randomly plays a white card each round. If it wins, everyone loses."
+    },
+    "god_mode": {
+      "name": "God Mode",
+      "desc": "The host remains Card Czar for the entire game while everyone entertains them."
+    },
+    "wheatons_law": {
+      "name": "Wheaton's Law",
+      "desc": "Before each round, the Card Czar picks which of two black cards to play."
+    },
+    "rebooting_universe": {
+      "name": "Rebooting the Universe",
+      "desc": "A player can discard their hand and draw 10 new cards at the cost of 1 point."
+    },
+    "meritocracy": {
+      "name": "Meritocracy",
+      "desc": "The winner of the previous round becomes the next Card Czar. If Rando wins, the Czar stays."
+    },
+    "high_stakes": {
+      "name": "High Stakes",
+      "desc": "Before playing, wager points. Win and collect, lose and forfeit."
+    },
+    "randoWon": "Rando Cardrissian wins — everyone loses!",
+    "czarPicksBlackCard": "Card Czar is picking a black card...",
+    "pickBlackCardTitle": "Pick the black card for this round",
+    "placeBet": "Place a bet",
+    "betLabel": "Your bet",
+    "betConfirm": "Confirm bet",
+    "betPlaced": "{amount} point bet placed"
   }
 }
