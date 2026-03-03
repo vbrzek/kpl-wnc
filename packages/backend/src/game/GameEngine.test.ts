@@ -448,3 +448,49 @@ describe('specialRules', () => {
     expect('error' in result).toBe(true);
   });
 });
+
+// --- wheatons_law ---
+
+describe('wheatons_law', () => {
+  let players: Player[];
+
+  beforeEach(() => {
+    players = [
+      makePlayer('p1', 'Alice'),
+      makePlayer('p2', 'Bob'),
+      makePlayer('p3', 'Charlie'),
+    ];
+  });
+
+  it('startRound returns blackCardCandidates when rule active', () => {
+    const eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), ['wheatons_law'], 'p1');
+    const result = eng.startRound();
+    expect(result.blackCardCandidates).toHaveLength(2);
+    expect(eng.currentBlackCard).toBeNull();
+  });
+
+  it('chooseBlackCard sets currentBlackCard and clears candidates', () => {
+    const eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), ['wheatons_law'], 'p1');
+    const { czarId, blackCardCandidates } = eng.startRound();
+    const chosen = blackCardCandidates![0];
+    const result = eng.chooseBlackCard(czarId, chosen.id);
+    expect('error' in result).toBe(false);
+    expect(eng.currentBlackCard?.id).toBe(chosen.id);
+    expect(eng.blackCardCandidates).toBeNull();
+  });
+
+  it('chooseBlackCard rejects non-czar', () => {
+    const eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), ['wheatons_law'], 'p1');
+    const { blackCardCandidates } = eng.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    const result = eng.chooseBlackCard(nonCzar.id, blackCardCandidates![0].id);
+    expect('error' in result).toBe(true);
+  });
+
+  it('without wheatons_law, startRound returns no candidates', () => {
+    const eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), [], 'p1');
+    const result = eng.startRound();
+    expect(result.blackCardCandidates).toBeUndefined();
+    expect(eng.currentBlackCard).not.toBeNull();
+  });
+});
