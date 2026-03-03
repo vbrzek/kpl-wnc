@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import type { SpecialRule } from '@kpl/shared';
 import { useLobbyStore } from '../stores/lobbyStore';
+import SpecialRulesPanel from './SpecialRulesPanel.vue';
 
 const emit = defineEmits<{
   close: [];
@@ -11,6 +13,7 @@ const emit = defineEmits<{
     selectedSetIds: number[];
     maxPlayers: number;
     targetScore: number;
+    specialRules: SpecialRule[];
   }];
 }>();
 
@@ -24,6 +27,10 @@ const targetScore = ref(10);
 const TARGET_SCORE_OPTIONS = [8, 10, 15, 20, 30] as const;
 const selectedSetId = ref<number | null>(null);
 const fetchError = ref('');
+const selectedRules = ref<SpecialRule[]>([]);
+const step = ref<'main' | 'rules'>('main');
+
+const isDesktop = () => window.innerWidth >= 768;
 
 const canSubmit = computed(() =>
   name.value.trim() !== '' &&
@@ -38,6 +45,7 @@ function submit() {
     selectedSetIds: [selectedSetId.value],
     maxPlayers: maxPlayers.value,
     targetScore: targetScore.value,
+    specialRules: selectedRules.value,
   });
 }
 
@@ -59,129 +67,174 @@ onMounted(async () => {
       class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click.self="$emit('close')"
     >
-      <div class="bg-[#0d1117] border border-white/10 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div class="p-6 space-y-5">
+      <div :class="[
+        'bg-[#0d1117] border border-white/10 rounded-2xl w-full max-h-[90vh] overflow-hidden',
+        'md:flex md:max-w-2xl',
+        'max-w-md',
+      ]">
 
-          <!-- Header -->
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-black tracking-tighter uppercase italic text-white">
-              {{ t('createTable.title') }}
-            </h2>
-            <button @click="$emit('close')" class="text-slate-500 hover:text-white transition-colors p-1">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+        <!-- Main content (step 1 on mobile, left column on desktop) -->
+        <div v-show="step === 'main' || isDesktop()" class="overflow-y-auto md:flex-1 md:border-r md:border-white/5">
+          <div class="p-6 space-y-5">
 
-          <!-- Table name -->
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
-              {{ t('createTable.tableName') }}
-            </label>
-            <input
-              v-model="name"
-              class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 transition-colors"
-              :placeholder="t('createTable.tableNamePlaceholder')"
-              @keyup.enter="submit"
-            />
-          </div>
-
-          <!-- Card sets -->
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
-              {{ t('createTable.cardSets') }}
-            </p>
-            <p v-if="fetchError" class="text-sm text-red-400">{{ fetchError }}</p>
-            <div v-else-if="!lobbyStore.cardSetsLoaded" class="text-sm text-slate-600">
-              {{ t('createTable.loadingSets') }}
-            </div>
-            <div v-else-if="lobbyStore.cardSets.length === 0" class="text-sm text-slate-600">
-              {{ t('createTable.noSets') }}
-            </div>
-            <div v-else class="space-y-2">
-              <button
-                v-for="set in lobbyStore.cardSets"
-                :key="set.id"
-                type="button"
-                @click="selectedSetId = set.id"
-                :class="[
-                  'w-full text-left px-4 py-3 rounded-xl border transition-all',
-                  selectedSetId === set.id
-                    ? 'bg-white/10 border-white/30 text-white'
-                    : 'bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/15 hover:text-slate-300',
-                ]"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-bold">{{ set.name }}</span>
-                  <span class="text-xs text-slate-500 shrink-0 ml-2">
-                    {{ set.blackCardCount }} ♠ / {{ set.whiteCardCount }} ♡
-                  </span>
-                </div>
-                <p v-if="set.description" class="text-xs text-slate-600 mt-0.5">{{ set.description }}</p>
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl font-black tracking-tighter uppercase italic text-white">
+                {{ t('createTable.title') }}
+              </h2>
+              <button @click="$emit('close')" class="text-slate-500 hover:text-white transition-colors p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
-            <p
-              v-if="!fetchError && lobbyStore.cardSets.length > 0 && selectedSetId === null"
-              class="text-xs text-yellow-500/70 mt-2"
-            >
-              {{ t('createTable.selectAtLeastOne') }}
-            </p>
-          </div>
 
-          <!-- Max players + target score -->
-          <div class="grid grid-cols-2 gap-3">
+            <!-- Table name -->
             <div>
               <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
-                {{ t('createTable.maxPlayers') }}
+                {{ t('createTable.tableName') }}
               </label>
               <input
-                v-model.number="maxPlayers"
-                type="number"
-                min="3"
-                max="20"
-                class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+                v-model="name"
+                class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-white/30 transition-colors"
+                :placeholder="t('createTable.tableNamePlaceholder')"
+                @keyup.enter="submit"
               />
             </div>
+
+            <!-- Card sets -->
             <div>
-              <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
-                {{ t('createTable.targetScore') }}
-              </label>
-              <select
-                v-model.number="targetScore"
-                class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+              <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+                {{ t('createTable.cardSets') }}
+              </p>
+              <p v-if="fetchError" class="text-sm text-red-400">{{ fetchError }}</p>
+              <div v-else-if="!lobbyStore.cardSetsLoaded" class="text-sm text-slate-600">
+                {{ t('createTable.loadingSets') }}
+              </div>
+              <div v-else-if="lobbyStore.cardSets.length === 0" class="text-sm text-slate-600">
+                {{ t('createTable.noSets') }}
+              </div>
+              <div v-else class="space-y-2">
+                <button
+                  v-for="set in lobbyStore.cardSets"
+                  :key="set.id"
+                  type="button"
+                  @click="selectedSetId = set.id"
+                  :class="[
+                    'w-full text-left px-4 py-3 rounded-xl border transition-all',
+                    selectedSetId === set.id
+                      ? 'bg-white/10 border-white/30 text-white'
+                      : 'bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/15 hover:text-slate-300',
+                  ]"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold">{{ set.name }}</span>
+                    <span class="text-xs text-slate-500 shrink-0 ml-2">
+                      {{ set.blackCardCount }} ♠ / {{ set.whiteCardCount }} ♡
+                    </span>
+                  </div>
+                  <p v-if="set.description" class="text-xs text-slate-600 mt-0.5">{{ set.description }}</p>
+                </button>
+              </div>
+              <p
+                v-if="!fetchError && lobbyStore.cardSets.length > 0 && selectedSetId === null"
+                class="text-xs text-yellow-500/70 mt-2"
               >
-                <option v-for="n in TARGET_SCORE_OPTIONS" :key="n" :value="n">
-                  {{ n }} {{ t('createTable.points') }}
-                </option>
-              </select>
+                {{ t('createTable.selectAtLeastOne') }}
+              </p>
             </div>
-          </div>
 
-          <!-- Public toggle -->
-          <label class="flex items-center gap-3 cursor-pointer">
-            <input v-model="isPublic" type="checkbox" class="w-4 h-4 accent-white" />
-            <span class="text-sm text-slate-400">{{ t('createTable.publicTable') }}</span>
-          </label>
+            <!-- Max players + target score -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+                  {{ t('createTable.maxPlayers') }}
+                </label>
+                <input
+                  v-model.number="maxPlayers"
+                  type="number"
+                  min="3"
+                  max="20"
+                  class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+                />
+              </div>
+              <div>
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+                  {{ t('createTable.targetScore') }}
+                </label>
+                <select
+                  v-model.number="targetScore"
+                  class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+                >
+                  <option v-for="n in TARGET_SCORE_OPTIONS" :key="n" :value="n">
+                    {{ n }} {{ t('createTable.points') }}
+                  </option>
+                </select>
+              </div>
+            </div>
 
-          <!-- Actions -->
-          <div class="flex gap-3 pt-1">
+            <!-- Public toggle -->
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input v-model="isPublic" type="checkbox" class="w-4 h-4 accent-white" />
+              <span class="text-sm text-slate-400">{{ t('createTable.publicTable') }}</span>
+            </label>
+
+            <!-- House Rules button (mobile only) -->
             <button
-              @click="$emit('close')"
-              class="flex-1 py-3.5 bg-slate-800 border border-white/10 text-slate-300 text-sm font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all"
+              type="button"
+              class="md:hidden w-full text-left px-4 py-3 bg-slate-900/40 border border-white/10 rounded-xl text-slate-300 text-sm font-bold flex items-center justify-between hover:border-white/20 transition-colors"
+              @click="step = 'rules'"
             >
-              {{ t('common.cancel') }}
+              <span>{{ t('specialRules.button') }}</span>
+              <div class="flex items-center gap-2">
+                <span v-if="selectedRules.length > 0" class="bg-yellow-400 text-black text-xs font-black px-2 py-0.5 rounded-full">
+                  {{ selectedRules.length }}
+                </span>
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </button>
-            <button
-              @click="submit"
-              :disabled="!canSubmit"
-              class="flex-1 py-3.5 bg-white text-black text-sm font-black uppercase tracking-widest rounded-2xl shadow-[0_4px_0_rgb(60,60,60)] active:shadow-none active:translate-y-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              {{ t('common.create') }}
-            </button>
-          </div>
 
+            <!-- Actions -->
+            <div class="flex gap-3 pt-1">
+              <button
+                @click="$emit('close')"
+                class="flex-1 py-3.5 bg-slate-800 border border-white/10 text-slate-300 text-sm font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all"
+              >
+                {{ t('common.cancel') }}
+              </button>
+              <button
+                @click="submit"
+                :disabled="!canSubmit"
+                class="flex-1 py-3.5 bg-white text-black text-sm font-black uppercase tracking-widest rounded-2xl shadow-[0_4px_0_rgb(60,60,60)] active:shadow-none active:translate-y-1 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {{ t('common.create') }}
+              </button>
+            </div>
+
+          </div>
         </div>
+
+        <!-- Right column / step 2: House Rules -->
+        <div v-show="step === 'rules' || isDesktop()" class="overflow-y-auto md:w-72 md:flex-shrink-0">
+          <div class="p-6">
+            <!-- Mobile header (back arrow) -->
+            <div class="flex items-center gap-3 mb-4 md:hidden">
+              <button @click="step = 'main'" class="text-slate-500 hover:text-white transition-colors p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <h3 class="text-sm font-black uppercase tracking-[0.15em] text-slate-400">{{ t('specialRules.button') }}</h3>
+            </div>
+            <!-- Desktop header -->
+            <h3 class="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">{{ t('specialRules.button') }}</h3>
+
+            <SpecialRulesPanel v-model="selectedRules" />
+          </div>
+        </div>
+
       </div>
     </div>
   </Teleport>
