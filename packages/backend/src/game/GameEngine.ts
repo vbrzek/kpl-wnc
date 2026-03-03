@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import type { BlackCard, WhiteCard, Player, AnonymousSubmission, RoundResult } from '@kpl/shared';
+import type { BlackCard, WhiteCard, Player, AnonymousSubmission, RoundResult, SpecialRule } from '@kpl/shared';
 
 const HAND_SIZE = 10;
 
@@ -13,6 +13,12 @@ export interface EngineSnapshot {
   roundNumber: number;
   tradedThisRound: string[];
   currentBlackCard: BlackCard | null;
+  specialRules: SpecialRule[];
+  hostId: string;
+  lastRoundWinnerId: string | null;
+  blackCardCandidates: BlackCard[] | null;
+  randoSubmission: { submissionId: 'rando_cardrissian'; cards: WhiteCard[] } | null;
+  bets: Record<string, number>;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -31,6 +37,13 @@ export class GameEngine {
   private czarPointer = -1;
   private usedWhiteCards: WhiteCard[] = [];
   private tradedThisRound = new Set<string>();
+  private specialRules: Set<SpecialRule>;
+  private hostId: string;
+  private lastRoundWinnerId: string | null = null;
+  public blackCardCandidates: BlackCard[] | null = null;
+  public static readonly RANDO_ID = 'rando_cardrissian';
+  private randoSubmission: { submissionId: 'rando_cardrissian'; cards: WhiteCard[] } | null = null;
+  private bets = new Map<string, number>();
 
   currentBlackCard: BlackCard | null = null;
   roundNumber = 0;
@@ -41,13 +54,23 @@ export class GameEngine {
     private players: Player[],
     blackCards: BlackCard[],
     whiteCards: WhiteCard[],
+    specialRules: SpecialRule[] = [],
+    hostId: string = '',
   ) {
     this.blackDeck = shuffle([...blackCards]);
     this.whiteDeck = shuffle([...whiteCards]);
+    this.specialRules = new Set(specialRules);
+    this.hostId = hostId;
   }
 
-  startRound(): { czarId: string } {
+  hasRule(rule: SpecialRule): boolean {
+    return this.specialRules.has(rule);
+  }
+
+  startRound(): { czarId: string; blackCardCandidates?: BlackCard[] } {
     this.roundNumber++;
+    this.randoSubmission = null;
+    this.bets.clear();
 
     // Move last round's submitted cards to the used pile before clearing
     for (const sub of this.submissions.values()) {
@@ -64,7 +87,6 @@ export class GameEngine {
 
     const blackCard = this.blackDeck.pop();
     if (!blackCard) throw new Error('Došly černé karty.');
-    this.currentBlackCard = blackCard;
 
     for (const p of this.players.filter(p => !p.isAfk)) {
       const hand = this.playerHands.get(p.id) ?? [];
@@ -83,10 +105,49 @@ export class GameEngine {
 
     const czar = this.pickNextCzar();
     czar.isCardCzar = true;
+
+    // Rando Cardrissian: auto-submit random cards
+    if (this.specialRules.has('rando_cardrissian')) {
+      if (this.whiteDeck.length === 0 && this.usedWhiteCards.length > 0) {
+        this.whiteDeck = shuffle(this.usedWhiteCards);
+        this.usedWhiteCards = [];
+      }
+      const randoCards: WhiteCard[] = [];
+      for (let i = 0; i < (blackCard.pick ?? 1); i++) {
+        const card = this.whiteDeck.pop();
+        if (card) randoCards.push(card);
+      }
+      if (randoCards.length > 0) {
+        this.randoSubmission = { submissionId: 'rando_cardrissian', cards: randoCards };
+      }
+    }
+
+    // Wheaton's Law: czar picks from 2 black card candidates
+    if (this.specialRules.has('wheatons_law')) {
+      const candidate2 = this.blackDeck.pop();
+      if (!candidate2) throw new Error('Došly černé karty.');
+      this.blackCardCandidates = [blackCard, candidate2];
+      this.currentBlackCard = null;
+      return { czarId: czar.id, blackCardCandidates: this.blackCardCandidates };
+    }
+
+    this.currentBlackCard = blackCard;
+    this.blackCardCandidates = null;
     return { czarId: czar.id };
   }
 
   private pickNextCzar(): Player {
+    // god_mode: host is always czar
+    if (this.specialRules.has('god_mode')) {
+      const host = this.players.find(p => p.id === this.hostId && !p.isAfk);
+      if (host) { this.czarPointer = this.players.indexOf(host); return host; }
+    }
+    // meritocracy: winner of last round becomes czar
+    if (this.specialRules.has('meritocracy') && this.lastRoundWinnerId) {
+      const winner = this.players.find(p => p.id === this.lastRoundWinnerId && !p.isAfk);
+      if (winner) { this.czarPointer = this.players.indexOf(winner); return winner; }
+    }
+    // default rotation
     const n = this.players.length;
     for (let i = 1; i <= n; i++) {
       const idx = (this.czarPointer + i) % n;
@@ -149,6 +210,9 @@ export class GameEngine {
   }
 
   tradeHand(playerId: string): { ok: true; newHand: WhiteCard[] } | { error: string } {
+    if (!this.specialRules.has('rebooting_universe')) {
+      return { error: 'Pravidlo Rebooting the Universe není aktivní.' };
+    }
     const player = this.players.find(p => p.id === playerId);
     if (!player) return { error: 'Hráč nenalezen.' };
     if (player.isCardCzar) return { error: 'Card Czar nemůže vyměňovat karty.' };
@@ -177,10 +241,42 @@ export class GameEngine {
     return { ok: true, newHand: [...newHand] };
   }
 
+  chooseBlackCard(czarId: string, cardId: number): { ok: true } | { error: string } {
+    const czar = this.players.find(p => p.id === czarId);
+    if (!czar?.isCardCzar) return { error: 'Nejsi Card Czar.' };
+    if (!this.blackCardCandidates) return { error: 'Není aktivní výběr černé karty.' };
+
+    const chosen = this.blackCardCandidates.find(c => c.id === cardId);
+    if (!chosen) return { error: 'Neplatná černá karta.' };
+
+    // Return rejected card to deck
+    const rejected = this.blackCardCandidates.find(c => c.id !== cardId)!;
+    this.blackDeck.unshift(rejected);
+
+    this.currentBlackCard = chosen;
+    this.blackCardCandidates = null;
+    return { ok: true };
+  }
+
+  placeBet(playerId: string, amount: number): { ok: true } | { error: string } {
+    if (!this.specialRules.has('high_stakes')) return { error: 'Pravidlo High Stakes není aktivní.' };
+    const player = this.players.find(p => p.id === playerId);
+    if (!player) return { error: 'Hráč nenalezen.' };
+    if (player.isCardCzar) return { error: 'Card Czar nemůže sázet.' };
+    if (amount < 0) return { error: 'Sázka nesmí být záporná.' };
+    if (amount > player.score) return { error: 'Nemáš dostatek bodů pro tuto sázku.' };
+    if (this.bets.has(playerId)) return { error: 'Už jsi v tomto kole sázku podal.' };
+    this.bets.set(playerId, amount);
+    return { ok: true };
+  }
+
   getAnonymousSubmissions(): AnonymousSubmission[] {
     const result = Array.from(this.submissions.values()).map(
       ({ submissionId, cards }) => ({ submissionId, cards }),
     );
+    if (this.randoSubmission) {
+      result.push({ submissionId: this.randoSubmission.submissionId, cards: this.randoSubmission.cards });
+    }
     return shuffle(result);
   }
 
@@ -190,6 +286,19 @@ export class GameEngine {
   ): RoundResult | { error: string } {
     const czar = this.players.find(p => p.id === czarId);
     if (!czar?.isCardCzar) return { error: 'Nejsi Card Czar.' };
+
+    // Rando Cardrissian win
+    if (submissionId === GameEngine.RANDO_ID && this.randoSubmission) {
+      const scores: Record<string, number> = {};
+      for (const p of this.players) scores[p.id] = p.score;
+      this.lastRoundWinnerId = null; // Rando won → meritocracy falls back to rotation
+      return {
+        winnerId: GameEngine.RANDO_ID,
+        winnerNickname: 'Rando Cardrissian',
+        winningCards: this.randoSubmission.cards,
+        scores,
+      };
+    }
 
     let winnerId: string | null = null;
     let winningCards: WhiteCard[] = [];
@@ -205,8 +314,23 @@ export class GameEngine {
     const winner = this.players.find(p => p.id === winnerId)!;
     winner.score++;
 
+    // High Stakes: apply bets
+    if (this.specialRules.has('high_stakes')) {
+      for (const [pid, bet] of this.bets.entries()) {
+        const betPlayer = this.players.find(p => p.id === pid);
+        if (!betPlayer) continue;
+        if (pid === winnerId) {
+          betPlayer.score += bet;
+        } else {
+          betPlayer.score = Math.max(0, betPlayer.score - bet);
+        }
+      }
+    }
+
     const scores: Record<string, number> = {};
     for (const p of this.players) scores[p.id] = p.score;
+
+    this.lastRoundWinnerId = winnerId;
 
     return { winnerId, winnerNickname: winner.nickname, winningCards, scores };
   }
@@ -228,12 +352,18 @@ export class GameEngine {
       roundNumber: this.roundNumber,
       tradedThisRound: Array.from(this.tradedThisRound),
       currentBlackCard: this.currentBlackCard,
+      specialRules: Array.from(this.specialRules),
+      hostId: this.hostId,
+      lastRoundWinnerId: this.lastRoundWinnerId,
+      blackCardCandidates: this.blackCardCandidates,
+      randoSubmission: this.randoSubmission,
+      bets: Object.fromEntries(this.bets),
     };
   }
 
   static fromSnapshot(snap: EngineSnapshot, players: Player[]): GameEngine {
     // Prázdné decky — hned přepíšeme ze snapshotu
-    const engine = new GameEngine(players, [], []);
+    const engine = new GameEngine(players, [], [], snap.specialRules ?? [], snap.hostId ?? '');
     engine.blackDeck = snap.blackDeck;
     engine.whiteDeck = snap.whiteDeck;
     engine.playerHands = new Map(Object.entries(snap.playerHands));
@@ -243,6 +373,10 @@ export class GameEngine {
     engine.roundNumber = snap.roundNumber;
     engine.tradedThisRound = new Set(snap.tradedThisRound ?? []);
     engine.currentBlackCard = snap.currentBlackCard;
+    engine.lastRoundWinnerId = snap.lastRoundWinnerId ?? null;
+    engine.blackCardCandidates = snap.blackCardCandidates ?? null;
+    engine.randoSubmission = snap.randoSubmission ?? null;
+    engine.bets = new Map(Object.entries(snap.bets ?? {}));
     return engine;
   }
 }

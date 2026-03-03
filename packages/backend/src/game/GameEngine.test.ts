@@ -305,6 +305,11 @@ describe('GameEngine', () => {
   // --- tradeHand ---
 
   describe('tradeHand', () => {
+    beforeEach(() => {
+      // tradeHand requires rebooting_universe rule
+      engine = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), ['rebooting_universe']);
+    });
+
     it('returns error if player not found', () => {
       engine.startRound();
       const result = engine.tradeHand('nonexistent');
@@ -381,5 +386,65 @@ describe('GameEngine', () => {
       const result = engine.tradeHand(nonCzar2.id);
       expect(result).not.toHaveProperty('error');
     });
+  });
+});
+
+// --- specialRules: foundation ---
+
+describe('specialRules', () => {
+  let players: Player[];
+
+  beforeEach(() => {
+    players = [
+      makePlayer('p1', 'Alice'),
+      makePlayer('p2', 'Bob'),
+      makePlayer('p3', 'Charlie'),
+    ];
+  });
+
+  it('god_mode: czar is always host across multiple rounds', () => {
+    const hostId = 'p1';
+    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), ['god_mode'], hostId);
+    for (let i = 0; i < 3; i++) {
+      eng.startRound();
+      expect(players.find(p => p.isCardCzar)!.id).toBe(hostId);
+    }
+  });
+
+  it('meritocracy: winner of round becomes czar next round', () => {
+    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), ['meritocracy'], 'p1');
+    eng.startRound();
+    const czar = players.find(p => p.isCardCzar)!;
+    const nonCzarPlayers = players.filter(p => !p.isCardCzar);
+    // Submit cards for all non-czar players
+    for (const p of nonCzarPlayers) {
+      eng.submitCards(p.id, [eng.getPlayerHand(p.id)[0].id]);
+    }
+    const subs = eng.getAnonymousSubmissions();
+    // Select first submission's winner
+    const winResult = eng.selectWinner(czar.id, subs[0].submissionId);
+    expect('error' in winResult).toBe(false);
+    const winnerId = (winResult as { winnerId: string }).winnerId;
+    // Start next round — winner should be czar
+    eng.startRound();
+    expect(players.find(p => p.isCardCzar)!.id).toBe(winnerId);
+  });
+
+  it('rebooting_universe: tradeHand works when rule is active', () => {
+    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), ['rebooting_universe'], 'p1');
+    eng.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    nonCzar.score = 2;
+    const result = eng.tradeHand(nonCzar.id);
+    expect('error' in result).toBe(false);
+  });
+
+  it('rebooting_universe: tradeHand blocked without rule', () => {
+    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), [], 'p1');
+    eng.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    nonCzar.score = 2;
+    const result = eng.tradeHand(nonCzar.id);
+    expect('error' in result).toBe(true);
   });
 });
