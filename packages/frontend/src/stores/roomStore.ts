@@ -50,6 +50,13 @@ export const useRoomStore = defineStore('room', () => {
 
     socket.on('lobby:stateUpdate', (updatedRoom) => {
       room.value = updatedRoom;
+      // During Wheaton's Law waiting phase game:roundStart is deferred, so czarId.value
+      // retains the previous round's value. Sync it immediately from player flags to
+      // prevent the old czar from passing the czarId.value === myPlayerId check.
+      if (updatedRoom.blackCardCandidates) {
+        const czar = updatedRoom.players.find(p => p.isCardCzar);
+        if (czar) czarId.value = czar.id;
+      }
     });
 
     socket.on('lobby:kicked', () => {
