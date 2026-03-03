@@ -1,6 +1,15 @@
 // Herní stavy
 export type GameStatus = 'LOBBY' | 'SELECTION' | 'JUDGING' | 'RESULTS' | 'FINISHED';
 
+// Speciální pravidla (House Rules)
+export type SpecialRule =
+  | 'rando_cardrissian'
+  | 'god_mode'
+  | 'wheatons_law'
+  | 'rebooting_universe'
+  | 'meritocracy'
+  | 'high_stakes';
+
 // Hráč
 export interface Player {
   id: string;
@@ -87,6 +96,8 @@ export interface GameRoom {
   roundNumber: number;
   roundDeadline: number | null;   // Unix ms timestamp, null = žádný aktivní timer
   targetScore: number;            // výherní podmínka: 8 | 10 | 15 | 20 | 30
+  specialRules: SpecialRule[];              // [] = žádná speciální pravidla
+  blackCardCandidates: BlackCard[] | null;  // Wheaton's Law: czar vybírá černou kartu
   lastActivityAt: number;         // Unix ms timestamp poslední akce (pro GC)
 }
 
@@ -97,6 +108,7 @@ export interface PublicRoomSummary {
   playerCount: number;
   maxPlayers: number;
   selectedSetIds: number[];
+  specialRules: SpecialRule[];
 }
 
 // Socket.io eventy — server → klient
@@ -114,6 +126,7 @@ export interface ServerToClientEvents {
   'game:stateSync': (data: GameStateSync) => void;
   'game:roundSkipped': () => void;  // kolo přeskočeno bez bodu (timeout)
   'game:gameOver': (payload: GameOverPayload) => void;
+  'game:blackCardCandidates': (cards: BlackCard[]) => void;
   'room:deleted': () => void;
 }
 
@@ -127,6 +140,7 @@ export interface ClientToServerEvents {
       maxPlayers: number;
       nickname: string;
       targetScore: number;
+      specialRules: SpecialRule[];
     },
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
@@ -138,7 +152,7 @@ export interface ClientToServerEvents {
   'lobby:unsubscribePublic': () => void;
   'lobby:leave': () => void;
   'lobby:updateSettings': (
-    settings: { name?: string; isPublic?: boolean; selectedSetIds?: number[]; maxPlayers?: number },
+    settings: { name?: string; isPublic?: boolean; selectedSetIds?: number[]; maxPlayers?: number; specialRules?: SpecialRule[] },
     callback: (result: { room: GameRoom } | { error: string }) => void
   ) => void;
   'lobby:kickPlayer': (
@@ -162,4 +176,6 @@ export interface ClientToServerEvents {
   'game:tradeCards': () => void;
   'game:czarForceAdvance': () => void;
   'game:skipCzarJudging': () => void;
+  'game:chooseBlackCard': (cardId: number) => void;
+  'game:placeBet': (amount: number, callback: (result: { ok: true } | { error: string }) => void) => void;
 }
