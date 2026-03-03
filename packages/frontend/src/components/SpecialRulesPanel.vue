@@ -24,11 +24,21 @@ const RULES: RuleInfo[] = [
   { id: 'high_stakes', icon: '💰' },
 ];
 
+// Mutually exclusive pairs: activating one deactivates the other(s)
+const CONFLICTS: Partial<Record<SpecialRule, SpecialRule[]>> = {
+  god_mode: ['meritocracy'],
+  meritocracy: ['god_mode'],
+};
+
 function toggle(id: SpecialRule) {
   if (props.readonly) return;
   const current = new Set(props.modelValue);
-  if (current.has(id)) current.delete(id);
-  else current.add(id);
+  if (current.has(id)) {
+    current.delete(id);
+  } else {
+    current.add(id);
+    for (const conflict of CONFLICTS[id] ?? []) current.delete(conflict);
+  }
   emit('update:modelValue', Array.from(current));
 }
 
