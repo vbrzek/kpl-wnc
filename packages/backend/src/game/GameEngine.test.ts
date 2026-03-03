@@ -548,3 +548,60 @@ describe('rando_cardrissian', () => {
     }
   });
 });
+
+// --- high_stakes ---
+
+describe('high_stakes', () => {
+  let players: Player[];
+  let eng: GameEngine;
+  let nonCzar1: Player;
+  let nonCzar2: Player;
+  let czar: Player;
+
+  beforeEach(() => {
+    players = [
+      makePlayer('p1', 'Alice'),
+      makePlayer('p2', 'Bob'),
+      makePlayer('p3', 'Charlie'),
+    ];
+    eng = new GameEngine(players, makeBlackCards(10), makeWhiteCards(50), ['high_stakes'], 'p1');
+    eng.startRound();
+    czar = players.find(p => p.isCardCzar)!;
+    [nonCzar1, nonCzar2] = players.filter(p => !p.isCardCzar);
+    nonCzar1.score = 3;
+    nonCzar2.score = 2;
+  });
+
+  it('placeBet stores bet', () => {
+    const result = eng.placeBet(nonCzar1.id, 2);
+    expect('error' in result).toBe(false);
+  });
+
+  it('placeBet rejects bet > score', () => {
+    const result = eng.placeBet(nonCzar1.id, 5);
+    expect('error' in result).toBe(true);
+  });
+
+  it('placeBet rejects negative amount', () => {
+    const result = eng.placeBet(nonCzar1.id, -1);
+    expect('error' in result).toBe(true);
+  });
+
+  it('winner gains bet points, loser loses them', () => {
+    eng.placeBet(nonCzar1.id, 2); // bets 2
+    eng.placeBet(nonCzar2.id, 1); // bets 1
+    eng.submitCards(nonCzar1.id, [eng.getPlayerHand(nonCzar1.id)[0].id]);
+    eng.submitCards(nonCzar2.id, [eng.getPlayerHand(nonCzar2.id)[0].id]);
+    const subs = eng.getAnonymousSubmissions();
+    const result = eng.selectWinner(czar.id, subs[0].submissionId);
+    if ('error' in result) return;
+    const winnerId = result.winnerId!;
+    const loserId = winnerId === nonCzar1.id ? nonCzar2.id : nonCzar1.id;
+    const winnerBet = winnerId === nonCzar1.id ? 2 : 1;
+    const loserBet = loserId === nonCzar1.id ? 2 : 1;
+    const winnerInitial = winnerId === nonCzar1.id ? 3 : 2;
+    const loserInitial = loserId === nonCzar1.id ? 3 : 2;
+    expect(result.scores[winnerId]).toBe(winnerInitial + 1 + winnerBet);
+    expect(result.scores[loserId]).toBe(Math.max(0, loserInitial - loserBet));
+  });
+});
