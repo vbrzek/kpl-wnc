@@ -547,6 +547,19 @@ describe('rando_cardrissian', () => {
       expect(Object.values(result.scores).every(s => s === 0)).toBe(true);
     }
   });
+
+  it('Rando win with meritocracy keeps the same czar next round', () => {
+    const eng = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), ['rando_cardrissian', 'meritocracy'], 'p1');
+    eng.startRound();
+    const czarRound1 = players.find(p => p.isCardCzar)!;
+    const nonCzar = players.filter(p => !p.isCardCzar);
+    for (const p of nonCzar) eng.submitCards(p.id, [eng.getPlayerHand(p.id)[0].id]);
+    eng.selectWinner(czarRound1.id, 'rando_cardrissian');
+
+    eng.startRound();
+    const czarRound2 = players.find(p => p.isCardCzar)!;
+    expect(czarRound2.id).toBe(czarRound1.id);
+  });
 });
 
 // --- high_stakes ---

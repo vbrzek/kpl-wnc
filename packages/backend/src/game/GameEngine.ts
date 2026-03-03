@@ -291,7 +291,7 @@ export class GameEngine {
     if (submissionId === GameEngine.RANDO_ID && this.randoSubmission) {
       const scores: Record<string, number> = {};
       for (const p of this.players) scores[p.id] = p.score;
-      this.lastRoundWinnerId = null; // Rando won → meritocracy falls back to rotation
+      this.lastRoundWinnerId = czar.id; // Rando won → meritocracy keeps the same czar
       return {
         winnerId: GameEngine.RANDO_ID,
         winnerNickname: 'Rando Cardrissian',
