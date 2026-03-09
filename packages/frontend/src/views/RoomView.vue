@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { useLobbyStore, loadPlayerToken } from '../stores/lobbyStore';
+import { useLobbyStore } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
 import { useProfileStore } from '../stores/profileStore';
 import { socket } from '../socket';
@@ -32,10 +32,10 @@ const stopKickedWatch = watch(
 );
 
 async function doJoin() {
-  const existingToken = loadPlayerToken(roomCode);
-  // Pokud má hráč token: reconnect s prázdnou přezdívkou (server použije token)
-  // Pokud ne: připoj se s přezdívkou z globálního profilu
-  const nickname = existingToken ? '' : profileStore.nickname;
+  // Vždy posílej skutečnou přezdívku — server ji při úspěšném reconnectu ignoruje,
+  // ale pokud je token zastaralý (hra skončila, server se restartoval apod.),
+  // umožní to fresh join bez chyby „Přezdívka nesmí být prázdná".
+  const nickname = profileStore.nickname;
 
   const result = await lobbyStore.joinRoom(roomCode, nickname);
   if ('error' in result) {
