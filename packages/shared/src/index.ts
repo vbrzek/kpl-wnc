@@ -10,6 +10,8 @@ export type SpecialRule =
   | 'meritocracy'
   | 'high_stakes';
 
+export type WinCondition = 'score' | 'time' | 'rounds';
+
 // Hráč
 export interface Player {
   id: string;
@@ -96,6 +98,10 @@ export interface GameRoom {
   roundNumber: number;
   roundDeadline: number | null;   // Unix ms timestamp, null = žádný aktivní timer
   targetScore: number;            // výherní podmínka: 8 | 10 | 15 | 20 | 30
+  winCondition: WinCondition;      // výchozí: 'score'
+  targetRounds: number;             // výchozí: 20 (pro 'rounds')
+  gameTimeLimit: number;            // minuty, výchozí: 15 (pro 'time')
+  gameStartedAt: number | null;     // ms timestamp, nastaven při startGame
   specialRules: SpecialRule[];              // [] = žádná speciální pravidla
   blackCardCandidates: BlackCard[] | null;  // Wheaton's Law: czar vybírá černou kartu
   lastActivityAt: number;         // Unix ms timestamp poslední akce (pro GC)
@@ -141,6 +147,9 @@ export interface ClientToServerEvents {
       nickname: string;
       targetScore: number;
       specialRules: SpecialRule[];
+      winCondition?: WinCondition;
+      targetRounds?: number;
+      gameTimeLimit?: number;
     },
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
@@ -152,7 +161,7 @@ export interface ClientToServerEvents {
   'lobby:unsubscribePublic': () => void;
   'lobby:leave': () => void;
   'lobby:updateSettings': (
-    settings: { name?: string; isPublic?: boolean; selectedSetIds?: number[]; maxPlayers?: number; specialRules?: SpecialRule[] },
+    settings: { name?: string; isPublic?: boolean; selectedSetIds?: number[]; maxPlayers?: number; specialRules?: SpecialRule[]; winCondition?: WinCondition; targetScore?: number; targetRounds?: number; gameTimeLimit?: number },
     callback: (result: { room: GameRoom } | { error: string }) => void
   ) => void;
   'lobby:kickPlayer': (
