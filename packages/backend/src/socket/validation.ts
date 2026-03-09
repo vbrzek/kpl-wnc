@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { SpecialRule } from '@kpl/shared';
+import type { SpecialRule, WinCondition } from '@kpl/shared';
 
 // --- Sdílené schémata ---
 
@@ -13,6 +13,9 @@ const VALID_RULES: SpecialRule[] = [
 
 const specialRules = z.array(z.enum(VALID_RULES as [SpecialRule, ...SpecialRule[]])).default([]);
 
+const VALID_WIN_CONDITIONS: WinCondition[] = ['score', 'time', 'rounds'];
+const winCondition = z.enum(VALID_WIN_CONDITIONS as [WinCondition, ...WinCondition[]]).default('score');
+
 // --- Schémata pro jednotlivé eventy ---
 
 export const CreateRoomSchema = z.object({
@@ -25,6 +28,11 @@ export const CreateRoomSchema = z.object({
     message: 'Cílový počet bodů musí být 8, 10, 15, 20 nebo 30',
   }),
   specialRules,
+  winCondition: winCondition,
+  targetRounds: z.number().int().min(5).max(100).default(20),
+  gameTimeLimit: z.number().int().refine(v => v >= 5 && v <= 60 && v % 5 === 0, {
+    message: 'Časový limit musí být 5–60 minut v krocích 5.',
+  }).default(15),
 });
 
 export const JoinRoomSchema = z.object({
@@ -39,6 +47,14 @@ export const UpdateSettingsSchema = z.object({
   selectedSetIds: z.array(z.number().int().positive()).min(1).optional(),
   maxPlayers: z.number().int().min(3).max(10).optional(),
   specialRules: specialRules.optional(),
+  winCondition: winCondition.optional(),
+  targetScore: z.number().int().refine(v => [8, 10, 15, 20, 30].includes(v), {
+    message: 'Cílový počet bodů musí být 8, 10, 15, 20 nebo 30',
+  }).optional(),
+  targetRounds: z.number().int().min(5).max(100).optional(),
+  gameTimeLimit: z.number().int().refine(v => v >= 5 && v <= 60 && v % 5 === 0, {
+    message: 'Časový limit musí být 5–60 minut v krocích 5.',
+  }).optional(),
 });
 
 export const ChooseBlackCardSchema = z.number().int().positive();
