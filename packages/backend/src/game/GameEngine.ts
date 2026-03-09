@@ -106,8 +106,10 @@ export class GameEngine {
     const czar = this.pickNextCzar();
     czar.isCardCzar = true;
 
-    // Rando Cardrissian: auto-submit random cards
-    if (this.specialRules.has('rando_cardrissian')) {
+    // Rando Cardrissian: auto-submit random cards.
+    // When Wheaton's Law is also active, defer until chooseBlackCard() so we
+    // know the final card's pick count.
+    if (this.specialRules.has('rando_cardrissian') && !this.specialRules.has('wheatons_law')) {
       if (this.whiteDeck.length === 0 && this.usedWhiteCards.length > 0) {
         this.whiteDeck = shuffle(this.usedWhiteCards);
         this.usedWhiteCards = [];
@@ -255,6 +257,23 @@ export class GameEngine {
 
     this.currentBlackCard = chosen;
     this.blackCardCandidates = null;
+
+    // Rando Cardrissian: deferred submission — now we know the final pick count
+    if (this.specialRules.has('rando_cardrissian')) {
+      if (this.whiteDeck.length === 0 && this.usedWhiteCards.length > 0) {
+        this.whiteDeck = shuffle(this.usedWhiteCards);
+        this.usedWhiteCards = [];
+      }
+      const randoCards: WhiteCard[] = [];
+      for (let i = 0; i < (chosen.pick ?? 1); i++) {
+        const card = this.whiteDeck.pop();
+        if (card) randoCards.push(card);
+      }
+      if (randoCards.length > 0) {
+        this.randoSubmission = { submissionId: 'rando_cardrissian', cards: randoCards };
+      }
+    }
+
     return { ok: true };
   }
 
