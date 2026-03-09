@@ -55,7 +55,19 @@
     "sound": "Sound",
     "soundOn": "On",
     "soundOff": "Off",
-    "save": "Save"
+    "save": "Save",
+    "loginWithGoogle": "Sign in with Google",
+    "loginWithDiscord": "Sign in with Discord",
+    "playAsGuest": "Play as guest",
+    "linkAccount": "Link account",
+    "logout": "Log out",
+    "loggedInAs": "Logged in as",
+    "avatar": "Avatar",
+    "avatarOAuth": "{provider} photo",
+    "avatarDicebear": "DiceBear",
+    "dicebearStyle": "Style",
+    "dicebearSeed": "Seed",
+    "dicebearSeedPlaceholder": "any text..."
   },
   "joinPrivate": {
     "title": "Join a table",

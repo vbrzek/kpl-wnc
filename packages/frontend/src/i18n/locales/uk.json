@@ -55,7 +55,19 @@
     "sound": "Звук",
     "soundOn": "Увімк",
     "soundOff": "Вимк",
-    "save": "Зберегти"
+    "save": "Зберегти",
+    "loginWithGoogle": "Увійти через Google",
+    "loginWithDiscord": "Увійти через Discord",
+    "playAsGuest": "Грати як гість",
+    "linkAccount": "Прив'язати акаунт",
+    "logout": "Вийти",
+    "loggedInAs": "Увійшли як",
+    "avatar": "Аватар",
+    "avatarOAuth": "Фото ({provider})",
+    "avatarDicebear": "DiceBear",
+    "dicebearStyle": "Стиль",
+    "dicebearSeed": "Сід",
+    "dicebearSeedPlaceholder": "будь-який текст..."
   },
   "joinPrivate": {
     "title": "Увійти до столу",

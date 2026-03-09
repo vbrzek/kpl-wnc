@@ -55,7 +55,19 @@
     "sound": "Звук",
     "soundOn": "Вкл",
     "soundOff": "Выкл",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "loginWithGoogle": "Войти через Google",
+    "loginWithDiscord": "Войти через Discord",
+    "playAsGuest": "Играть как гость",
+    "linkAccount": "Привязать аккаунт",
+    "logout": "Выйти",
+    "loggedInAs": "Вошёл как",
+    "avatar": "Аватар",
+    "avatarOAuth": "Фото ({provider})",
+    "avatarDicebear": "DiceBear",
+    "dicebearStyle": "Стиль",
+    "dicebearSeed": "Сид",
+    "dicebearSeedPlaceholder": "любой текст..."
   },
   "joinPrivate": {
     "title": "Войти в стол",

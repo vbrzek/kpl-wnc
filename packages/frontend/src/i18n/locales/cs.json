@@ -55,7 +55,19 @@
     "sound": "Zvuky",
     "soundOn": "Zapnuto",
     "soundOff": "Vypnuto",
-    "save": "Uložit"
+    "save": "Uložit",
+    "loginWithGoogle": "Přihlásit se přes Google",
+    "loginWithDiscord": "Přihlásit se přes Discord",
+    "playAsGuest": "Hrát jako host",
+    "linkAccount": "Propojit účet",
+    "logout": "Odhlásit se",
+    "loggedInAs": "Přihlášen jako",
+    "avatar": "Avatar",
+    "avatarOAuth": "Profilovka ({provider})",
+    "avatarDicebear": "DiceBear",
+    "dicebearStyle": "Styl",
+    "dicebearSeed": "Seed",
+    "dicebearSeedPlaceholder": "libovolný text..."
   },
   "joinPrivate": {
     "title": "Připojit se ke stolu",

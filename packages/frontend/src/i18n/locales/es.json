@@ -55,7 +55,19 @@
     "sound": "Sonido",
     "soundOn": "Activado",
     "soundOff": "Desactivado",
-    "save": "Guardar"
+    "save": "Guardar",
+    "loginWithGoogle": "Iniciar sesión con Google",
+    "loginWithDiscord": "Iniciar sesión con Discord",
+    "playAsGuest": "Jugar como invitado",
+    "linkAccount": "Vincular cuenta",
+    "logout": "Cerrar sesión",
+    "loggedInAs": "Conectado como",
+    "avatar": "Avatar",
+    "avatarOAuth": "Foto ({provider})",
+    "avatarDicebear": "DiceBear",
+    "dicebearStyle": "Estilo",
+    "dicebearSeed": "Semilla",
+    "dicebearSeedPlaceholder": "cualquier texto..."
   },
   "joinPrivate": {
     "title": "Unirse a una mesa",
