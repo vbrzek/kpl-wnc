@@ -89,8 +89,8 @@ describe('EventLogger', () => {
           max_players: 6,
           win_condition: 'score',
           target_score: 8,
-          target_rounds: 20,
-          game_time_limit: 15,
+          target_rounds: null,
+          game_time_limit: null,
           set_ids: JSON.stringify([1, 2]),
           special_rules: JSON.stringify([]),
         })
@@ -125,8 +125,8 @@ describe('EventLogger', () => {
           max_players: 6,
           win_condition: 'score',
           target_score: 8,
-          target_rounds: 20,
-          game_time_limit: 15,
+          target_rounds: null,
+          game_time_limit: null,
           set_ids: JSON.stringify([1, 2]),
           special_rules: JSON.stringify([]),
         })

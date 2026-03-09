@@ -19,9 +19,9 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean('is_public').notNullable();
     table.tinyint('max_players').unsigned().notNullable();
     table.string('win_condition', 20).notNullable();
-    table.smallint('target_score').unsigned().notNullable();
-    table.smallint('target_rounds').unsigned().notNullable();
-    table.smallint('game_time_limit').unsigned().notNullable();
+    table.smallint('target_score').unsigned().nullable();
+    table.smallint('target_rounds').unsigned().nullable();
+    table.smallint('game_time_limit').unsigned().nullable();
     table.json('set_ids').notNullable();
     table.json('special_rules').notNullable();
     table.foreign('event_id').references('id').inTable('game_events').onDelete('CASCADE');
