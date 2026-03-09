@@ -8,6 +8,7 @@ import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } 
 import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, validate } from './validation.js';
 import { checkRateLimit, cleanupSocket } from './rateLimiter.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
+import { eventLogger } from '../analytics/EventLogger.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -44,6 +45,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     socket.leave('lobby');
 
     broadcastPublicRooms(io);
+    eventLogger.logRoomCreated(room, data.nickname);
     callback({ room, playerToken, playerId });
   });
 
@@ -134,6 +136,8 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
     io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
     broadcastPublicRooms(io);
+    const host = result.room.players.find(p => p.id === result.room.hostId);
+    eventLogger.logSettingsUpdated(result.room, host?.nickname ?? 'unknown');
     callback({ room: result.room });
   });
 
@@ -210,6 +214,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     // Spusť první kolo (broadcast stateUpdate + game:roundStart per player + timer)
     try {
       startNewRound(room, engine, io);
+      eventLogger.logGameStarted(room);
     } catch {
       io.to(`room:${room.code}`).emit('game:error', 'Chyba při inicializaci hry — zkontroluj sady karet.');
     }
