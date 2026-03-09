@@ -49,7 +49,7 @@ async function startGame() {
 
 <template>
     
-    <div class="flex items-center justify-between gap-4 border-b border-white/5 pt-2 pb-6">
+    <div class="flex items-center justify-between gap-4 border-b border-white/5 pt-4 pb-6">
       <div class="flex flex-col">
         <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">{{ t('createTable.tableName') }}</span>
         <h1 class="text-3xl font-black tracking-tighter uppercase italic text-white leading-none">
@@ -64,7 +64,7 @@ async function startGame() {
     </p>
 
     <!-- Win condition chip + settings button -->
-    <div class="flex items-center justify-between pb-4 border-b border-white/5">
+    <div class="flex items-center justify-between pt-4 pb-4 border-b border-white/5">
       <span class="text-xs font-bold text-slate-400">{{ winConditionLabel }}</span>
       <button
         v-if="roomStore.isHost"
@@ -76,7 +76,7 @@ async function startGame() {
     </div>
 
     <!-- Active special rules chips -->
-    <div v-if="roomStore.specialRules.length > 0" class="flex flex-wrap gap-1.5 pb-4 border-b border-white/5">
+    <div v-if="roomStore.specialRules.length > 0" class="flex flex-wrap gap-1.5 pt-3 pb-4 border-b border-white/5">
       <span
         v-for="rule in roomStore.specialRules"
         :key="rule"
@@ -86,7 +86,7 @@ async function startGame() {
       </span>
     </div>
 
-    <section>
+    <section class="pt-4">
       <div class="flex items-center justify-between mb-4 px-1">
         <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500">
           {{ t('lobby.players', { current: room.players.length, max: room.maxPlayers }) }}
