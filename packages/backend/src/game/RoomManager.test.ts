@@ -33,6 +33,25 @@ describe('RoomManager', () => {
     expect(typeof playerToken).toBe('string');
   });
 
+  it('sets default win condition when not provided', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 10, specialRules: [] }
+    );
+    expect(room.winCondition).toBe('score');
+    expect(room.targetRounds).toBe(20);
+    expect(room.gameTimeLimit).toBe(15);
+    expect(room.gameStartedAt).toBeNull();
+  });
+
+  it('uses provided win condition', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 10, specialRules: [],
+        winCondition: 'time', gameTimeLimit: 30 }
+    );
+    expect(room.winCondition).toBe('time');
+    expect(room.gameTimeLimit).toBe(30);
+  });
+
   // --- joinRoom ---
 
   it('joins an existing room and returns playerToken', () => {

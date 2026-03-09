@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
-import type { GameRoom, GameOverPayload, Player, PublicRoomSummary, SpecialRule } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, Player, PublicRoomSummary, SpecialRule, WinCondition } from '@kpl/shared';
 import { GameEngine, type EngineSnapshot } from './GameEngine.js';
 
 export interface ManagerSnapshot {
@@ -55,6 +55,9 @@ export interface CreateRoomSettings {
   nickname: string;
   targetScore: number;
   specialRules: SpecialRule[];
+  winCondition?: WinCondition;
+  targetRounds?: number;
+  gameTimeLimit?: number;
 }
 
 export interface FinishGameResult {
@@ -69,6 +72,10 @@ export interface UpdateSettingsData {
   selectedSetIds?: number[];
   maxPlayers?: number;
   specialRules?: SpecialRule[];
+  winCondition?: WinCondition;
+  targetScore?: number;
+  targetRounds?: number;
+  gameTimeLimit?: number;
 }
 
 // --- RoomManager ---
@@ -118,6 +125,10 @@ export class RoomManager {
       roundNumber: 0,
       roundDeadline: null,
       targetScore: settings.targetScore,
+      winCondition: settings.winCondition ?? 'score',
+      targetRounds: settings.targetRounds ?? 20,
+      gameTimeLimit: settings.gameTimeLimit ?? 15,
+      gameStartedAt: null,
       specialRules: settings.specialRules,
       lastActivityAt: Date.now(),
     };
