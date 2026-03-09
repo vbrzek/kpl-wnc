@@ -11,9 +11,12 @@ import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { registerLobbyHandlers } from './socket/lobbyHandlers.js';
 import { registerGameHandlers } from './socket/gameHandlers.js';
 import { startGarbageCollector } from './game/GarbageCollector.js';
+import cookie from '@fastify/cookie';
+import oauth2Plugin from '@fastify/oauth2';
 import cardSetsRoutes from './routes/cardSets.js';
 import cardTranslationsRoute from './routes/cardTranslations.js';
 import roomsRoutes from './routes/rooms.js';
+import authRoutes from './routes/auth.js';
 
 config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
 
@@ -24,11 +27,57 @@ const app = Fastify({ logger: true });
 
 await app.register(cors, {
   origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+  credentials: true,
 });
+
+const PUBLIC_BACKEND_URL = process.env.PUBLIC_BACKEND_URL ?? 'http://localhost:3000';
+
+await app.register(cookie);
+
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  await app.register(oauth2Plugin, {
+    name: 'googleOAuth2',
+    scope: ['openid', 'profile', 'email'],
+    credentials: {
+      client: {
+        id: process.env.GOOGLE_CLIENT_ID,
+        secret: process.env.GOOGLE_CLIENT_SECRET,
+      },
+      auth: (oauth2Plugin as any).GOOGLE_CONFIGURATION,
+    },
+    startRedirectPath: '/auth/google',
+    callbackUri: `${PUBLIC_BACKEND_URL}/auth/google/callback`,
+    callbackUriParams: { access_type: 'online' },
+  });
+}
+
+if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+  await app.register(oauth2Plugin, {
+    name: 'discordOAuth2',
+    scope: ['identify'],
+    credentials: {
+      client: {
+        id: process.env.DISCORD_CLIENT_ID,
+        secret: process.env.DISCORD_CLIENT_SECRET,
+      },
+      auth: {
+        authorizeHost: 'https://discord.com',
+        authorizePath: '/api/oauth2/authorize',
+        tokenHost: 'https://discord.com',
+        tokenPath: '/api/oauth2/token',
+      },
+    },
+    startRedirectPath: '/auth/discord',
+    callbackUri: `${PUBLIC_BACKEND_URL}/auth/discord/callback`,
+  });
+}
+
+await app.register(authRoutes);
 
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(app.server, {
   cors: {
     origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    credentials: true,
   },
 });
 
