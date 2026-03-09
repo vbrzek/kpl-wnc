@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { socket } from '../socket';
-import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult, SpecialRule } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult, SpecialRule, WinCondition } from '@kpl/shared';
 
 export const useRoomStore = defineStore('room', () => {
   const room = ref<GameRoom | null>(null);
@@ -138,6 +138,11 @@ export const useRoomStore = defineStore('room', () => {
     isPublic?: boolean;
     selectedSetIds?: number[];
     maxPlayers?: number;
+    specialRules?: SpecialRule[];
+    winCondition?: WinCondition;
+    targetScore?: number;
+    targetRounds?: number;
+    gameTimeLimit?: number;
   }): Promise<{ error: string } | null> {
     return new Promise((resolve) => {
       socket.emit('lobby:updateSettings', settings, (result) => {
