@@ -105,13 +105,14 @@ npm run dev:frontend    # Vite dev server
 npm run build           # Build všech balíčků
 npm run migrate --workspace=packages/backend   # Spustí DB migrace
 npm run seed --workspace=packages/backend      # Naplní DB seed daty (destruktivní!)
-npm test --workspace=packages/backend          # Vitest unit testy — 71 testů
+npm test --workspace=packages/backend          # Vitest unit testy — 113 testů
+npx tsx packages/backend/scripts/generate-seeds.ts  # Regeneruje seed z aktuálního DB stavu
 ```
 
 ## 🗄️ Databázové schéma
 
-Každá karta patří právě jedné sadě (přístup duplikace přiřazení). Každá karta může mít překlad do libovolného počtu jazyků. 
-Výchozím jazykem je čeština
+Karty jsou deduplikované — jedna karta může patřit do více sad (M:N přes junction tabulky). Každá karta může mít překlad do libovolného počtu jazyků.
+Výchozím jazykem je čeština.
 
 ```sql
 CREATE TABLE card_sets (
@@ -125,17 +126,30 @@ CREATE TABLE card_sets (
 
 CREATE TABLE black_cards (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    card_set_id INT NOT NULL,
     text TEXT NOT NULL,       -- Obsahuje placeholder "____"
-    pick TINYINT DEFAULT 1,   -- Počet bílých karet k doložení
-    FOREIGN KEY (card_set_id) REFERENCES card_sets(id) ON DELETE CASCADE
+    pick TINYINT DEFAULT 1    -- Počet bílých karet k doložení
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE white_cards (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    card_set_id INT NOT NULL,
-    text TEXT NOT NULL,
-    FOREIGN KEY (card_set_id) REFERENCES card_sets(id) ON DELETE CASCADE
+    text TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- M:N přiřazení karet k sadám
+CREATE TABLE card_set_black_cards (
+    card_set_id   INT UNSIGNED NOT NULL,
+    black_card_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY (card_set_id, black_card_id),
+    FOREIGN KEY (card_set_id)   REFERENCES card_sets(id)  ON DELETE CASCADE,
+    FOREIGN KEY (black_card_id) REFERENCES black_cards(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE card_set_white_cards (
+    card_set_id   INT UNSIGNED NOT NULL,
+    white_card_id INT UNSIGNED NOT NULL,
+    PRIMARY KEY (card_set_id, white_card_id),
+    FOREIGN KEY (card_set_id)   REFERENCES card_sets(id)  ON DELETE CASCADE,
+    FOREIGN KEY (white_card_id) REFERENCES white_cards(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Překlady karet (fallback na originál přes COALESCE v dotazu)
