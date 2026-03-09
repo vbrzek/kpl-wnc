@@ -3,6 +3,20 @@ import type { ServerToClientEvents, ClientToServerEvents, GameStateSync } from '
 import { roomManager } from '../game/RoomManager.js';
 import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
+import { extractUserIdFromCookieHeader } from '../auth/jwt.js';
+
+async function linkPlayerToken(cookieHeader: string, playerToken: string, roomCode: string) {
+  const userId = extractUserIdFromCookieHeader(cookieHeader);
+  if (!userId) return;
+  try {
+    await db('user_player_tokens')
+      .insert({ user_id: userId, player_token: playerToken, room_code: roomCode })
+      .onConflict(['player_token', 'room_code'])
+      .merge({ last_seen: db.fn.now() });
+  } catch {
+    // non-critical — ignore errors
+  }
+}
 import { GameEngine } from '../game/GameEngine.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
 import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, validate } from './validation.js';
@@ -44,6 +58,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     socket.join(`room:${room.code}`);
     socket.leave('lobby');
 
+    const cookieHeader = socket.handshake.headers.cookie ?? '';
+    linkPlayerToken(cookieHeader, playerToken, room.code).catch(() => {});
+
     broadcastPublicRooms(io);
     eventLogger.logRoomCreated(room, data.nickname);
     callback({ room, playerToken, playerId });
@@ -74,6 +91,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     socketToToken.set(socket.id, playerToken);
     socket.join(`room:${room.code}`);
     socket.leave('lobby');
+
+    const cookieHeaderJoin = socket.handshake.headers.cookie ?? '';
+    linkPlayerToken(cookieHeaderJoin, playerToken, room.code).catch(() => {});
 
     // Po reconnectu do rozjeté hry pošli hráči jeho aktuální herní stav
     if (result.wasReconnect && (room.status === 'SELECTION' || room.status === 'JUDGING')) {
