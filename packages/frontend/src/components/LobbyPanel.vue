@@ -5,6 +5,7 @@ import type { GameRoom, SpecialRule } from '@kpl/shared';
 import { useRoomStore } from '../stores/roomStore';
 import PlayerList from './PlayerList.vue';
 import InviteLink from './InviteLink.vue';
+import RoomSettingsModal from './RoomSettingsModal.vue';
 
 const RULE_ICONS: Record<SpecialRule, string> = {
   rando_cardrissian: '🎲',
@@ -20,6 +21,16 @@ const props = defineProps<{ room: GameRoom }>();
 const { t } = useI18n();
 const roomStore = useRoomStore();
 const errorMsg = ref('');
+const showSettings = ref(false);
+
+const winConditionLabel = computed(() => {
+  const room = props.room;
+  switch (room.winCondition ?? 'score') {
+    case 'score': return t('lobby.winConditionScore', { n: room.targetScore });
+    case 'time': return t('lobby.winConditionTime', { n: room.gameTimeLimit });
+    case 'rounds': return t('lobby.winConditionRounds', { n: room.targetRounds });
+  }
+});
 
 const activePlayers = computed(() =>
   props.room.players.filter(p => !p.isAfk).length
@@ -51,6 +62,18 @@ async function startGame() {
     <p v-if="errorMsg" class="bg-red-500/10 text-red-400 p-4 rounded-2xl border border-red-500/20 text-sm font-bold animate-pulse">
       {{ errorMsg }}
     </p>
+
+    <!-- Win condition chip + settings button -->
+    <div class="flex items-center justify-between pb-4 border-b border-white/5">
+      <span class="text-xs font-bold text-slate-400">{{ winConditionLabel }}</span>
+      <button
+        v-if="roomStore.isHost"
+        @click="showSettings = true"
+        class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 hover:text-white transition-colors px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20"
+      >
+        {{ t('lobby.settings') }}
+      </button>
+    </div>
 
     <!-- Active special rules chips -->
     <div v-if="roomStore.specialRules.length > 0" class="flex flex-wrap gap-1.5 pb-4 border-b border-white/5">
@@ -110,4 +133,10 @@ async function startGame() {
       </div>
       <div class="h-[env(safe-area-inset-bottom)]"></div>
     </div>
+
+    <RoomSettingsModal
+      v-if="showSettings"
+      :room="props.room"
+      @close="showSettings = false"
+    />
 </template>
