@@ -239,6 +239,20 @@ describe('RoomManager', () => {
     expect('error' in result).toBe(true);
   });
 
+  it('updates win condition via updateSettings', () => {
+    const { room, playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 10, specialRules: [] }
+    );
+    expect(room.winCondition).toBe('score');
+
+    const result = rm.updateSettings(playerToken, { winCondition: 'rounds', targetRounds: 15 });
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.winCondition).toBe('rounds');
+      expect(result.room.targetRounds).toBe(15);
+    }
+  });
+
   // --- startGame ---
 
   it('rejects startGame with fewer than 3 players', () => {

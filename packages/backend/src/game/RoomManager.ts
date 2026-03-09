@@ -336,6 +336,10 @@ export class RoomManager {
     if (settings.selectedSetIds !== undefined) room.selectedSetIds = settings.selectedSetIds;
     if (settings.maxPlayers !== undefined) room.maxPlayers = settings.maxPlayers;
     if (settings.specialRules !== undefined) room.specialRules = settings.specialRules;
+    if (settings.winCondition !== undefined) room.winCondition = settings.winCondition;
+    if (settings.targetScore !== undefined) room.targetScore = settings.targetScore;
+    if (settings.targetRounds !== undefined) room.targetRounds = settings.targetRounds;
+    if (settings.gameTimeLimit !== undefined) room.gameTimeLimit = settings.gameTimeLimit;
 
     return { room };
   }
@@ -391,6 +395,7 @@ export class RoomManager {
     }
 
     room.status = 'SELECTION';
+    room.gameStartedAt = Date.now();
     return { room };
   }
 
