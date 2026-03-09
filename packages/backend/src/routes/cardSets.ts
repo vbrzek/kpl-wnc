@@ -20,8 +20,8 @@ const cardSetsRoutes: FastifyPluginAsync = async (fastify) => {
         'description',
         'slug',
         db.raw('is_public as isPublic'),
-        db.raw('(SELECT COUNT(*) FROM black_cards WHERE card_set_id = card_sets.id) as blackCardCount'),
-        db.raw('(SELECT COUNT(*) FROM white_cards WHERE card_set_id = card_sets.id) as whiteCardCount'),
+        db.raw('(SELECT COUNT(*) FROM card_set_black_cards WHERE card_set_id = card_sets.id) as blackCardCount'),
+        db.raw('(SELECT COUNT(*) FROM card_set_white_cards WHERE card_set_id = card_sets.id) as whiteCardCount'),
       ).orderBy('name');
 
       return rows.map((r) => ({

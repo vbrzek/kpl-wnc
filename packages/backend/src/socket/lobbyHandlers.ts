@@ -184,11 +184,15 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     try {
       [blackCards, whiteCards] = await Promise.all([
         db('black_cards')
-          .whereIn('card_set_id', room.selectedSetIds)
-          .select<BlackCard[]>('id', 'text', 'pick'),
+          .join('card_set_black_cards as csbc', 'csbc.black_card_id', 'black_cards.id')
+          .whereIn('csbc.card_set_id', room.selectedSetIds)
+          .distinct()
+          .select<BlackCard[]>('black_cards.id', 'black_cards.text', 'black_cards.pick'),
         db('white_cards')
-          .whereIn('card_set_id', room.selectedSetIds)
-          .select<WhiteCard[]>('id', 'text'),
+          .join('card_set_white_cards as cswc', 'cswc.white_card_id', 'white_cards.id')
+          .whereIn('cswc.card_set_id', room.selectedSetIds)
+          .distinct()
+          .select<WhiteCard[]>('white_cards.id', 'white_cards.text'),
       ]);
     } catch {
       room.status = 'LOBBY';
