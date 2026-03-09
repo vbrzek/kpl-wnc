@@ -9,11 +9,11 @@ class EventLogger {
   ): Promise<void> {
     try {
       await db.transaction(async (trx) => {
-        const [eventId] = await trx.insert({
+        const [eventId] = await trx('game_events').insert({
           event_type: eventType,
           room_code: roomCode,
         });
-        await trx.insert({ event_id: eventId, ...detail });
+        await trx(`game_event_${eventType}`).insert({ event_id: eventId, ...detail });
       });
     } catch (err) {
       console.error('[Analytics] Failed to log event:', eventType, err);

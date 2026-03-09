@@ -4,9 +4,13 @@ import type { GameRoom } from '@kpl/shared';
 // All mock state declared inside vi.mock factory — canonical Vitest pattern
 vi.mock('../db/db.js', () => {
   const mockInsert = vi.fn().mockResolvedValue([42]);
-  const mockTrx = { insert: mockInsert };
+  // mockTrx is callable: trx('tableName') returns { insert } — mirrors real Knex transaction API
+  const mockTrx = Object.assign(
+    vi.fn(() => ({ insert: mockInsert })),
+    { _mockInsert: mockInsert }
+  );
   const mockDb = Object.assign(
-    vi.fn(() => mockTrx),
+    vi.fn(() => ({ insert: mockInsert })),
     {
       transaction: vi.fn((cb: (trx: typeof mockTrx) => Promise<void>) => cb(mockTrx)),
       _mockInsert: mockInsert,
@@ -21,7 +25,11 @@ import { eventLogger } from './EventLogger.js';
 
 // Helper to access internal mock state exposed by the factory
 const getMocks = () => {
-  const d = db as unknown as { _mockInsert: ReturnType<typeof vi.fn>; _mockTrx: { insert: ReturnType<typeof vi.fn> }; transaction: ReturnType<typeof vi.fn> };
+  const d = db as unknown as {
+    _mockInsert: ReturnType<typeof vi.fn>;
+    _mockTrx: ReturnType<typeof vi.fn> & { _mockInsert: ReturnType<typeof vi.fn> };
+    transaction: ReturnType<typeof vi.fn>;
+  };
   return { mockInsert: d._mockInsert, mockTrx: d._mockTrx, transaction: d.transaction };
 };
 
