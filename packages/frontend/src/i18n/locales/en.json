@@ -136,6 +136,9 @@
       "winningCards": "Winning cards",
       "score": "Score",
       "gameTimeLeft": "Time left in game",
+      "roundProgress": "Round {current} of {total} played",
+      "lastRoundNext": "Next round is the last one",
+      "scoreGoal": "First to {score} points wins",
       "nextRound": "New round starts in 5 seconds...",
       "endGame": "End game"
     },

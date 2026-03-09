@@ -136,6 +136,9 @@
       "winningCards": "Виграшні карти",
       "score": "Рахунок",
       "gameTimeLeft": "До кінця гри",
+      "roundProgress": "Зіграно раунд {current} з {total}",
+      "lastRoundNext": "Наступний раунд останній",
+      "scoreGoal": "Мета гри — набрати {score} очок",
       "nextRound": "Новий раунд починається за 5 секунд...",
       "endGame": "Завершити гру"
     },

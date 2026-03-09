@@ -136,6 +136,9 @@
       "winningCards": "Выигрышные карты",
       "score": "Счёт",
       "gameTimeLeft": "До конца игры",
+      "roundProgress": "Сыгран раунд {current} из {total}",
+      "lastRoundNext": "Следующий раунд последний",
+      "scoreGoal": "Цель игры — набрать {score} очков",
       "nextRound": "Новый раунд начнётся через 5 секунд...",
       "endGame": "Завершить игру"
     },

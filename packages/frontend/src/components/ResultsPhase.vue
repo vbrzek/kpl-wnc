@@ -38,6 +38,13 @@ const scoreboard = computed(() => {
     .sort((a, b) => b.score - a.score);
 });
 
+// Informace o průběhu (rounds / score)
+const isLastRoundNext = computed(() => {
+  const room = roomStore.room;
+  if (room?.winCondition !== 'rounds') return false;
+  return room.roundNumber >= room.targetRounds - 1;
+});
+
 // Zbývající čas do konce hry (jen pro winCondition === 'time')
 const gameSecondsLeft = ref(0);
 let gameTimerInterval: ReturnType<typeof setInterval> | null = null;
@@ -122,6 +129,19 @@ async function onEndGame() {
         :class="gameSecondsLeft <= 60 ? 'text-red-400' : 'text-yellow-400'"
       >{{ gameTimeFormatted }}</p>
     </div>
+
+    <!-- Průběh kol (pouze winCondition === 'rounds') -->
+    <p v-else-if="roomStore.room?.winCondition === 'rounds'" class="font-semibold text-lg"
+      :class="isLastRoundNext ? 'text-yellow-400' : 'text-gray-300'"
+    >
+      <template v-if="isLastRoundNext">{{ t('game.results.lastRoundNext') }}</template>
+      <template v-else>{{ t('game.results.roundProgress', { current: roomStore.room!.roundNumber, total: roomStore.room!.targetRounds }) }}</template>
+    </p>
+
+    <!-- Cíl skóre (pouze winCondition === 'score') -->
+    <p v-else-if="roomStore.room?.winCondition === 'score'" class="text-gray-400 text-sm">
+      {{ t('game.results.scoreGoal', { score: roomStore.room!.targetScore }) }}
+    </p>
 
     <p class="text-gray-500 text-sm">{{ t('game.results.nextRound') }}</p>
 

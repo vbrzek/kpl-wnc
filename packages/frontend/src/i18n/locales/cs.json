@@ -136,6 +136,9 @@
       "winningCards": "Vítězné karty",
       "score": "Skóre",
       "gameTimeLeft": "Čas do konce hry",
+      "roundProgress": "Zahráno kolo {current} z {total}",
+      "lastRoundNext": "Následuje poslední kolo",
+      "scoreGoal": "Cílem hry je získat {score} bodů",
       "nextRound": "Nové kolo začíná za 5 sekund...",
       "endGame": "Ukončit hru"
     },

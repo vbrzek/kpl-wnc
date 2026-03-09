@@ -136,6 +136,9 @@
       "winningCards": "Cartas ganadoras",
       "score": "Puntuación",
       "gameTimeLeft": "Tiempo restante",
+      "roundProgress": "Ronda {current} de {total} jugada",
+      "lastRoundNext": "La siguiente es la última ronda",
+      "scoreGoal": "El objetivo es conseguir {score} puntos",
       "nextRound": "La nueva ronda comienza en 5 segundos...",
       "endGame": "Terminar juego"
     },
