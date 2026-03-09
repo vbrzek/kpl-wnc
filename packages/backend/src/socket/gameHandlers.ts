@@ -1,6 +1,7 @@
 import type { Server, Socket } from 'socket.io';
-import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
+import type { ServerToClientEvents, ClientToServerEvents, GameRoom, RoundResult } from '@kpl/shared';
 import { roomManager } from '../game/RoomManager.js';
+import type { GameEngine } from '../game/GameEngine.js';
 import { socketToToken } from './socketState.js';
 import { startNewRound, startJudgingPhase, finalizeRoundStart, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
 import { PlayCardsSchema, JudgeSelectSchema, ChooseBlackCardSchema, PlaceBetSchema, validate } from './validation.js';
@@ -9,6 +10,17 @@ import { checkRateLimit } from './rateLimiter.js';
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 const SKIP_DELAY_MS = 3_000;
+
+function isWinConditionMet(room: GameRoom, engine: GameEngine, result: RoundResult): boolean {
+  switch (room.winCondition ?? 'score') {
+    case 'score':
+      return !!(result.winnerId && result.scores[result.winnerId] >= room.targetScore);
+    case 'rounds':
+      return engine.roundNumber >= room.targetRounds;
+    case 'time':
+      return !!(room.gameStartedAt && Date.now() - room.gameStartedAt >= room.gameTimeLimit * 60_000);
+  }
+}
 
 export function registerGameHandlers(io: IO, socket: AppSocket) {
 
@@ -147,9 +159,8 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     io.to(`room:${room.code}`).emit('game:roundEnd', result);
 
-    // Auto-win: zkontroluj jestli vítěz dosáhl targetScore
-    const winnerId = result.winnerId;
-    if (winnerId && result.scores[winnerId] >= room.targetScore) {
+    // Auto-win: zkontroluj výherní podmínku
+    if (isWinConditionMet(room, engine, result)) {
       const finishResult = roomManager.finishGame(room.code);
       if (!('error' in finishResult)) {
         io.to(`room:${room.code}`).emit('game:gameOver', finishResult.payload);
@@ -279,6 +290,23 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
         const cr = roomManager.getRoom(roomCode);
         const ce = roomManager.getGameEngine(roomCode);
         if (!cr || !ce || cr.status !== 'SELECTION') return;
+        // Zkontroluj podmínku kol i při přeskočeném kole (rounds mode)
+        if ((cr.winCondition ?? 'score') === 'rounds' && ce.roundNumber >= cr.targetRounds) {
+          const finishResult = roomManager.finishGame(roomCode);
+          if (!('error' in finishResult)) {
+            io.to(`room:${roomCode}`).emit('game:gameOver', finishResult.payload);
+            for (const [sid, token] of socketToToken.entries()) {
+              if (finishResult.kickedTokens.includes(token)) {
+                const kickedSocket = io.sockets.sockets.get(sid);
+                if (kickedSocket) kickedSocket.leave(`room:${roomCode}`);
+                socketToToken.delete(sid);
+              }
+            }
+            io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(finishResult.room));
+            broadcastPublicRooms(io);
+          }
+          return;
+        }
         try {
           startNewRound(cr, ce, io);
         } catch {
@@ -372,6 +400,23 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       const cr = roomManager.getRoom(roomCode);
       const ce = roomManager.getGameEngine(roomCode);
       if (!cr || !ce || cr.status !== 'JUDGING') return;
+      // Zkontroluj podmínku kol i při přeskočeném kole (rounds mode)
+      if ((cr.winCondition ?? 'score') === 'rounds' && ce.roundNumber >= cr.targetRounds) {
+        const finishResult = roomManager.finishGame(roomCode);
+        if (!('error' in finishResult)) {
+          io.to(`room:${roomCode}`).emit('game:gameOver', finishResult.payload);
+          for (const [sid, token] of socketToToken.entries()) {
+            if (finishResult.kickedTokens.includes(token)) {
+              const kickedSocket = io.sockets.sockets.get(sid);
+              if (kickedSocket) kickedSocket.leave(`room:${roomCode}`);
+              socketToToken.delete(sid);
+            }
+          }
+          io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(finishResult.room));
+          broadcastPublicRooms(io);
+        }
+        return;
+      }
       try {
         startNewRound(cr, ce, io);
       } catch {
