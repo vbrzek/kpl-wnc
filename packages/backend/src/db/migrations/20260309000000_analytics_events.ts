@@ -4,8 +4,8 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('game_events', (table) => {
     table.bigIncrements('id').primary();
     table.enu('event_type', ['room_created', 'settings_updated', 'game_started']).notNullable();
-    table.string('room_code', 6).notNullable();
-    table.timestamp('occurred_at', { useTz: false }).notNullable().defaultTo(knex.fn.now());
+    table.specificType('room_code', 'CHAR(6)').notNullable();
+    table.specificType('occurred_at', 'TIMESTAMP(3)').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP(3)'));
     table.index(['room_code'], 'idx_room');
     table.index(['event_type', 'occurred_at'], 'idx_type');
   });
