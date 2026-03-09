@@ -51,6 +51,9 @@ async function onCreateRoom(settings: {
   maxPlayers: number;
   targetScore: number;
   specialRules: import('@kpl/shared').SpecialRule[];
+  winCondition: import('@kpl/shared').WinCondition;
+  targetRounds: number;
+  gameTimeLimit: number;
 }) {
   const result = await lobbyStore.createRoom({ ...settings, nickname: profileStore.nickname });
   if ('error' in result) {

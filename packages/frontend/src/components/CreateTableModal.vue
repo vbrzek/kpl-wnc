@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { SpecialRule } from '@kpl/shared';
+import type { SpecialRule, WinCondition } from '@kpl/shared';
 import { useLobbyStore } from '../stores/lobbyStore';
 import SpecialRulesPanel from './SpecialRulesPanel.vue';
 
@@ -14,6 +14,9 @@ const emit = defineEmits<{
     maxPlayers: number;
     targetScore: number;
     specialRules: SpecialRule[];
+    winCondition: WinCondition;
+    targetRounds: number;
+    gameTimeLimit: number;
   }];
 }>();
 
@@ -25,6 +28,9 @@ const isPublic = ref(true);
 const maxPlayers = ref(8);
 const targetScore = ref(10);
 const TARGET_SCORE_OPTIONS = [8, 10, 15, 20, 30] as const;
+const winCondition = ref<WinCondition>('score');
+const targetRounds = ref(20);
+const gameTimeLimit = ref(15);
 const selectedSetId = ref<number | null>(null);
 const fetchError = ref('');
 const selectedRules = ref<SpecialRule[]>([]);
@@ -46,6 +52,9 @@ function submit() {
     maxPlayers: maxPlayers.value,
     targetScore: targetScore.value,
     specialRules: selectedRules.value,
+    winCondition: winCondition.value,
+    targetRounds: targetRounds.value,
+    gameTimeLimit: gameTimeLimit.value,
   });
 }
 
@@ -144,33 +153,73 @@ onMounted(async () => {
               </p>
             </div>
 
-            <!-- Max players + target score -->
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
-                  {{ t('createTable.maxPlayers') }}
-                </label>
-                <input
-                  v-model.number="maxPlayers"
-                  type="number"
-                  min="3"
-                  max="20"
-                  class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
-                />
-              </div>
-              <div>
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
-                  {{ t('createTable.targetScore') }}
-                </label>
-                <select
-                  v-model.number="targetScore"
-                  class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+            <!-- Max players -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+                {{ t('createTable.maxPlayers') }}
+              </label>
+              <input
+                v-model.number="maxPlayers"
+                type="number" min="3" max="20"
+                class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+              />
+            </div>
+
+            <!-- Win condition -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+                {{ t('createTable.winCondition') }}
+              </label>
+              <!-- Radio tabs -->
+              <div class="flex gap-1 mb-3">
+                <button
+                  v-for="cond in (['score', 'time', 'rounds'] as WinCondition[])"
+                  :key="cond"
+                  type="button"
+                  @click="winCondition = cond"
+                  :class="[
+                    'flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wide transition-all border',
+                    winCondition === cond
+                      ? 'bg-white text-black border-white'
+                      : 'bg-slate-900/60 text-slate-400 border-white/10 hover:border-white/20',
+                  ]"
                 >
-                  <option v-for="n in TARGET_SCORE_OPTIONS" :key="n" :value="n">
-                    {{ n }} {{ t('createTable.points') }}
-                  </option>
-                </select>
+                  {{ t(`createTable.win${cond.charAt(0).toUpperCase() + cond.slice(1)}`) }}
+                </button>
               </div>
+
+              <!-- Score picker -->
+              <select
+                v-if="winCondition === 'score'"
+                v-model.number="targetScore"
+                class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+              >
+                <option v-for="n in TARGET_SCORE_OPTIONS" :key="n" :value="n">
+                  {{ n }} {{ t('createTable.points') }}
+                </option>
+              </select>
+
+              <!-- Time slider -->
+              <div v-else-if="winCondition === 'time'" class="space-y-2">
+                <input
+                  v-model.number="gameTimeLimit"
+                  type="range" min="5" max="60" step="5"
+                  class="w-full accent-white"
+                />
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>5 {{ t('createTable.minutes') }}</span>
+                  <span class="text-white font-bold">{{ gameTimeLimit }} {{ t('createTable.minutes') }}</span>
+                  <span>60 {{ t('createTable.minutes') }}</span>
+                </div>
+              </div>
+
+              <!-- Rounds input -->
+              <input
+                v-else-if="winCondition === 'rounds'"
+                v-model.number="targetRounds"
+                type="number" min="5" max="100"
+                class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+              />
             </div>
 
             <!-- Public toggle -->
