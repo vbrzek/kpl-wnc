@@ -135,6 +135,7 @@
       "roundWinner": "Round winner",
       "winningCards": "Winning cards",
       "score": "Score",
+      "gameTimeLeft": "Time left in game",
       "nextRound": "New round starts in 5 seconds...",
       "endGame": "End game"
     },

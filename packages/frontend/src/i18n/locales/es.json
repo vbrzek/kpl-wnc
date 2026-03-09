@@ -135,6 +135,7 @@
       "roundWinner": "Ganador de la ronda",
       "winningCards": "Cartas ganadoras",
       "score": "Puntuación",
+      "gameTimeLeft": "Tiempo restante",
       "nextRound": "La nueva ronda comienza en 5 segundos...",
       "endGame": "Terminar juego"
     },

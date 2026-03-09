@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { useCardTranslations } from '../composables/useCardTranslations.js';
@@ -38,10 +38,36 @@ const scoreboard = computed(() => {
     .sort((a, b) => b.score - a.score);
 });
 
+// Zbývající čas do konce hry (jen pro winCondition === 'time')
+const gameSecondsLeft = ref(0);
+let gameTimerInterval: ReturnType<typeof setInterval> | null = null;
+
+function updateGameSecondsLeft() {
+  const room = roomStore.room;
+  if (!room?.gameStartedAt) { gameSecondsLeft.value = 0; return; }
+  const endMs = room.gameStartedAt + room.gameTimeLimit * 60_000;
+  gameSecondsLeft.value = Math.max(0, Math.ceil((endMs - Date.now()) / 1000));
+}
+
+const gameTimeFormatted = computed(() => {
+  const s = gameSecondsLeft.value;
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, '0')}`;
+});
+
 onMounted(() => {
   if (roomStore.roundResult?.winnerId === roomStore.myPlayerId) {
     play('round-win')
   }
+  if (roomStore.room?.winCondition === 'time') {
+    updateGameSecondsLeft();
+    gameTimerInterval = setInterval(updateGameSecondsLeft, 1000);
+  }
+});
+
+onUnmounted(() => {
+  if (gameTimerInterval !== null) clearInterval(gameTimerInterval);
 });
 
 async function onEndGame() {
@@ -86,6 +112,15 @@ async function onEndGame() {
     <div class="max-w-sm mx-auto text-left scoreboard-fadein">
       <h3 class="text-xl font-semibold mb-3">{{ t('game.results.score') }}</h3>
       <Scoreboard :entries="scoreboard" />
+    </div>
+
+    <!-- Čas do konce hry (pouze winCondition === 'time') -->
+    <div v-if="roomStore.room?.winCondition === 'time'" class="text-center">
+      <p class="text-gray-400 text-sm mb-1">{{ t('game.results.gameTimeLeft') }}</p>
+      <p
+        class="text-3xl font-mono font-bold tabular-nums"
+        :class="gameSecondsLeft <= 60 ? 'text-red-400' : 'text-yellow-400'"
+      >{{ gameTimeFormatted }}</p>
     </div>
 
     <p class="text-gray-500 text-sm">{{ t('game.results.nextRound') }}</p>

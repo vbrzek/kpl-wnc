@@ -135,6 +135,7 @@
       "roundWinner": "Vítěz kola",
       "winningCards": "Vítězné karty",
       "score": "Skóre",
+      "gameTimeLeft": "Čas do konce hry",
       "nextRound": "Nové kolo začíná za 5 sekund...",
       "endGame": "Ukončit hru"
     },
