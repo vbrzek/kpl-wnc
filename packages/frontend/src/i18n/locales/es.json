@@ -29,7 +29,17 @@
     "selectAtLeastOne": "Selecciona al menos un mazo.",
     "publicTable": "Mesa pública (visible en la lista)",
     "targetScore": "Puntuación objetivo",
-    "points": "puntos"
+    "points": "puntos",
+    "winCondition": "Condición de victoria",
+    "winScore": "Puntos",
+    "winTime": "Tiempo",
+    "winRounds": "Rondas",
+    "minutes": "min",
+    "rounds": "rondas"
+  },
+  "roomSettings": {
+    "title": "Configuración de sala",
+    "save": "Guardar cambios"
   },
   "nickname": {
     "title": "Introduce tu apodo",
@@ -64,7 +74,11 @@
     "players": "Jugadores ({current}/{max})",
     "startGame": "Iniciar juego",
     "minPlayers": "({current}/3 mín.)",
-    "waitingForHost": "Esperando a que el anfitrión inicie el juego..."
+    "waitingForHost": "Esperando a que el anfitrión inicie el juego...",
+    "settings": "Configuración",
+    "winConditionScore": "🏆 {n} puntos",
+    "winConditionTime": "⏱ {n} min",
+    "winConditionRounds": "🔄 {n} rondas"
   },
   "player": {
     "host": "anfitrión",

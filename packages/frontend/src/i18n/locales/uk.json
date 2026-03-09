@@ -29,7 +29,17 @@
     "selectAtLeastOne": "Виберіть хоча б один набір.",
     "publicTable": "Публічний стіл (видно у списку)",
     "targetScore": "Цільова кількість очок",
-    "points": "очок"
+    "points": "очок",
+    "winCondition": "Умова перемоги",
+    "winScore": "Очки",
+    "winTime": "Час",
+    "winRounds": "Раунди",
+    "minutes": "хв",
+    "rounds": "кол"
+  },
+  "roomSettings": {
+    "title": "Налаштування кімнати",
+    "save": "Зберегти зміни"
   },
   "nickname": {
     "title": "Введіть нікнейм",
@@ -64,7 +74,11 @@
     "players": "Гравці ({current}/{max})",
     "startGame": "Почати гру",
     "minPlayers": "({current}/3 хв.)",
-    "waitingForHost": "Чекаємо, поки хост почне гру..."
+    "waitingForHost": "Чекаємо, поки хост почне гру...",
+    "settings": "Налаштування",
+    "winConditionScore": "🏆 {n} оч.",
+    "winConditionTime": "⏱ {n} хв",
+    "winConditionRounds": "🔄 {n} кол."
   },
   "player": {
     "host": "хост",

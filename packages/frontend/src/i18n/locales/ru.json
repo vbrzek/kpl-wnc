@@ -29,7 +29,17 @@
     "selectAtLeastOne": "Выберите хотя бы один набор.",
     "publicTable": "Публичный стол (виден в списке)",
     "targetScore": "Целевое количество очков",
-    "points": "очков"
+    "points": "очков",
+    "winCondition": "Условие победы",
+    "winScore": "Очки",
+    "winTime": "Время",
+    "winRounds": "Раунды",
+    "minutes": "мин",
+    "rounds": "кол"
+  },
+  "roomSettings": {
+    "title": "Настройки комнаты",
+    "save": "Сохранить"
   },
   "nickname": {
     "title": "Введите никнейм",
@@ -64,7 +74,11 @@
     "players": "Игроки ({current}/{max})",
     "startGame": "Начать игру",
     "minPlayers": "({current}/3 мин.)",
-    "waitingForHost": "Ждём, пока хост начнёт игру..."
+    "waitingForHost": "Ждём, пока хост начнёт игру...",
+    "settings": "Настройки",
+    "winConditionScore": "🏆 {n} оч.",
+    "winConditionTime": "⏱ {n} мин",
+    "winConditionRounds": "🔄 {n} кол."
   },
   "player": {
     "host": "хост",

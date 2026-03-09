@@ -29,7 +29,17 @@
     "selectAtLeastOne": "Select at least one set.",
     "publicTable": "Public table (visible in the list)",
     "targetScore": "Target score",
-    "points": "points"
+    "points": "points",
+    "winCondition": "Win condition",
+    "winScore": "Score",
+    "winTime": "Time",
+    "winRounds": "Rounds",
+    "minutes": "min",
+    "rounds": "rounds"
+  },
+  "roomSettings": {
+    "title": "Room settings",
+    "save": "Save changes"
   },
   "nickname": {
     "title": "Enter your nickname",
@@ -64,7 +74,11 @@
     "players": "Players ({current}/{max})",
     "startGame": "Start game",
     "minPlayers": "({current}/3 min.)",
-    "waitingForHost": "Waiting for the host to start the game..."
+    "waitingForHost": "Waiting for the host to start the game...",
+    "settings": "Settings",
+    "winConditionScore": "🏆 {n} points",
+    "winConditionTime": "⏱ {n} min",
+    "winConditionRounds": "🔄 {n} rounds"
   },
   "player": {
     "host": "host",

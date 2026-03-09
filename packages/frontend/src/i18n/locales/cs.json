@@ -29,7 +29,17 @@
     "selectAtLeastOne": "Vyber alespoň jednu sadu.",
     "publicTable": "Veřejný stůl (zobrazí se v seznamu)",
     "targetScore": "Cílový počet bodů",
-    "points": "bodů"
+    "points": "bodů",
+    "winCondition": "Kritérium vítězství",
+    "winScore": "Body",
+    "winTime": "Čas",
+    "winRounds": "Kola",
+    "minutes": "min",
+    "rounds": "kol"
+  },
+  "roomSettings": {
+    "title": "Nastavení místnosti",
+    "save": "Uložit změny"
   },
   "nickname": {
     "title": "Zadej svou přezdívku",
@@ -64,7 +74,11 @@
     "players": "Hráči ({current}/{max})",
     "startGame": "Spustit hru",
     "minPlayers": "({current}/3 min.)",
-    "waitingForHost": "Čekáme, až host spustí hru..."
+    "waitingForHost": "Čekáme, až host spustí hru...",
+    "settings": "Nastavení",
+    "winConditionScore": "🏆 {n} bodů",
+    "winConditionTime": "⏱ {n} min",
+    "winConditionRounds": "🔄 {n} kol"
   },
   "player": {
     "host": "host",
