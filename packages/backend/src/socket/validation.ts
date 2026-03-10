@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { SpecialRule, WinCondition } from '@kpl/shared';
+import type { SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
 
 // --- Sdílené schémata ---
 
@@ -7,11 +7,14 @@ const nickname = z.string().min(1).max(24).trim();
 const roomCode = z.string().toUpperCase().regex(/^[A-Z2-9]{6}$/, 'Neplatný kód místnosti');
 
 const VALID_RULES: SpecialRule[] = [
-  'rando_cardrissian', 'god_mode', 'wheatons_law',
-  'rebooting_universe', 'meritocracy', 'high_stakes',
+  'rando_cardrissian', 'wheatons_law',
+  'rebooting_universe', 'high_stakes',
 ];
 
 const specialRules = z.array(z.enum(VALID_RULES as [SpecialRule, ...SpecialRule[]])).default([]);
+
+const VALID_CZAR_MODES: CzarMode[] = ['classic', 'meritocracy', 'god_mode', 'czar_is_dead'];
+const czarMode = z.enum(VALID_CZAR_MODES as [CzarMode, ...CzarMode[]]).default('classic');
 
 const VALID_WIN_CONDITIONS: WinCondition[] = ['score', 'time', 'rounds'];
 const winCondition = z.enum(VALID_WIN_CONDITIONS as [WinCondition, ...WinCondition[]]).default('score');
@@ -31,6 +34,7 @@ export const CreateRoomSchema = z.object({
     message: 'Cílový počet bodů musí být 8, 10, 15, 20 nebo 30',
   }),
   specialRules,
+  czarMode,
   winCondition: winCondition,
   targetRounds: z.number().int().min(5).max(100).default(20),
   gameTimeLimit: z.number().int().refine(v => v >= 5 && v <= 60 && v % 5 === 0, {
@@ -53,6 +57,7 @@ export const UpdateSettingsSchema = z.object({
   selectedSetIds: z.array(z.number().int().positive()).min(1).optional(),
   maxPlayers: z.number().int().min(3).max(10).optional(),
   specialRules: specialRules.optional(),
+  czarMode: czarMode.optional(),
   winCondition: winCondition.optional(),
   targetScore: z.number().int().refine(v => [8, 10, 15, 20, 30].includes(v), {
     message: 'Cílový počet bodů musí být 8, 10, 15, 20 nebo 30',
@@ -67,6 +72,11 @@ export const ChooseBlackCardSchema = z.number().int().positive();
 export const PlaceBetSchema = z.number().int().min(0).max(100);
 
 export const PlayCardsSchema = z.array(z.number().int().positive()).min(1).max(3);
+
+export const VoteSchema = z.union([
+  z.string().uuid(),
+  z.literal('rando_cardrissian'),
+]);
 
 export const JudgeSelectSchema = z.union([
   z.string().uuid(),

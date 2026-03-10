@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { GameRoom, SpecialRule } from '@kpl/shared';
+import type { GameRoom, SpecialRule, CzarMode } from '@kpl/shared';
 import { useRoomStore } from '../stores/roomStore';
 import PlayerList from './PlayerList.vue';
 import InviteLink from './InviteLink.vue';
@@ -9,11 +9,16 @@ import RoomSettingsModal from './RoomSettingsModal.vue';
 
 const RULE_ICONS: Record<SpecialRule, string> = {
   rando_cardrissian: '🎲',
-  god_mode: '👑',
   wheatons_law: '🃏',
   rebooting_universe: '♻️',
-  meritocracy: '🏆',
   high_stakes: '💰',
+};
+
+const CZAR_MODE_ICONS: Record<CzarMode, string> = {
+  classic: '🔄',
+  meritocracy: '🏆',
+  god_mode: '👑',
+  czar_is_dead: '🗳️',
 };
 
 const props = defineProps<{ room: GameRoom }>();
@@ -75,8 +80,14 @@ async function startGame() {
       </button>
     </div>
 
-    <!-- Active special rules chips -->
-    <div v-if="roomStore.specialRules.length > 0" class="flex flex-wrap gap-1.5 pt-3 pb-4 border-b border-white/5">
+    <!-- Active czar mode + special rules chips -->
+    <div v-if="roomStore.czarMode !== 'classic' || roomStore.specialRules.length > 0" class="flex flex-wrap gap-1.5 pt-3 pb-4 border-b border-white/5">
+      <span
+        v-if="roomStore.czarMode !== 'classic'"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-xs font-bold"
+      >
+        {{ CZAR_MODE_ICONS[roomStore.czarMode] }} {{ t(`specialRules.czarMode.${roomStore.czarMode}.name`) }}
+      </span>
       <span
         v-for="rule in roomStore.specialRules"
         :key="rule"

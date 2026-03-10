@@ -7,6 +7,7 @@ import { useSound } from '../composables/useSound';
 import { socket } from '../socket';
 import CzarJudgingLayout from './game/layouts/CzarJudgingLayout.vue';
 import WaitingForCzarLayout from './game/layouts/WaitingForCzarLayout.vue';
+import VotingLayout from './game/layouts/VotingLayout.vue';
 
 const { t, locale } = useI18n();
 const roomStore = useRoomStore();
@@ -103,8 +104,21 @@ async function onEndGame() {
 </script>
 
 <template>
+  <VotingLayout
+    v-if="roomStore.czarMode === 'czar_is_dead'"
+    :blackCard="translatedBlackCard!"
+    :submissions="translatedSubmissions"
+    :mySubmissionId="roomStore.mySubmissionId"
+    :myVotedId="roomStore.myVotedSubmissionId"
+    :votedCount="roomStore.voteProgress?.votedCount ?? 0"
+    :totalVoters="roomStore.voteProgress?.totalVoters ?? 0"
+    :secondsLeft="secondsLeft"
+    :revealedCount="revealedCount"
+    @vote="roomStore.castVote"
+    @skipVoting="roomStore.skipVoting"
+  />
   <CzarJudgingLayout
-    v-if="roomStore.isCardCzar"
+    v-else-if="roomStore.isCardCzar"
     :blackCard="translatedBlackCard!"
     :secondsLeft="secondsLeft"
     :totalSeconds="60"

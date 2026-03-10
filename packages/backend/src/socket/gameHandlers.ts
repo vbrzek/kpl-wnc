@@ -4,7 +4,7 @@ import { roomManager } from '../game/RoomManager.js';
 import type { GameEngine } from '../game/GameEngine.js';
 import { socketToToken } from './socketState.js';
 import { startNewRound, startJudgingPhase, finalizeRoundStart, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
-import { PlayCardsSchema, JudgeSelectSchema, ChooseBlackCardSchema, PlaceBetSchema, validate } from './validation.js';
+import { PlayCardsSchema, JudgeSelectSchema, VoteSchema, ChooseBlackCardSchema, PlaceBetSchema, validate } from './validation.js';
 import { checkRateLimit } from './rateLimiter.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -12,14 +12,52 @@ type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 const SKIP_DELAY_MS = 3_000;
 
 function isWinConditionMet(room: GameRoom, engine: GameEngine, result: RoundResult): boolean {
+  const allWinnerIds = result.winnerIds && result.winnerIds.length > 0
+    ? result.winnerIds
+    : (result.winnerId ? [result.winnerId] : []);
+
   switch (room.winCondition ?? 'score') {
     case 'score':
-      return !!(result.winnerId && result.scores[result.winnerId] >= room.targetScore);
+      return allWinnerIds.some(
+        wid => wid !== 'rando_cardrissian' && (result.scores[wid] ?? 0) >= room.targetScore
+      );
     case 'rounds':
       return engine.roundNumber >= room.targetRounds;
     case 'time':
       return !!(room.gameStartedAt && Date.now() - room.gameStartedAt >= room.gameTimeLimit * 60_000);
   }
+}
+
+function handlePostRound(room: GameRoom, engine: GameEngine, result: RoundResult, io: IO): void {
+  if (isWinConditionMet(room, engine, result)) {
+    const finishResult = roomManager.finishGame(room.code);
+    if (!('error' in finishResult)) {
+      io.to(`room:${room.code}`).emit('game:gameOver', finishResult.payload);
+      for (const [sid, token] of socketToToken.entries()) {
+        if (finishResult.kickedTokens.includes(token)) {
+          const kickedSocket = io.sockets.sockets.get(sid);
+          if (kickedSocket) kickedSocket.leave(`room:${room.code}`);
+          socketToToken.delete(sid);
+        }
+      }
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(finishResult.room));
+      broadcastPublicRooms(io);
+    }
+    return;
+  }
+
+  const roomCode = room.code;
+  setTimeout(() => {
+    const currentRoom = roomManager.getRoom(roomCode);
+    const currentEngine = roomManager.getGameEngine(roomCode);
+    if (!currentRoom || !currentEngine) return;
+    if (currentRoom.status !== 'RESULTS') return;
+    try {
+      startNewRound(currentRoom, currentEngine, io);
+    } catch {
+      io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
+    }
+  }, 5_000);
 }
 
 export function registerGameHandlers(io: IO, socket: AppSocket) {
@@ -54,6 +92,10 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
       socket.emit('game:error', result.error);
       return;
     }
+
+    // Emit submissionId back to the player (needed for czar_is_dead voting UI)
+    const subId = engine.getSubmissionId(playerId);
+    if (subId) socket.emit('game:mySubmissionId', subId);
 
     if (result.allSubmitted) {
       // Zruš round timer a přejdi do JUDGING
@@ -159,38 +201,90 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
     io.to(`room:${room.code}`).emit('game:roundEnd', result);
 
-    // Auto-win: zkontroluj výherní podmínku
-    if (isWinConditionMet(room, engine, result)) {
-      const finishResult = roomManager.finishGame(room.code);
-      if (!('error' in finishResult)) {
-        io.to(`room:${room.code}`).emit('game:gameOver', finishResult.payload);
-        for (const [sid, token] of socketToToken.entries()) {
-          if (finishResult.kickedTokens.includes(token)) {
-            const kickedSocket = io.sockets.sockets.get(sid);
-            if (kickedSocket) kickedSocket.leave(`room:${room.code}`);
-            socketToToken.delete(sid);
-          }
-        }
-        io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(finishResult.room));
-        broadcastPublicRooms(io);
-      }
-      return; // nepokračuj na setTimeout pro startNewRound
+    handlePostRound(room, engine, result, io);
+  });
+
+  // czar_is_dead: player votes for a submission
+  socket.on('game:vote', (submissionId) => {
+    if (!checkRateLimit(socket.id, 'game:vote')) {
+      socket.emit('game:error', 'Příliš mnoho požadavků. Zkus to za chvíli.');
+      return;
+    }
+    const id = validate(VoteSchema, submissionId);
+    if (!id) { socket.emit('game:error', 'Neplatné submissionId.'); return; }
+
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'JUDGING') {
+      socket.emit('game:error', 'Hra není ve fázi hlasování.');
+      return;
     }
 
-    // After 5s: start next round
-    const roomCode = room.code;
-    setTimeout(() => {
-      const currentRoom = roomManager.getRoom(roomCode);
-      const currentEngine = roomManager.getGameEngine(roomCode);
-      if (!currentRoom || !currentEngine) return;
-      if (currentRoom.status !== 'RESULTS') return; // host mohl ukončit hru
+    const engine = roomManager.getGameEngine(room.code);
+    if (!engine || engine.getCzarMode() !== 'czar_is_dead') {
+      socket.emit('game:error', 'Hlasování není v tomto módu dostupné.');
+      return;
+    }
 
-      try {
-        startNewRound(currentRoom, currentEngine, io);
-      } catch {
-        io.to(`room:${roomCode}`).emit('game:error', 'Hra skončila — došly karty nebo nejsou aktivní hráči.');
-      }
-    }, 5_000);
+    const playerId = roomManager.getPlayerIdByToken(playerToken)!;
+    const result = engine.castVote(playerId, id);
+
+    if ('error' in result) {
+      socket.emit('game:error', result.error);
+      return;
+    }
+
+    roomManager.updateActivity(room.code);
+
+    // Broadcast vote count update
+    const activePlayers = room.players.filter(p => !p.isAfk);
+    const votedCount = activePlayers.filter(p => engine.hasVoted(p.id)).length;
+    io.to(`room:${room.code}`).emit('game:voteUpdate', {
+      votedCount,
+      totalVoters: activePlayers.length,
+    });
+
+    if (result.allVoted) {
+      const roundResult = engine.resolveVotes();
+      roomManager.clearJudgingTimer(room.code);
+
+      room.status = 'RESULTS';
+      room.roundDeadline = null;
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
+      io.to(`room:${room.code}`).emit('game:roundEnd', roundResult);
+
+      handlePostRound(room, engine, roundResult, io);
+    }
+  });
+
+  // czar_is_dead: skip voting after deadline
+  socket.on('game:skipVoting', () => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+
+    const room = roomManager.getRoomByPlayerToken(playerToken);
+    if (!room || room.status !== 'JUDGING') return;
+
+    const engine = roomManager.getGameEngine(room.code);
+    if (!engine || engine.getCzarMode() !== 'czar_is_dead') return;
+
+    if (!room.roundDeadline || Date.now() < room.roundDeadline) {
+      socket.emit('game:error', 'Časový limit ještě nevypršel.');
+      return;
+    }
+
+    const roundResult = engine.resolveVotes();
+    roomManager.clearJudgingTimer(room.code);
+    roomManager.updateActivity(room.code);
+
+    room.status = 'RESULTS';
+    room.roundDeadline = null;
+    io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
+    io.to(`room:${room.code}`).emit('game:roundEnd', roundResult);
+
+    handlePostRound(room, engine, roundResult, io);
   });
 
   // Player explicitly leaves during game

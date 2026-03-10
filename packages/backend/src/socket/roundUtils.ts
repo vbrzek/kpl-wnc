@@ -16,8 +16,17 @@ export function startJudgingPhase(room: GameRoom, engine: GameEngine, io: IO): v
   io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
   io.to(`room:${roomCode}`).emit('game:judging', engine.getAnonymousSubmissions());
 
+  // Emit initial vote count for czar_is_dead
+  if (engine.getCzarMode() === 'czar_is_dead') {
+    const activePlayers = room.players.filter(p => !p.isAfk);
+    io.to(`room:${roomCode}`).emit('game:voteUpdate', {
+      votedCount: 0,
+      totalVoters: activePlayers.length,
+    });
+  }
+
   roomManager.setJudgingTimer(roomCode, () => {
-    // Timer vypršel — čeká se na game:skipCzarJudging od non-Czar hráče
+    // Timer vypršel — čeká se na game:skipCzarJudging / game:skipVoting
   }, JUDGING_TIMEOUT_MS);
 }
 
@@ -46,8 +55,8 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
     room.roundDeadline = null;
     io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
     // Send candidates only to czar
-    const czarSocketId = roomManager.getSocketId(czarId);
-    if (czarSocketId) {
+    const czarSocketId = czarId ? roomManager.getSocketId(czarId) : undefined;
+    if (czarId && czarSocketId) {
       const czarSocket = io.sockets.sockets.get(czarSocketId);
       if (czarSocket) czarSocket.emit('game:blackCardCandidates', blackCardCandidates);
     }
@@ -69,8 +78,9 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
       playerSocket.emit('game:roundStart', {
         blackCard: engine.currentBlackCard!,
         hand: engine.getPlayerHand(player.id),
-        czarId,
+        czarId: czarId ?? '',
         roundNumber: engine.roundNumber,
+        czarMode: engine.getCzarMode(),
       });
     }
   }
@@ -84,7 +94,7 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
 // Called after czar chooses black card (Wheaton's Law) — sends game:roundStart to all
 export function finalizeRoundStart(room: GameRoom, engine: GameEngine, io: IO): void {
   const roomCode = room.code;
-  const czarId = room.players.find(p => p.isCardCzar)?.id ?? '';
+  const czarId: string | null = room.players.find(p => p.isCardCzar)?.id ?? null;
   room.blackCardCandidates = null;
   room.currentBlackCard = engine.currentBlackCard;
   room.roundDeadline = Date.now() + SELECTION_TIMEOUT_MS;
@@ -99,8 +109,9 @@ export function finalizeRoundStart(room: GameRoom, engine: GameEngine, io: IO): 
       playerSocket.emit('game:roundStart', {
         blackCard: engine.currentBlackCard!,
         hand: engine.getPlayerHand(player.id),
-        czarId,
+        czarId: czarId ?? '',
         roundNumber: engine.roundNumber,
+        czarMode: engine.getCzarMode(),
       });
     }
   }

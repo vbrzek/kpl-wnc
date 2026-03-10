@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { GameRoom, SpecialRule, WinCondition } from '@kpl/shared';
+import type { GameRoom, SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
 import { useLobbyStore } from '../stores/lobbyStore';
 import { useRoomStore } from '../stores/roomStore';
 import SpecialRulesPanel from './SpecialRulesPanel.vue';
+import CzarModePanel from './CzarModePanel.vue';
 
 const props = defineProps<{ room: GameRoom }>();
 const emit = defineEmits<{ close: [] }>();
@@ -22,6 +23,7 @@ const targetScore = ref(props.room.targetScore ?? 10);
 const targetRounds = ref(props.room.targetRounds ?? 20);
 const gameTimeLimit = ref(props.room.gameTimeLimit ?? 15);
 const selectedRules = ref<SpecialRule[]>([...props.room.specialRules]);
+const czarMode = ref<CzarMode>(props.room.czarMode ?? 'classic');
 const step = ref<'main' | 'rules'>('main');
 const saving = ref(false);
 const errorMsg = ref('');
@@ -41,6 +43,7 @@ async function save() {
     selectedSetIds: [selectedSetId.value],
     maxPlayers: maxPlayers.value,
     specialRules: selectedRules.value,
+    czarMode: czarMode.value,
     winCondition: winCondition.value,
     targetScore: targetScore.value,
     targetRounds: targetRounds.value,
@@ -241,6 +244,8 @@ onMounted(async () => {
               <h3 class="text-sm font-black uppercase tracking-[0.15em] text-slate-400">{{ t('specialRules.button') }}</h3>
             </div>
             <h3 class="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">{{ t('specialRules.button') }}</h3>
+            <CzarModePanel v-model="czarMode" class="mb-6" />
+            <div class="border-t border-white/5 my-4" />
             <SpecialRulesPanel v-model="selectedRules" />
           </div>
         </div>

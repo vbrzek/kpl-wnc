@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { socket } from '../socket';
-import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult, SpecialRule, WinCondition } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult, SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
 
 export const useRoomStore = defineStore('room', () => {
   const room = ref<GameRoom | null>(null);
@@ -18,6 +18,9 @@ export const useRoomStore = defineStore('room', () => {
   const finishedState = ref<GameOverPayload | null>(null);
 
   const myBet = ref<number | null>(null);
+  const voteProgress = ref<{ votedCount: number; totalVoters: number } | null>(null);
+  const myVotedSubmissionId = ref<string | null>(null);
+  const mySubmissionId = ref<string | null>(null);
 
   const isHost = computed(() =>
     room.value !== null && myPlayerId.value !== null
@@ -25,6 +28,7 @@ export const useRoomStore = defineStore('room', () => {
       : false
   );
 
+  const czarMode = computed<CzarMode>(() => room.value?.czarMode ?? 'classic');
   const specialRules = computed(() => room.value?.specialRules ?? []);
   const hasRule = (rule: SpecialRule) => specialRules.value.includes(rule);
   const blackCardCandidates = computed(() => room.value?.blackCardCandidates ?? null);
@@ -77,6 +81,9 @@ export const useRoomStore = defineStore('room', () => {
       selectedCards.value = [];
       lastPlayedCards.value = [];
       myBet.value = null;
+      voteProgress.value = null;
+      myVotedSubmissionId.value = null;
+      mySubmissionId.value = null;
     });
 
     socket.on('game:judging', (subs) => {
@@ -119,6 +126,14 @@ export const useRoomStore = defineStore('room', () => {
     socket.on('game:blackCardCandidates', (cards) => {
       if (room.value) room.value.blackCardCandidates = cards;
     });
+
+    socket.on('game:voteUpdate', (data) => {
+      voteProgress.value = data;
+    });
+
+    socket.on('game:mySubmissionId', (id) => {
+      mySubmissionId.value = id;
+    });
   }
 
   function setRoom(joinedRoom: GameRoom) {
@@ -140,6 +155,7 @@ export const useRoomStore = defineStore('room', () => {
     selectedSetIds?: number[];
     maxPlayers?: number;
     specialRules?: SpecialRule[];
+    czarMode?: CzarMode;
     winCondition?: WinCondition;
     targetScore?: number;
     targetRounds?: number;
@@ -221,6 +237,15 @@ export const useRoomStore = defineStore('room', () => {
     socket.emit('game:skipCzarJudging');
   }
 
+  function castVote(submissionId: string) {
+    socket.emit('game:vote', submissionId);
+    myVotedSubmissionId.value = submissionId;
+  }
+
+  function skipVoting() {
+    socket.emit('game:skipVoting');
+  }
+
   function chooseBlackCard(cardId: number) {
     socket.emit('game:chooseBlackCard', cardId);
   }
@@ -261,6 +286,8 @@ export const useRoomStore = defineStore('room', () => {
     socket.off('game:gameOver');
     socket.off('room:deleted');
     socket.off('game:blackCardCandidates');
+    socket.off('game:voteUpdate');
+    socket.off('game:mySubmissionId');
     finishedState.value = null;
     room.value = null;
     myPlayerId.value = null;
@@ -272,6 +299,9 @@ export const useRoomStore = defineStore('room', () => {
     selectedCards.value = [];
     lastPlayedCards.value = [];
     roundSkipped.value = false;
+    voteProgress.value = null;
+    myVotedSubmissionId.value = null;
+    mySubmissionId.value = null;
     initialised = false;
   }
 
@@ -279,10 +309,11 @@ export const useRoomStore = defineStore('room', () => {
     room, myPlayerId, isHost, me,
     hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
     roundSkipped, finishedState,
-    specialRules, hasRule, blackCardCandidates, myBet, setMyBet,
+    czarMode, specialRules, hasRule, blackCardCandidates, myBet, setMyBet,
+    voteProgress, myVotedSubmissionId, mySubmissionId,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, endGame, updateNickname, updateAvatar, clearFinishedState, cleanup,
     playCards, judgeSelect, toggleCardSelection, retractCards, tradeCards, czarForceAdvance, skipCzarJudging,
-    chooseBlackCard, placeBet,
+    chooseBlackCard, placeBet, castVote, skipVoting,
   };
 });

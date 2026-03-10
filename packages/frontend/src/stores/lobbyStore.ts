@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { socket } from '../socket';
-import type { PublicRoomSummary, GameRoom, SpecialRule, WinCondition } from '@kpl/shared';
+import type { PublicRoomSummary, GameRoom, SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
 import { useProfileStore } from './profileStore';
 
 export interface CardSetSummary {
@@ -71,6 +71,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     nickname: string;
     targetScore: number;
     specialRules: SpecialRule[];
+    czarMode?: CzarMode;
     winCondition?: WinCondition;
     targetRounds?: number;
     gameTimeLimit?: number;

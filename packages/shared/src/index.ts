@@ -4,11 +4,12 @@ export type GameStatus = 'LOBBY' | 'SELECTION' | 'JUDGING' | 'RESULTS' | 'FINISH
 // Speciální pravidla (House Rules)
 export type SpecialRule =
   | 'rando_cardrissian'
-  | 'god_mode'
   | 'wheatons_law'
   | 'rebooting_universe'
-  | 'meritocracy'
   | 'high_stakes';
+
+// Czar Mode — nahrazuje god_mode a meritocracy ze SpecialRule
+export type CzarMode = 'classic' | 'meritocracy' | 'god_mode' | 'czar_is_dead';
 
 export type WinCondition = 'score' | 'time' | 'rounds';
 
@@ -42,6 +43,7 @@ export interface GameRoundStart {
   hand: WhiteCard[];
   czarId: string;
   roundNumber: number;
+  czarMode: CzarMode;
 }
 
 export interface AnonymousSubmission {
@@ -54,6 +56,7 @@ export interface RoundResult {
   winnerNickname: string | null;
   winningCards: WhiteCard[];
   scores: Record<string, number>;
+  winnerIds?: string[];           // czar_is_dead: více vítězů (remíza)
 }
 
 export interface GameStateSync {
@@ -103,6 +106,7 @@ export interface GameRoom {
   targetRounds: number;             // výchozí: 20 (pro 'rounds')
   gameTimeLimit: number;            // minuty, výchozí: 15 (pro 'time')
   gameStartedAt: number | null;     // ms timestamp, nastaven při startGame
+  czarMode: CzarMode;                       // výchozí: 'classic'
   specialRules: SpecialRule[];              // [] = žádná speciální pravidla
   blackCardCandidates: BlackCard[] | null;  // Wheaton's Law: czar vybírá černou kartu
   lastActivityAt: number;         // Unix ms timestamp poslední akce (pro GC)
@@ -134,6 +138,8 @@ export interface ServerToClientEvents {
   'game:roundSkipped': () => void;  // kolo přeskočeno bez bodu (timeout)
   'game:gameOver': (payload: GameOverPayload) => void;
   'game:blackCardCandidates': (cards: BlackCard[]) => void;
+  'game:voteUpdate': (data: { votedCount: number; totalVoters: number }) => void;
+  'game:mySubmissionId': (submissionId: string) => void;
   'room:deleted': () => void;
 }
 
@@ -149,6 +155,7 @@ export interface ClientToServerEvents {
       avatarUrl?: string | null;
       targetScore: number;
       specialRules: SpecialRule[];
+      czarMode?: CzarMode;
       winCondition?: WinCondition;
       targetRounds?: number;
       gameTimeLimit?: number;
@@ -164,7 +171,7 @@ export interface ClientToServerEvents {
   'lobby:unsubscribePublic': () => void;
   'lobby:leave': () => void;
   'lobby:updateSettings': (
-    settings: { name?: string; isPublic?: boolean; selectedSetIds?: number[]; maxPlayers?: number; specialRules?: SpecialRule[]; winCondition?: WinCondition; targetScore?: number; targetRounds?: number; gameTimeLimit?: number },
+    settings: { name?: string; isPublic?: boolean; selectedSetIds?: number[]; maxPlayers?: number; specialRules?: SpecialRule[]; czarMode?: CzarMode; winCondition?: WinCondition; targetScore?: number; targetRounds?: number; gameTimeLimit?: number },
     callback: (result: { room: GameRoom } | { error: string }) => void
   ) => void;
   'lobby:kickPlayer': (
@@ -190,4 +197,6 @@ export interface ClientToServerEvents {
   'game:skipCzarJudging': () => void;
   'game:chooseBlackCard': (cardId: number) => void;
   'game:placeBet': (amount: number, callback: (result: { ok: true } | { error: string }) => void) => void;
+  'game:vote': (submissionId: string) => void;
+  'game:skipVoting': () => void;
 }

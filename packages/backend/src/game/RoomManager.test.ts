@@ -52,6 +52,31 @@ describe('RoomManager', () => {
     expect(room.gameTimeLimit).toBe(30);
   });
 
+  it('stores czarMode in room', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8, specialRules: [], czarMode: 'god_mode' }
+    );
+    expect(room.czarMode).toBe('god_mode');
+  });
+
+  it('default czarMode is classic', () => {
+    const { room } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8, specialRules: [] }
+    );
+    expect(room.czarMode).toBe('classic');
+  });
+
+  it('updateSettings: can change czarMode', () => {
+    const { playerToken } = rm.createRoom(
+      { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8, specialRules: [] }
+    );
+    const result = rm.updateSettings(playerToken, { czarMode: 'meritocracy' });
+    expect('error' in result).toBe(false);
+    if (!('error' in result)) {
+      expect(result.room.czarMode).toBe('meritocracy');
+    }
+  });
+
   // --- joinRoom ---
 
   it('joins an existing room and returns playerToken', () => {

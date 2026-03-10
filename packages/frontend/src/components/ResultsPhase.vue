@@ -29,6 +29,23 @@ const translatedWinningCards = computed(() =>
   })) ?? [],
 );
 
+const winnerNames = computed(() => {
+  const result = roomStore.roundResult;
+  if (!result) return [];
+  if (result.winnerIds && result.winnerIds.length > 0) {
+    return result.winnerIds.map(id => {
+      if (id === 'rando_cardrissian') return 'Rando Cardrissian';
+      return roomStore.room?.players.find(p => p.id === id)?.nickname ?? id;
+    });
+  }
+  return result.winnerNickname ? [result.winnerNickname] : [];
+});
+
+const isMultiWinner = computed(() => {
+  const ids = roomStore.roundResult?.winnerIds;
+  return ids && ids.length > 1;
+});
+
 const scoreboard = computed(() => {
   const result = roomStore.roundResult;
   const players = roomStore.room?.players ?? [];
@@ -64,7 +81,9 @@ const gameTimeFormatted = computed(() => {
 });
 
 onMounted(() => {
-  if (roomStore.roundResult?.winnerId === roomStore.myPlayerId) {
+  const result = roomStore.roundResult;
+  const myId = roomStore.myPlayerId;
+  if (myId && (result?.winnerId === myId || result?.winnerIds?.includes(myId))) {
     play('round-win')
   }
   if (roomStore.room?.winCondition === 'time') {
@@ -95,7 +114,15 @@ async function onEndGame() {
       <p class="text-2xl font-black text-red-400">{{ t('specialRules.randoWon') }}</p>
     </div>
 
-    <!-- Vítěz kola -->
+    <!-- Vítěz kola (multi-winner pro czar_is_dead remízu) -->
+    <div v-else-if="isMultiWinner" class="winner-entrance">
+      <p class="text-gray-400 text-lg mb-2">{{ t('game.results.roundWinner') }}</p>
+      <h2 v-for="name in winnerNames" :key="name" class="text-3xl font-bold winner-name">
+        {{ name }}
+      </h2>
+    </div>
+
+    <!-- Vítěz kola (single) -->
     <div v-else class="winner-entrance">
       <p class="text-gray-400 text-lg mb-2">{{ t('game.results.roundWinner') }}</p>
       <h2 class="text-4xl font-bold winner-name">

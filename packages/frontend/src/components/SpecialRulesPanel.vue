@@ -17,18 +17,10 @@ interface RuleInfo {
 
 const RULES: RuleInfo[] = [
   { id: 'rando_cardrissian', icon: '🎲' },
-  { id: 'god_mode', icon: '👑' },
   { id: 'wheatons_law', icon: '🃏' },
   { id: 'rebooting_universe', icon: '♻️' },
-  { id: 'meritocracy', icon: '🏆' },
   { id: 'high_stakes', icon: '💰' },
 ];
-
-// Mutually exclusive pairs: activating one deactivates the other(s)
-const CONFLICTS: Partial<Record<SpecialRule, SpecialRule[]>> = {
-  god_mode: ['meritocracy'],
-  meritocracy: ['god_mode'],
-};
 
 function toggle(id: SpecialRule) {
   if (props.readonly) return;
@@ -37,7 +29,6 @@ function toggle(id: SpecialRule) {
     current.delete(id);
   } else {
     current.add(id);
-    for (const conflict of CONFLICTS[id] ?? []) current.delete(conflict);
   }
   emit('update:modelValue', Array.from(current));
 }

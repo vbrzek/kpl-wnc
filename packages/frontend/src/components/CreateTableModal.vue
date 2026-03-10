@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { SpecialRule, WinCondition } from '@kpl/shared';
+import type { SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
 import { useLobbyStore } from '../stores/lobbyStore';
 import SpecialRulesPanel from './SpecialRulesPanel.vue';
+import CzarModePanel from './CzarModePanel.vue';
 
 const emit = defineEmits<{
   close: [];
@@ -14,6 +15,7 @@ const emit = defineEmits<{
     maxPlayers: number;
     targetScore: number;
     specialRules: SpecialRule[];
+    czarMode: CzarMode;
     winCondition: WinCondition;
     targetRounds: number;
     gameTimeLimit: number;
@@ -34,6 +36,7 @@ const gameTimeLimit = ref(15);
 const selectedSetId = ref<number | null>(null);
 const fetchError = ref('');
 const selectedRules = ref<SpecialRule[]>([]);
+const czarMode = ref<CzarMode>('classic');
 const step = ref<'main' | 'rules'>('main');
 
 const isDesktop = () => window.innerWidth >= 768;
@@ -52,6 +55,7 @@ function submit() {
     maxPlayers: maxPlayers.value,
     targetScore: targetScore.value,
     specialRules: selectedRules.value,
+    czarMode: czarMode.value,
     winCondition: winCondition.value,
     targetRounds: targetRounds.value,
     gameTimeLimit: gameTimeLimit.value,
@@ -280,6 +284,8 @@ onMounted(async () => {
             <!-- Desktop header -->
             <h3 class="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">{{ t('specialRules.button') }}</h3>
 
+            <CzarModePanel v-model="czarMode" class="mb-6" />
+            <div class="border-t border-white/5 my-4" />
             <SpecialRulesPanel v-model="selectedRules" />
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
-import type { GameRoom, GameOverPayload, Player, PublicRoomSummary, SpecialRule, WinCondition } from '@kpl/shared';
+import type { GameRoom, GameOverPayload, Player, PublicRoomSummary, SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
 import { GameEngine, type EngineSnapshot } from './GameEngine.js';
 
 export interface ManagerSnapshot {
@@ -56,6 +56,7 @@ export interface CreateRoomSettings {
   avatarUrl?: string | null;
   targetScore: number;
   specialRules: SpecialRule[];
+  czarMode?: CzarMode;
   winCondition?: WinCondition;
   targetRounds?: number;
   gameTimeLimit?: number;
@@ -73,6 +74,7 @@ export interface UpdateSettingsData {
   selectedSetIds?: number[];
   maxPlayers?: number;
   specialRules?: SpecialRule[];
+  czarMode?: CzarMode;
   winCondition?: WinCondition;
   targetScore?: number;
   targetRounds?: number;
@@ -131,6 +133,7 @@ export class RoomManager {
       targetRounds: settings.targetRounds ?? 20,
       gameTimeLimit: settings.gameTimeLimit ?? 15,
       gameStartedAt: null,
+      czarMode: settings.czarMode ?? 'classic',
       specialRules: settings.specialRules,
       lastActivityAt: Date.now(),
     };
@@ -343,6 +346,7 @@ export class RoomManager {
     if (settings.selectedSetIds !== undefined) room.selectedSetIds = settings.selectedSetIds;
     if (settings.maxPlayers !== undefined) room.maxPlayers = settings.maxPlayers;
     if (settings.specialRules !== undefined) room.specialRules = settings.specialRules;
+    if (settings.czarMode !== undefined) room.czarMode = settings.czarMode;
     if (settings.winCondition !== undefined) room.winCondition = settings.winCondition;
     if (settings.targetScore !== undefined) room.targetScore = settings.targetScore;
     if (settings.targetRounds !== undefined) room.targetRounds = settings.targetRounds;

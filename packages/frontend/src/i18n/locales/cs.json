@@ -206,6 +206,34 @@
     "betLabel": "Vaše sázka",
     "betConfirm": "Potvrdit sázku",
     "betActive": "Vsazeno: {amount}",
-    "betPlaced": "Sázka {amount} bodů uložena"
+    "betPlaced": "Sázka {amount} bodů uložena",
+    "czarMode": {
+      "label": "Karetní král",
+      "classic": {
+        "name": "Klasický",
+        "desc": "Karetní král se střídá po směru hodinových ručiček."
+      },
+      "meritocracy": {
+        "name": "Meritocracy",
+        "desc": "Karetním králem se vždy stává vítěz minulého kola."
+      },
+      "god_mode": {
+        "name": "God Mode",
+        "desc": "Hostitel zůstává karetním králem po celou dobu hry."
+      },
+      "czar_is_dead": {
+        "name": "Czar is Dead",
+        "desc": "Není žádný karetní král — hlasují všichni. Vítěz získá nejvíce hlasů. Nikdo nesmí hlasovat pro sebe."
+      }
+    },
+    "voteProgress": "Hlasovalo {voted} z {total} hráčů",
+    "skipVoting": "Dál nečekat",
+    "yourVoteCast": "Tvůj hlas byl odevzdán",
+    "voting": {
+      "title": "Hlasování — vyber nejlepší odpověď!",
+      "waiting": "Čekej na výsledky hlasování...",
+      "yourCards": "Tvoje karty",
+      "vote": "Hlasovat"
+    }
   }
 }

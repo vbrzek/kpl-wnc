@@ -3,7 +3,7 @@ import { GameEngine } from './GameEngine.js';
 import type { Player, BlackCard, WhiteCard } from '@kpl/shared';
 
 function makePlayer(id: string, nickname: string): Player {
-  return { id, socketId: 'socket-' + id, nickname, score: 0, isCardCzar: false, hasPlayed: false, tradedThisRound: false, isAfk: false };
+  return { id, socketId: 'socket-' + id, nickname, score: 0, isCardCzar: false, hasPlayed: false, tradedThisRound: false, isAfk: false } as Player;
 }
 
 function makeBlackCards(n: number, pick = 1): BlackCard[] {
@@ -404,7 +404,7 @@ describe('specialRules', () => {
 
   it('god_mode: czar is always host across multiple rounds', () => {
     const hostId = 'p1';
-    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), ['god_mode'], hostId);
+    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), [], hostId, 'god_mode');
     for (let i = 0; i < 3; i++) {
       eng.startRound();
       expect(players.find(p => p.isCardCzar)!.id).toBe(hostId);
@@ -412,7 +412,7 @@ describe('specialRules', () => {
   });
 
   it('meritocracy: winner of round becomes czar next round', () => {
-    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), ['meritocracy'], 'p1');
+    const eng = new GameEngine(players, makeBlackCards(5), makeWhiteCards(50), [], 'p1', 'meritocracy');
     eng.startRound();
     const czar = players.find(p => p.isCardCzar)!;
     const nonCzarPlayers = players.filter(p => !p.isCardCzar);
@@ -549,7 +549,7 @@ describe('rando_cardrissian', () => {
   });
 
   it('Rando win with meritocracy keeps the same czar next round', () => {
-    const eng = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), ['rando_cardrissian', 'meritocracy'], 'p1');
+    const eng = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), ['rando_cardrissian'], 'p1', 'meritocracy');
     eng.startRound();
     const czarRound1 = players.find(p => p.isCardCzar)!;
     const nonCzar = players.filter(p => !p.isCardCzar);
@@ -622,5 +622,124 @@ describe('high_stakes', () => {
     const loserInitial = loserId === nonCzar1.id ? 3 : 2;
     expect(result.scores[winnerId]).toBe(winnerInitial + 1 + winnerBet);
     expect(result.scores[loserId]).toBe(Math.max(0, loserInitial - loserBet));
+  });
+});
+
+// --- czarMode ---
+
+describe('czarMode', () => {
+  let players: Player[];
+
+  beforeEach(() => {
+    players = [
+      makePlayer('p1', 'Alice'),
+      makePlayer('p2', 'Bob'),
+      makePlayer('p3', 'Charlie'),
+    ];
+  });
+
+  it('classic: rotates czar as usual', () => {
+    const e = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), [], 'p1', 'classic');
+    e.startRound();
+    expect(players.filter(p => p.isCardCzar)).toHaveLength(1);
+  });
+
+  it('god_mode: host is always czar', () => {
+    const e = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), [], 'p1', 'god_mode');
+    e.startRound();
+    expect(players.find(p => p.id === 'p1')?.isCardCzar).toBe(true);
+    e.startRound();
+    expect(players.find(p => p.id === 'p1')?.isCardCzar).toBe(true);
+  });
+
+  it('meritocracy: winner of last round becomes czar', () => {
+    const e = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), [], 'p1', 'meritocracy');
+    e.startRound();
+    // set last round winner manually
+    (e as any).lastRoundWinnerId = 'p2';
+    e.startRound();
+    expect(players.find(p => p.id === 'p2')?.isCardCzar).toBe(true);
+  });
+
+  it('czar_is_dead: no player gets isCardCzar=true', () => {
+    const e = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), [], 'p1', 'czar_is_dead');
+    e.startRound();
+    expect(players.filter(p => p.isCardCzar)).toHaveLength(0);
+  });
+
+  it('czar_is_dead: all players can submit cards', () => {
+    const e = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), [], 'p1', 'czar_is_dead');
+    e.startRound();
+    for (const p of players) {
+      const cardId = e.getPlayerHand(p.id)[0].id;
+      const result = e.submitCards(p.id, [cardId]);
+      expect(result).toEqual({ ok: true, allSubmitted: expect.any(Boolean) });
+    }
+  });
+});
+
+describe('czar_is_dead voting', () => {
+  let players: Player[];
+  let engine: GameEngine;
+
+  beforeEach(() => {
+    players = [
+      makePlayer('p1', 'Alice'),
+      makePlayer('p2', 'Bob'),
+      makePlayer('p3', 'Charlie'),
+    ];
+    engine = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), [], 'p1', 'czar_is_dead');
+    engine.startRound();
+    // submit cards for all players
+    for (const p of players) {
+      const cardId = engine.getPlayerHand(p.id)[0].id;
+      engine.submitCards(p.id, [cardId]);
+    }
+  });
+
+  it('castVote: player can vote for another submission', () => {
+    const p1Sub = (engine as any).submissions.get('p1');
+    // find a submission not owned by p1
+    const p2Sub = (engine as any).submissions.get('p2');
+    const result = engine.castVote('p1', p2Sub.submissionId);
+    expect(result).toEqual({ ok: true, allVoted: false });
+  });
+
+  it('castVote: player cannot vote for own submission', () => {
+    const ownSub = (engine as any).submissions.get('p1');
+    const result = engine.castVote('p1', ownSub.submissionId);
+    expect('error' in result).toBe(true);
+  });
+
+  it('resolveVotes: winner has most votes', () => {
+    const p3Sub = (engine as any).submissions.get('p3');
+    engine.castVote('p1', p3Sub.submissionId);
+    engine.castVote('p2', p3Sub.submissionId);
+    const result = engine.resolveVotes();
+    expect(result.winnerIds).toEqual(['p3']);
+    const p3 = players.find(p => p.id === 'p3')!;
+    expect(p3.score).toBe(1);
+  });
+
+  it('resolveVotes: tie gives all tied players +1', () => {
+    const p2Sub = (engine as any).submissions.get('p2');
+    const p3Sub = (engine as any).submissions.get('p3');
+    // p1 votes for p2, p2 votes for p3 → tie (1 each)
+    engine.castVote('p1', p2Sub.submissionId);
+    engine.castVote('p2', p3Sub.submissionId);
+    const result = engine.resolveVotes();
+    expect(result.winnerIds).toHaveLength(2);
+    expect(result.winnerIds).toContain('p2');
+    expect(result.winnerIds).toContain('p3');
+    const p2 = players.find(p => p.id === 'p2')!;
+    const p3 = players.find(p => p.id === 'p3')!;
+    expect(p2.score).toBe(1);
+    expect(p3.score).toBe(1);
+  });
+
+  it('resolveVotes: no votes → no winner, winnerIds empty', () => {
+    const result = engine.resolveVotes();
+    expect(result.winnerIds).toEqual([]);
+    expect(result.winnerId).toBeNull();
   });
 });
