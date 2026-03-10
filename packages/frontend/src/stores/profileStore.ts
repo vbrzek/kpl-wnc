@@ -37,7 +37,7 @@ export const useProfileStore = defineStore('profile', () => {
         return oauthUser.value.avatarUrl;
       }
       const style = oauthUser.value.dicebearStyle ?? 'bottts';
-      const seed = oauthUser.value.dicebearSeed ?? nickname.value || 'default';
+      const seed = (oauthUser.value.dicebearSeed ?? nickname.value) || 'default';
       return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
     }
     return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(nickname.value || 'default')}`;
