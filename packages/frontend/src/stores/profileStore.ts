@@ -55,6 +55,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   async function init() {
     // Try OAuth session first
+    let oauthLoaded = false;
     try {
       const res = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
       if (res.ok) {
@@ -63,19 +64,22 @@ export const useProfileStore = defineStore('profile', () => {
         oauthUser.value = user;
         if (user.nickname) nickname.value = user.nickname;
         if (user.locale) loadLocale(user.locale);
-        return;
+        oauthLoaded = true;
+        if (nickname.value) return; // nickname in DB — done
+        // OAuth session valid but no nickname in DB yet — also check localStorage
       }
     } catch {
       // network error — fall through to localStorage
     }
 
     // Fall back to localStorage profile
+    // (covers: no OAuth session, network error, or OAuth user whose nickname isn't in DB yet)
     const raw = localStorage.getItem('playerProfile');
     if (!raw) return;
     try {
       const profile = JSON.parse(raw) as PlayerProfile;
       if (profile.nickname) nickname.value = profile.nickname;
-      if (profile.locale) loadLocale(profile.locale);
+      if (profile.locale && !oauthLoaded) loadLocale(profile.locale);
     } catch {
       // ignore malformed data
     }
