@@ -47,6 +47,13 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     }
     const data = validate(CreateRoomSchema, settings, callback);
     if (!data) return;
+    const nameTaken = [...roomManager.getAllRooms()].some(
+      r => r.name.toLowerCase() === data.name.toLowerCase()
+    );
+    if (nameTaken) {
+      callback({ error: 'Stůl s tímto názvem již existuje.' });
+      return;
+    }
     const { room, playerToken } = roomManager.createRoom({ ...data, avatarUrl: data.avatarUrl ?? null });
 
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;

@@ -55,6 +55,7 @@ async function onCreateRoom(settings: {
   targetRounds: number;
   gameTimeLimit: number;
 }) {
+  showCreate.value = false;
   const result = await lobbyStore.createRoom({ ...settings, nickname: profileStore.nickname });
   if ('error' in result) {
     errorMsg.value = result.error;
