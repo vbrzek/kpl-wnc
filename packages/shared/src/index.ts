@@ -15,7 +15,6 @@ export type WinCondition = 'score' | 'time' | 'rounds';
 // Hráč
 export interface Player {
   id: string;
-  socketId: string | null;
   isOnline: boolean;
   nickname: string;
   avatarUrl: string | null;

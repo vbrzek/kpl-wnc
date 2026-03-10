@@ -133,14 +133,14 @@ describe('RoomManager', () => {
     }
   });
 
-  it('reconnects player by playerToken, restores socketId', () => {
+  it('reconnects player by playerToken, restores online + clears AFK', () => {
     const { room, playerToken } = rm.createRoom(
       { name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6, nickname: 'Alice', targetScore: 8 }
     );
     rm.handleDisconnect(playerToken);
-    const reconnected = rm.reconnect(playerToken, 'socket-new-123');
+    const reconnected = rm.reconnect(playerToken);
     expect(reconnected).not.toBeNull();
-    expect(reconnected!.players[0].socketId).toBe('socket-new-123');
+    expect(reconnected!.players[0].isOnline).toBe(true);
     expect(reconnected!.players[0].isAfk).toBe(false);
   });
 
@@ -493,7 +493,6 @@ describe('serialize / restore', () => {
     });
     // Simuluj online stav před snapshotem
     room.players[0].isOnline = true;
-    room.players[0].socketId = 'fake-socket-id';
 
     const snapshot = rm.serialize();
     const rm2 = new RoomManager();
@@ -501,7 +500,6 @@ describe('serialize / restore', () => {
 
     const restored = rm2.getRoom(room.code)!;
     expect(restored.players[0].isOnline).toBe(false);
-    expect(restored.players[0].socketId).toBeNull();
   });
 
   it('restores game engine for rooms with active game', () => {

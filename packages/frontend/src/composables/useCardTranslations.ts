@@ -12,7 +12,7 @@ function cacheKey(lang: string, type: 'b' | 'w', id: number): string {
 
 export function useCardTranslations() {
   const { locale } = useI18n();
-  const backendUrl = import.meta.env.VITE_BACKEND_URL as string;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
 
   async function fetchTranslations(blackIds: number[], whiteIds: number[]): Promise<void> {
     const lang = locale.value;

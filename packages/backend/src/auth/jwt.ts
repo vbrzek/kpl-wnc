@@ -5,13 +5,19 @@ export interface JwtPayload {
   provider: 'google' | 'discord';
 }
 
+function getSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('Missing required environment variable: JWT_SECRET');
+  return secret;
+}
+
 export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: '30d' });
+  return jwt.sign(payload, getSecret(), { expiresIn: '30d' });
 }
 
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    return jwt.verify(token, getSecret()) as JwtPayload;
   } catch {
     return null;
   }

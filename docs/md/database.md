@@ -67,23 +67,26 @@ CREATE TABLE users (
     provider VARCHAR(20) NOT NULL,          -- 'google' | 'discord'
     provider_id VARCHAR(255) NOT NULL,
     email VARCHAR(255),
-    nickname VARCHAR(24),
+    nickname VARCHAR(50),                   -- app limituje na 24 znaků
     locale VARCHAR(5) DEFAULT 'cs',
     avatar_type ENUM('oauth', 'dicebear') DEFAULT 'oauth',
     avatar_url TEXT,
     dicebear_style VARCHAR(50),
     dicebear_seed VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (provider, provider_id)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (provider, provider_id),
+    UNIQUE (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Vazba OAuth user → player token (propojení se Socket.io session)
+-- PK je kompozitní (player_token, room_code) — žádný surrogate id
 CREATE TABLE user_player_tokens (
-    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     player_token VARCHAR(36) NOT NULL,
     room_code VARCHAR(6) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (player_token, room_code),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```

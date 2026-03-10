@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { socket } from '../socket';
@@ -97,7 +97,7 @@ function czarForceAdvance() {
 watch(() => roomStore.hand, () => { retracting.value = false; });
 
 function onGameError() { retracting.value = false; }
-socket.on('game:error', onGameError);
+onMounted(() => { socket.on('game:error', onGameError); });
 onUnmounted(() => { socket.off('game:error', onGameError); });
 
 const players = computed(() => roomStore.room?.players ?? []);
@@ -128,13 +128,13 @@ async function onPlaceBet(amount: number) {
   betError.value = '';
   const err = await roomStore.placeBet(amount);
   if (err) betError.value = err.error;
-  else { betPlaced.value = true; roomStore.myBet = amount; }
+  else { betPlaced.value = true; roomStore.setMyBet(amount); }
 }
 
 watch(() => roomStore.room?.status, () => {
   betPlaced.value = false;
   betError.value = '';
-  roomStore.myBet = null;
+  roomStore.setMyBet(null);
 });
 </script>
 

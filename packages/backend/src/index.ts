@@ -22,20 +22,18 @@ config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env')
 
 const SNAPSHOT_PATH = process.env.SNAPSHOT_PATH ?? '/tmp/kpl-snapshot.json';
 const STARTUP_ID = Date.now();
+const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+const PUBLIC_BACKEND_URL = process.env.PUBLIC_BACKEND_URL ?? 'http://localhost:3000';
 
 const app = Fastify({ logger: true });
 
 await app.register(cors, {
-  origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+  origin: FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
 });
 
-const PUBLIC_BACKEND_URL = process.env.PUBLIC_BACKEND_URL ?? 'http://localhost:3000';
-
 await app.register(cookie);
-
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   await app.register(oauth2Plugin, {
@@ -85,7 +83,7 @@ await app.register(authRoutes);
 
 const io = new Server<ClientToServerEvents, ServerToClientEvents>(app.server, {
   cors: {
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    origin: FRONTEND_URL,
     credentials: true,
   },
 });

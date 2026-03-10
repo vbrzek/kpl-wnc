@@ -30,7 +30,7 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
 
   // Un-AFK hráče, kteří jsou stále připojeni (akce-AFK je jen per-kolo)
   for (const player of room.players) {
-    if (player.isAfk && player.socketId !== null) {
+    if (player.isAfk && roomManager.getSocketId(player.id) !== undefined) {
       player.isAfk = false;
     }
   }
@@ -46,9 +46,9 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
     room.roundDeadline = null;
     io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
     // Send candidates only to czar
-    const czar = room.players.find(p => p.id === czarId);
-    if (czar?.socketId) {
-      const czarSocket = io.sockets.sockets.get(czar.socketId);
+    const czarSocketId = roomManager.getSocketId(czarId);
+    if (czarSocketId) {
+      const czarSocket = io.sockets.sockets.get(czarSocketId);
       if (czarSocket) czarSocket.emit('game:blackCardCandidates', blackCardCandidates);
     }
     return; // roundStart sent after chooseBlackCard
@@ -62,8 +62,9 @@ export function startNewRound(room: GameRoom, engine: GameEngine, io: IO): void 
   io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
 
   for (const player of room.players) {
-    if (!player.socketId) continue;
-    const playerSocket = io.sockets.sockets.get(player.socketId);
+    const sid = roomManager.getSocketId(player.id);
+    if (!sid) continue;
+    const playerSocket = io.sockets.sockets.get(sid);
     if (playerSocket) {
       playerSocket.emit('game:roundStart', {
         blackCard: engine.currentBlackCard!,
@@ -91,8 +92,9 @@ export function finalizeRoundStart(room: GameRoom, engine: GameEngine, io: IO): 
   io.to(`room:${roomCode}`).emit('lobby:stateUpdate', toPublicRoom(room));
 
   for (const player of room.players) {
-    if (!player.socketId) continue;
-    const playerSocket = io.sockets.sockets.get(player.socketId);
+    const sid = roomManager.getSocketId(player.id);
+    if (!sid) continue;
+    const playerSocket = io.sockets.sockets.get(sid);
     if (playerSocket) {
       playerSocket.emit('game:roundStart', {
         blackCard: engine.currentBlackCard!,
@@ -112,10 +114,7 @@ export function broadcastPublicRooms(io: IO): void {
   io.to('lobby').emit('lobby:publicRoomsUpdate', roomManager.getPublicRooms());
 }
 
-/** Vrátí kopii místnosti s odstraněnými socketId hráčů (pro broadcast klientům). */
+/** Pass-through — kept for forward-compatibility if server-only fields are added later. */
 export function toPublicRoom(room: GameRoom): GameRoom {
-  return {
-    ...room,
-    players: room.players.map(p => ({ ...p, socketId: null })),
-  };
+  return room;
 }

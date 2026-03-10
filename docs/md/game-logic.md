@@ -22,7 +22,7 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 
 **Implementační poznámky:**
 - `CreateTableModal` podporuje výběr právě 1 sady karet (backend podporuje `selectedSetIds: number[]`)
-- `socketId` je součástí `Player` a je broadcastován všem hráčům — informace nutná jen pro server (bezpečnostní issue)
+- `socketId` je součástí sdíleného `Player` interfacu — `toPublicRoom()` ho nulluje před broadcastem, ale správné řešení je přesunout ho do server-only mapy (TODO: refactor)
 - `useSound.ts` přehrává efekty při herních událostech
 
 ## Player Profile

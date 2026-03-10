@@ -55,6 +55,7 @@ kpl-wnc/
 │       │   ├── CreateTableModal.vue, JoinPrivateModal.vue, RoomPreviewModal.vue
 │       │   ├── InviteLink.vue, PublicRoomsList.vue
 │       │   ├── SelectionPhase.vue, JudgingPhase.vue, ResultsPhase.vue, FinishedPhase.vue
+│       │   ├── SpecialRulesPanel.vue   # Aktivní speciální pravidla kola
 │       │   ├── game/atoms/         # BlackCard, CardHand, Scoreboard, Podium, SubmissionGrid…
 │       │   └── game/layouts/       # PlayerSelectingLayout, CzarJudgingLayout, …
 │       ├── composables/

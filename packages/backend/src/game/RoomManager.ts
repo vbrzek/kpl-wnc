@@ -89,6 +89,7 @@ export class RoomManager {
   private tokenToPlayerId: Map<string, string> = new Map();
   // playerToken → AFK timer handle
   private afkTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private readonly _playerSocketIds = new Map<string, string>(); // playerId → socket.id
   private engines = new Map<string, GameEngine>();
   private roundTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private judgingTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
@@ -102,7 +103,6 @@ export class RoomManager {
 
     const host: Player = {
       id: playerId,
-      socketId: null,
       isOnline: true,
       nickname: settings.nickname,
       avatarUrl: settings.avatarUrl ?? null,
@@ -154,7 +154,7 @@ export class RoomManager {
     if (playerToken) {
       const existingRoomCode = this.playerRooms.get(playerToken);
       if (existingRoomCode === code) {
-        const reconnected = this.reconnect(playerToken, null);
+        const reconnected = this.reconnect(playerToken);
         if (reconnected) {
           // Update avatarUrl on reconnect (player may have changed it)
           if (avatarUrl !== undefined) {
@@ -192,7 +192,6 @@ export class RoomManager {
 
     const player: Player = {
       id: playerId,
-      socketId: null,
       isOnline: true,
       nickname,
       avatarUrl: avatarUrl ?? null,
@@ -212,7 +211,7 @@ export class RoomManager {
 
   // ------------------------------------------------------------------ reconnect
 
-  reconnect(playerToken: string, socketId: string | null): GameRoom | null {
+  reconnect(playerToken: string): GameRoom | null {
     const code = this.playerRooms.get(playerToken);
     if (!code) return null;
 
@@ -232,7 +231,6 @@ export class RoomManager {
       this.afkTimers.delete(playerToken);
     }
 
-    player.socketId = socketId;
     player.isOnline = true;
     player.isAfk = false;
 
@@ -254,7 +252,7 @@ export class RoomManager {
     const player = room.players.find((p) => p.id === playerId);
     if (!player) return;
 
-    player.socketId = null;
+    this.clearSocketIdByToken(playerToken);
     player.isOnline = false;
 
     // Clear any existing timer first
@@ -466,6 +464,23 @@ export class RoomManager {
     return this.tokenToPlayerId.get(playerToken) ?? null;
   }
 
+  getSocketId(playerId: string): string | undefined {
+    return this._playerSocketIds.get(playerId);
+  }
+
+  setSocketId(playerId: string, socketId: string): void {
+    this._playerSocketIds.set(playerId, socketId);
+  }
+
+  clearSocketId(playerId: string): void {
+    this._playerSocketIds.delete(playerId);
+  }
+
+  clearSocketIdByToken(playerToken: string): void {
+    const playerId = this.tokenToPlayerId.get(playerToken);
+    if (playerId) this._playerSocketIds.delete(playerId);
+  }
+
   // ------------------------------------------------------------------ setGameEngine / getGameEngine
 
   setGameEngine(code: string, engine: GameEngine): void {
@@ -593,7 +608,7 @@ export class RoomManager {
       p.isCardCzar = false;
       p.hasPlayed = false;
       p.tradedThisRound = false;
-      if (p.socketId !== null) p.isAfk = false;
+      if (this._playerSocketIds.has(p.id)) p.isAfk = false;
     }
 
     return { room, payload, kickedTokens };
@@ -665,7 +680,6 @@ export class RoomManager {
       // roundDeadline se záměrně zachovává: hodnota v minulosti je přijatelná,
       // klienti zobrazí nulu a hra pokračuje přes standardní flow (czarForceAdvance apod.).
       for (const player of room.players) {
-        player.socketId = null;
         player.isOnline = false;
       }
       this.rooms.set(room.code, room);

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { useCardTranslations } from '../composables/useCardTranslations.js';
 import { useSound } from '../composables/useSound';
-import { socket } from '../socket/index.js';
+import { socket } from '../socket';
 import CzarJudgingLayout from './game/layouts/CzarJudgingLayout.vue';
 import WaitingForCzarLayout from './game/layouts/WaitingForCzarLayout.vue';
 
@@ -52,6 +52,7 @@ onMounted(() => {
     }, i * FLIP_STAGGER_MS)
     flipTimers.push(timer)
   })
+  socket.on('game:error', onGameError);
 })
 
 // --- Countdown ---
@@ -92,7 +93,6 @@ function skipCzarJudging() {
 
 const gameError = ref('');
 function onGameError(msg: string) { gameError.value = msg; }
-socket.on('game:error', onGameError);
 
 const endingGame = ref(false);
 async function onEndGame() {

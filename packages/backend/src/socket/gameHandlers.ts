@@ -201,6 +201,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     const roomCode = roomManager.getRoomByPlayerToken(playerToken)?.code;
     roomManager.leaveRoom(playerToken);
     socketToToken.delete(socket.id);
+    roomManager.clearSocketIdByToken(playerToken);
 
     if (roomCode) {
       socket.leave(`room:${roomCode}`);
@@ -273,7 +274,7 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
     // Označit nepřipravené hráče jako AFK
     for (const p of room.players) {
-      if (!p.isAfk && !p.isCardCzar && !p.hasPlayed && p.socketId !== null) {
+      if (!p.isAfk && !p.isCardCzar && !p.hasPlayed && roomManager.getSocketId(p.id) !== undefined) {
         p.isAfk = true;
       }
     }

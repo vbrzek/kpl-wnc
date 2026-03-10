@@ -49,10 +49,8 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     if (!data) return;
     const { room, playerToken } = roomManager.createRoom({ ...data, avatarUrl: data.avatarUrl ?? null });
 
-    // Attach socket to the host player
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
-    const player = room.players.find(p => p.id === playerId);
-    if (player) player.socketId = socket.id;
+    roomManager.setSocketId(playerId, socket.id);
 
     socketToToken.set(socket.id, playerToken);
     socket.join(`room:${room.code}`);
@@ -83,10 +81,9 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
     const { room, playerToken } = result;
 
-    // Attach socket to player (reconnect or new join)
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
     const player = room.players.find(p => p.id === playerId);
-    if (player) player.socketId = socket.id;
+    roomManager.setSocketId(playerId, socket.id);
 
     socketToToken.set(socket.id, playerToken);
     socket.join(`room:${room.code}`);
@@ -128,6 +125,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     const roomCode = roomManager.getRoomByPlayerToken(playerToken)?.code;
     roomManager.leaveRoom(playerToken);
     socketToToken.delete(socket.id);
+    roomManager.clearSocketIdByToken(playerToken);
 
     if (roomCode) {
       socket.leave(`room:${roomCode}`);
@@ -281,6 +279,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     if (!playerToken) return;
 
     socketToToken.delete(socket.id);
+    roomManager.clearSocketIdByToken(playerToken);
     roomManager.handleDisconnect(playerToken);
 
     const room = roomManager.getRoomByPlayerToken(playerToken);

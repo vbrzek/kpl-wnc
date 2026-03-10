@@ -76,6 +76,7 @@ export const useRoomStore = defineStore('room', () => {
       roundResult.value = null;
       selectedCards.value = [];
       lastPlayedCards.value = [];
+      myBet.value = null;
     });
 
     socket.on('game:judging', (subs) => {
@@ -224,6 +225,10 @@ export const useRoomStore = defineStore('room', () => {
     socket.emit('game:chooseBlackCard', cardId);
   }
 
+  function setMyBet(amount: number | null) {
+    myBet.value = amount;
+  }
+
   async function placeBet(amount: number): Promise<{ error: string } | null> {
     return new Promise(resolve => {
       socket.emit('game:placeBet', amount, (result) => {
@@ -274,7 +279,7 @@ export const useRoomStore = defineStore('room', () => {
     room, myPlayerId, isHost, me,
     hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
     roundSkipped, finishedState,
-    specialRules, hasRule, blackCardCandidates, myBet,
+    specialRules, hasRule, blackCardCandidates, myBet, setMyBet,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, endGame, updateNickname, updateAvatar, clearFinishedState, cleanup,
     playCards, judgeSelect, toggleCardSelection, retractCards, tradeCards, czarForceAdvance, skipCzarJudging,
