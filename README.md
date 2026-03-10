@@ -80,6 +80,20 @@ PORT=3000
 FRONTEND_URL=http://localhost:5173
 VITE_BACKEND_URL=http://localhost:3000
 
+# OAuth (Google)
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+
+# OAuth (Discord)
+DISCORD_CLIENT_ID=...
+DISCORD_CLIENT_SECRET=...
+
+# JWT secret (min. 32 znaků)
+JWT_SECRET=Flcgkda3A,sS.cmAsH30SFkslda0mskw
+
+# Veřejná URL backendu (pro OAuth callback URI)
+PUBLIC_BACKEND_URL=http://localhost:3000
+
 # Cesta pro snapshot stavu her při restartu (výchozí: /tmp/kpl-snapshot.json)
 # SNAPSHOT_PATH=/tmp/kpl-snapshot.json
 ```
@@ -147,6 +161,10 @@ Příklad konfigurace (`/etc/apache2/sites-available/kpl.conf`):
     # Frontend — statické soubory
     DocumentRoot /var/www/kpl-wnc/packages/frontend/dist
 
+    # Auth proxy
+    ProxyPass /auth http://localhost:3000/auth
+    ProxyPassReverse /auth http://localhost:3000/auth
+
     # API proxy
     ProxyPass /api http://localhost:3000/api
     ProxyPassReverse /api http://localhost:3000/api
@@ -165,22 +183,26 @@ systemctl reload apache2
 
 ---
 
-## 🗺️ Roadmap
+## 🚀 Roadmap
 
-- [x] Monorepo setup — npm workspaces, TypeScript, Fastify, Vue 3 + Tailwind v4
-- [x] Lobby — Socket.io místnosti, správa hráčů, AFK, reconnect, přenos hosta
-- [x] REST API — sady karet + seed data
-- [x] Výběr sad karet při vytváření stolu
-- [x] Herní stavový stroj (rozdávání → hraní → vyhodnocení)
-- [x] Nasazení na VPS (Apache + PM2)
-- [x] Globální profil hráče — přezdívka + DiceBear avatar
-- [x] Vícejazyčná verze — 5 jazyků, překlad karet přes REST
-- [x] Finální design (responzivní layout)
-- [x] PWA — offline fallback, instalovatelné na mobil
-- [x] Zvukové efekty při herních událostech
-- [x] Perzistence stavu her — rozehrané hry přežijí restart serveru (SIGTERM snapshot)
-- [ ] OAuth přihlášení (Google, Facebook)
-- [ ] Admin rozhraní — CRUD pro správu sad a karet
+- [x] Monorepo setup — npm workspaces, TypeScript, Fastify server, Vue 3 + Tailwind v4
+- [x] Lobby — Socket.io místnosti, správa hráčů, AFK, reconnect, host přenos
+- [x] REST API — GET /api/card-sets + seed data (česká sada)
+- [x] Výběr sad karet při vytváření stolu (CreateTableModal)
+- [x] Hra — stavový stroj (rozdávání, hraní, vyhodnocení)
+- [x] VPS deploy — Apache proxy + PM2
+- [x] Správa místnosti hostem (vyhodnocení hry, změna režimu a pod.)
+- [x] Globální profil hráče — nickname + DiceBear avatar + locale (localStorage, bez OAuth)
+- [x] Vícejazyčná verze — 5 jazyků (cs, en, ru, uk, es), překlad karet přes REST
+- [x] Finální vzhled (layout, design)
+- [x] Perzistence stavu her — rozehrané hry přežijí restart serveru (SIGTERM snapshot + client reload)
+- [x] Možnost aktivace rozšířených pravidel
+- [x] Volba cíle hry (počet bodů, počet kol, čas)
+- [x] Profily hráčů — OAuth (Google, Discord) + JWT cookie + propojení účtů
+- [ ] CRUD pro správu sad a karet (admin) a sdílení sad karet s ostatními hráči
+- [ ] Friendship managment
+- [ ] Dlouhodobé statistiky a achievmenty
+
 
 ---
 

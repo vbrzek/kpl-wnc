@@ -299,5 +299,9 @@ Na `SIGTERM` (PM2 deploy) se celý stav `RoomManager` + `GameEngine` serializuje
 - [x] Vícejazyčná verze — 5 jazyků (cs, en, ru, uk, es), překlad karet přes REST
 - [x] Finální vzhled (layout, design)
 - [x] Perzistence stavu her — rozehrané hry přežijí restart serveru (SIGTERM snapshot + client reload)
+- [x] Možnost aktivace rozšířených pravidel
+- [x] Volba cíle hry (počet bodů, počet kol, čas)
 - [x] Profily hráčů — OAuth (Google, Discord) + JWT cookie + propojení účtů
-- [ ] REST API — CRUD pro správu sad a karet (admin)
+- [ ] CRUD pro správu sad a karet (admin) a sdílení sad karet s ostatními hráči
+- [ ] Friendship managment
+- [ ] Dlouhodobé statistiky a achievmenty
