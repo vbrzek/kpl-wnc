@@ -24,6 +24,11 @@ interface PlayerProfile {
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
 
+/** Build a DiceBear avatar URL. Exported for reuse in components. */
+export function buildDiceBearUrl(style: string, seed: string): string {
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed || 'default')}`;
+}
+
 export const useProfileStore = defineStore('profile', () => {
   const nickname = ref('');
   const locale = ref<SupportedLocale>('cs');
@@ -36,11 +41,12 @@ export const useProfileStore = defineStore('profile', () => {
       if (oauthUser.value.avatarType === 'oauth' && oauthUser.value.avatarUrl) {
         return oauthUser.value.avatarUrl;
       }
-      const style = oauthUser.value.dicebearStyle ?? 'bottts';
-      const seed = (oauthUser.value.dicebearSeed ?? nickname.value) || 'default';
-      return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
+      return buildDiceBearUrl(
+        oauthUser.value.dicebearStyle ?? 'bottts',
+        oauthUser.value.dicebearSeed ?? nickname.value,
+      );
     }
-    return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(nickname.value || 'default')}`;
+    return buildDiceBearUrl('bottts', nickname.value);
   });
 
   const hasProfile = computed(() => nickname.value.trim().length > 0);

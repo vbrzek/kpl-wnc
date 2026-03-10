@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useProfileStore } from '../stores/profileStore';
+import { useProfileStore, buildDiceBearUrl } from '../stores/profileStore';
 import type { SupportedLocale } from '../stores/profileStore';
 import { useSound } from '../composables/useSound';
 
-const props = withDefaults(defineProps<{ isEdit?: boolean; isOAuthSetup?: boolean }>(), {
+const props = withDefaults(defineProps<{ isEdit?: boolean; isOAuthSetup?: boolean; authError?: boolean }>(), {
   isEdit: false,
   isOAuthSetup: false,
+  authError: false,
 });
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
 const emit = defineEmits<{ close: [] }>();
 
 const { t } = useI18n();
@@ -40,10 +43,9 @@ const previewAvatarUrl = computed(() => {
     if (selectedAvatarType.value === 'oauth' && profileStore.oauthUser.avatarUrl) {
       return profileStore.oauthUser.avatarUrl;
     }
-    const seed = dicebearSeedInput.value || nicknameInput.value || 'default';
-    return `https://api.dicebear.com/9.x/${selectedDicebearStyle.value}/svg?seed=${encodeURIComponent(seed)}`;
+    return buildDiceBearUrl(selectedDicebearStyle.value, dicebearSeedInput.value || nicknameInput.value);
   }
-  return `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(nicknameInput.value || 'default')}`;
+  return buildDiceBearUrl('bottts', nicknameInput.value);
 });
 
 const canSave = computed(() => nicknameInput.value.trim().length > 0);
@@ -106,8 +108,11 @@ function onBackdropClick() {
 
           <!-- OAuth login (jen v setup modu, ne edit ani isOAuthSetup) -->
           <template v-if="isSetupMode">
+            <!-- #4 — auth=error feedback -->
+            <p v-if="props.authError" class="text-red-400 text-sm text-center">{{ t('profile.oauthError') }}</p>
+
             <a
-              href="/auth/google"
+              :href="BACKEND_URL + '/auth/google'"
               class="flex items-center justify-center gap-3 w-full py-3 bg-white text-black text-sm font-bold rounded-2xl hover:bg-gray-100 transition-colors"
             >
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -119,7 +124,7 @@ function onBackdropClick() {
               {{ t('profile.loginWithGoogle') }}
             </a>
             <a
-              href="/auth/discord"
+              :href="BACKEND_URL + '/auth/discord'"
               class="flex items-center justify-center gap-3 w-full py-3 bg-[#5865F2] text-white text-sm font-bold rounded-2xl hover:bg-[#4752c4] transition-colors"
             >
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -130,7 +135,7 @@ function onBackdropClick() {
 
             <div class="flex items-center gap-3">
               <div class="flex-1 h-px bg-white/10"></div>
-              <span class="text-slate-500 text-xs font-bold uppercase tracking-widest">nebo</span>
+              <span class="text-slate-500 text-xs font-bold uppercase tracking-widest">{{ t('profile.or') }}</span>
               <div class="flex-1 h-px bg-white/10"></div>
             </div>
           </template>
@@ -257,13 +262,13 @@ function onBackdropClick() {
           <div v-if="isEdit && !profileStore.isAuthenticated" class="border-t border-white/10 pt-4 space-y-2">
             <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{{ t('profile.linkAccount') }}</p>
             <a
-              href="/auth/google"
+              :href="BACKEND_URL + '/auth/google'"
               class="flex items-center justify-center gap-2 w-full py-2.5 bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl hover:bg-white/10 transition-colors"
             >
               <span>G</span> {{ t('profile.loginWithGoogle') }}
             </a>
             <a
-              href="/auth/discord"
+              :href="BACKEND_URL + '/auth/discord'"
               class="flex items-center justify-center gap-2 w-full py-2.5 bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#c0c5ff] text-xs font-bold rounded-xl hover:bg-[#5865F2]/30 transition-colors"
             >
               <span>D</span> {{ t('profile.loginWithDiscord') }}

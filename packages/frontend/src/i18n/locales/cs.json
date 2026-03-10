@@ -67,7 +67,9 @@
     "avatarDicebear": "DiceBear",
     "dicebearStyle": "Styl",
     "dicebearSeed": "Seed",
-    "dicebearSeedPlaceholder": "libovolný text..."
+    "dicebearSeedPlaceholder": "libovolný text...",
+    "or": "nebo",
+    "oauthError": "Přihlášení selhalo. Zkus to znovu nebo pokračuj jako host."
   },
   "joinPrivate": {
     "title": "Připojit se ke stolu",

@@ -67,7 +67,9 @@
     "avatarDicebear": "DiceBear",
     "dicebearStyle": "Стиль",
     "dicebearSeed": "Сид",
-    "dicebearSeedPlaceholder": "любой текст..."
+    "dicebearSeedPlaceholder": "любой текст...",
+    "or": "или",
+    "oauthError": "Ошибка входа. Попробуй ещё раз или продолжи как гость."
   },
   "joinPrivate": {
     "title": "Войти в стол",

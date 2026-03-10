@@ -67,7 +67,9 @@
     "avatarDicebear": "DiceBear",
     "dicebearStyle": "Style",
     "dicebearSeed": "Seed",
-    "dicebearSeedPlaceholder": "any text..."
+    "dicebearSeedPlaceholder": "any text...",
+    "or": "or",
+    "oauthError": "Sign-in failed. Try again or continue as a guest."
   },
   "joinPrivate": {
     "title": "Join a table",

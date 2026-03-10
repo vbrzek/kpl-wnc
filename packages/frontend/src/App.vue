@@ -11,6 +11,7 @@ const route = useRoute();
 const router = useRouter();
 const showProfileModal = ref(false);
 const oauthSetup = ref(false);
+const authError = ref(false);
 const isPublicPage = computed(() => !!route.meta.public);
 
 onMounted(async () => {
@@ -21,6 +22,12 @@ onMounted(async () => {
   const authParam = route.query.auth as string | undefined;
   if (authParam) {
     router.replace({ query: {} }); // clean URL
+    if (authParam === 'error') {
+      // #4 — OAuth failed, show profile modal with error
+      authError.value = true;
+      showProfileModal.value = true;
+      return;
+    }
     if (authParam === 'new' || (authParam === 'success' && profileStore.isAuthenticated && !profileStore.hasProfile)) {
       // New OAuth user, or returning OAuth user who never finished setting up nickname
       oauthSetup.value = true;
@@ -53,7 +60,8 @@ onUnmounted(() => socket.disconnect());
       v-if="showProfileModal"
       :is-edit="false"
       :is-oauth-setup="oauthSetup"
-      @close="showProfileModal = false; oauthSetup = false"
+      :auth-error="authError"
+      @close="showProfileModal = false; oauthSetup = false; authError = false"
     />
   </template>
 </template>

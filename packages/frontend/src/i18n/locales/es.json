@@ -67,7 +67,9 @@
     "avatarDicebear": "DiceBear",
     "dicebearStyle": "Estilo",
     "dicebearSeed": "Semilla",
-    "dicebearSeedPlaceholder": "cualquier texto..."
+    "dicebearSeedPlaceholder": "cualquier texto...",
+    "or": "o",
+    "oauthError": "Error de inicio de sesión. Inténtalo de nuevo o continúa como invitado."
   },
   "joinPrivate": {
     "title": "Unirse a una mesa",

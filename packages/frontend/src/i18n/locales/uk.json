@@ -67,7 +67,9 @@
     "avatarDicebear": "DiceBear",
     "dicebearStyle": "Стиль",
     "dicebearSeed": "Сід",
-    "dicebearSeedPlaceholder": "будь-який текст..."
+    "dicebearSeedPlaceholder": "будь-який текст...",
+    "or": "або",
+    "oauthError": "Помилка входу. Спробуй ще раз або продовжуй як гість."
   },
   "joinPrivate": {
     "title": "Увійти до столу",

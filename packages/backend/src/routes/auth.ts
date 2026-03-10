@@ -1,6 +1,11 @@
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import { z } from 'zod';
 import db from '../db/db.js';
 import { verifyToken, signToken } from '../auth/jwt.js';
+import type { JwtPayload } from '../auth/jwt.js';
+
+// #7 — single FRONTEND_URL constant
+const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
 
 export interface UserRow {
   id: number;
@@ -14,6 +19,22 @@ export interface UserRow {
   dicebear_style: string | null;
   dicebear_seed: string | null;
 }
+
+// #6 — Fastify type augmentation for jwtUser
+declare module 'fastify' {
+  interface FastifyRequest {
+    jwtUser?: JwtPayload;
+  }
+}
+
+// #8 — Zod schema for PATCH /api/me (#9 — nickname max 24)
+const UpdateMeSchema = z.object({
+  nickname: z.string().max(24).trim().optional(),
+  locale: z.string().max(5).optional(),
+  avatarType: z.enum(['oauth', 'dicebear']).optional(),
+  dicebearStyle: z.string().max(50).nullable().optional(),
+  dicebearSeed: z.string().max(100).nullable().optional(),
+});
 
 function setJwtCookie(reply: FastifyReply, payload: { userId: number; provider: 'google' | 'discord' }) {
   const token = signToken(payload);
@@ -31,7 +52,7 @@ async function verifyJwt(request: FastifyRequest, reply: FastifyReply) {
   if (!token) return reply.status(401).send({ error: 'Unauthorized' });
   const payload = verifyToken(decodeURIComponent(token));
   if (!payload) return reply.status(401).send({ error: 'Unauthorized' });
-  (request as FastifyRequest & { jwtUser: { userId: number; provider: string } }).jwtUser = payload;
+  request.jwtUser = payload; // #6 — type-safe access
 }
 
 function formatUser(user: UserRow) {
@@ -50,11 +71,6 @@ function formatUser(user: UserRow) {
 /**
  * Find an existing user by email (cross-provider) or by provider+provider_id,
  * or insert a new record. Returns userId and whether it was newly created.
- *
- * Priority:
- *  1. email match  → link account regardless of provider (preserves nickname/avatar settings)
- *  2. provider+provider_id match → same provider re-login (update avatar_url only)
- *  3. insert new record
  */
 async function findOrCreateUser(params: {
   email: string | null;
@@ -99,29 +115,56 @@ async function findOrCreateUser(params: {
   return { userId: insertedId, isNew: true };
 }
 
+// #2 — shared OAuth callback handler
+async function handleOAuthCallback(
+  fastify: { log: { error: (err: unknown, msg: string) => void } },
+  reply: FastifyReply,
+  provider: 'google' | 'discord',
+  fetchUserInfo: () => Promise<{ email: string | null; providerId: string; avatarUrl: string | null }>,
+) {
+  try {
+    const userInfo = await fetchUserInfo();
+    const { userId, isNew } = await findOrCreateUser({
+      email: userInfo.email,
+      provider,
+      providerId: userInfo.providerId,
+      avatarUrl: userInfo.avatarUrl,
+    });
+    setJwtCookie(reply, { userId, provider });
+    return reply.redirect(`${FRONTEND_URL}/?auth=${isNew ? 'new' : 'success'}`);
+  } catch (err) {
+    fastify.log.error(err, `${provider} OAuth callback failed`);
+    return reply.redirect(`${FRONTEND_URL}/?auth=error`);
+  }
+}
+
 const authRoutes: FastifyPluginAsync = async (fastify) => {
+  // #6 — decorateRequest for type-safe jwtUser
+  fastify.decorateRequest('jwtUser', undefined);
+
   fastify.get('/api/me', { preHandler: verifyJwt }, async (request, reply) => {
-    const { userId } = (request as any).jwtUser;
+    const { userId } = request.jwtUser!;
     const user = await db<UserRow>('users').where({ id: userId }).first();
     if (!user) return reply.status(404).send({ error: 'User not found' });
     return formatUser(user);
   });
 
   fastify.patch('/api/me', { preHandler: verifyJwt }, async (request, reply) => {
-    const { userId } = (request as any).jwtUser;
-    const body = request.body as {
-      nickname?: string;
-      locale?: string;
-      avatarType?: 'oauth' | 'dicebear';
-      dicebearStyle?: string | null;
-      dicebearSeed?: string | null;
-    };
+    const { userId } = request.jwtUser!;
+
+    // #8 — Zod validation
+    const parsed = UpdateMeSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid data' });
+    }
+    const body = parsed.data;
+
     const updates: Partial<UserRow> = {};
-    if (body.nickname !== undefined) updates.nickname = body.nickname.trim().slice(0, 50) || null;
-    if (body.locale !== undefined) updates.locale = body.locale.slice(0, 5);
+    if (body.nickname !== undefined) updates.nickname = body.nickname || null;
+    if (body.locale !== undefined) updates.locale = body.locale;
     if (body.avatarType !== undefined) updates.avatar_type = body.avatarType;
-    if (body.dicebearStyle !== undefined) updates.dicebear_style = body.dicebearStyle;
-    if (body.dicebearSeed !== undefined) updates.dicebear_seed = body.dicebearSeed?.slice(0, 100) ?? null;
+    if (body.dicebearStyle !== undefined) updates.dicebear_style = body.dicebearStyle ?? null;
+    if (body.dicebearSeed !== undefined) updates.dicebear_seed = body.dicebearSeed ?? null;
     await db('users').where({ id: userId }).update(updates);
     const user = await db<UserRow>('users').where({ id: userId }).first();
     return formatUser(user!);
@@ -132,34 +175,26 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     return { ok: true };
   });
 
+  // #2 — deduplicated Google callback
   fastify.get('/auth/google/callback', async (request, reply) => {
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
-    try {
+    return handleOAuthCallback(fastify, reply, 'google', async () => {
       const { token } = await (fastify as any).googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
       const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${token.access_token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch Google user info');
       const googleUser = await res.json() as { sub: string; email?: string; picture?: string };
-
-      const { userId, isNew } = await findOrCreateUser({
+      return {
         email: googleUser.email ?? null,
-        provider: 'google',
         providerId: googleUser.sub,
         avatarUrl: googleUser.picture ?? null,
-      });
-
-      setJwtCookie(reply, { userId, provider: 'google' });
-      return reply.redirect(`${frontendUrl}/?auth=${isNew ? 'new' : 'success'}`);
-    } catch (err) {
-      fastify.log.error(err, 'Google OAuth callback failed');
-      return reply.redirect(`${process.env.FRONTEND_URL ?? 'http://localhost:5173'}/?auth=error`);
-    }
+      };
+    });
   });
 
+  // #2 — deduplicated Discord callback
   fastify.get('/auth/discord/callback', async (request, reply) => {
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
-    try {
+    return handleOAuthCallback(fastify, reply, 'discord', async () => {
       const { token } = await (fastify as any).discordOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
       const res = await fetch('https://discord.com/api/users/@me', {
         headers: { Authorization: `Bearer ${token.access_token}` },
@@ -169,20 +204,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       const avatarUrl = discordUser.avatar
         ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png?size=256`
         : null;
-
-      const { userId, isNew } = await findOrCreateUser({
+      return {
         email: discordUser.email ?? null,
-        provider: 'discord',
         providerId: discordUser.id,
         avatarUrl,
-      });
-
-      setJwtCookie(reply, { userId, provider: 'discord' });
-      return reply.redirect(`${frontendUrl}/?auth=${isNew ? 'new' : 'success'}`);
-    } catch (err) {
-      fastify.log.error(err, 'Discord OAuth callback failed');
-      return reply.redirect(`${process.env.FRONTEND_URL ?? 'http://localhost:5173'}/?auth=error`);
-    }
+      };
+    });
   });
 };
 
