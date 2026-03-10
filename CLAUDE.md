@@ -13,6 +13,7 @@ Vlastní online verze hry Karty proti lidskosti.
 | `@kpl/frontend` | Vue 3 (Composition API) + Vite + Tailwind v4 + Pinia + Vue Router | 5173 |
 
 **Infrastruktura:** Linux VPS + Apache (reverse proxy + WebSocket tunel na `/socket.io/`) + PM2.
+**OAuth:** `@fastify/oauth2` (Google + Discord, podmíněná registrace podle env vars) + `@fastify/cookie` + JWT (`kpl_token` httpOnly cookie). CORS a Socket.io mají `credentials: true`.
 **Migrace:** Knex.js CLI (`npm run migrate --workspace=packages/backend`).
 **Seed dat:** `npm run seed --workspace=packages/backend` — načte českou sadu karet (destruktivní, jen pro dev).
 **Env:** databázové údaje a URL v `.env` (viz `.env.example`). Vite čte `.env` z kořene monorepa (`envDir: '../../'` v `vite.config.ts`).
@@ -36,7 +37,10 @@ kpl-wnc/
 │   │   │   ├── gameHandlers.ts     # Socket.io herní handlery (playCards/judgeSelect/czarAdvance/…)
 │   │   │   ├── roundUtils.ts       # Sdílené utility pro přechody kol (startNextRound, finishGame…)
 │   │   │   └── socketState.ts      # Sdílený roomManager singleton pro socket handlery
+│   │   ├── auth/
+│   │   │   └── jwt.ts              # signToken, verifyToken, extractUserIdFromCookieHeader (JWT helpers)
 │   │   ├── routes/
+│   │   │   ├── auth.ts             # OAuth routes: GET/PATCH /api/me, POST /auth/logout, Google/Discord callbacks
 │   │   │   ├── cardSets.ts         # GET /api/card-sets — seznam sad s počty karet
 │   │   │   ├── cardTranslations.ts # GET /api/cards/translations — překlad karet (COALESCE fallback na cs)
 │   │   │   └── rooms.ts            # GET /api/rooms/:code/preview — náhled místnosti (bez autentizace)
@@ -47,8 +51,7 @@ kpl-wnc/
 │   │       ├── seed.ts             # CLI runner pro seed data
 │   │       ├── migrations/         # Knex migrace
 │   │       └── seeds/
-│   │           ├── 01_czech_set.ts       # Základní česká sada
-│   │           └── 02_liberecaci_2026.ts # Liberecká banda 2026
+│   │           └── 01_all_cards.ts  # Auto-generated seed (all cards + sets, replaces old per-set seeds)
 │   └── frontend/src/
 │       ├── router/index.ts         # Vue Router: / a /room/:token
 │       ├── layouts/
@@ -105,7 +108,7 @@ npm run dev:frontend    # Vite dev server
 npm run build           # Build všech balíčků
 npm run migrate --workspace=packages/backend   # Spustí DB migrace
 npm run seed --workspace=packages/backend      # Naplní DB seed daty (destruktivní!)
-npm test --workspace=packages/backend          # Vitest unit testy — 113 testů
+npm test --workspace=packages/backend          # Vitest unit testy — 119 testů
 npx tsx packages/backend/scripts/generate-seeds.ts  # Regeneruje seed z aktuálního DB stavu
 ```
 
@@ -170,6 +173,31 @@ CREATE TABLE white_card_translations (
     UNIQUE (white_card_id, language_code),
     FOREIGN KEY (white_card_id) REFERENCES white_cards(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- OAuth uživatelé
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    provider VARCHAR(20) NOT NULL,          -- 'google' | 'discord'
+    provider_id VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    nickname VARCHAR(24),
+    locale VARCHAR(5) DEFAULT 'cs',
+    avatar_type ENUM('oauth', 'dicebear') DEFAULT 'oauth',
+    avatar_url TEXT,
+    dicebear_style VARCHAR(50),
+    dicebear_seed VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (provider, provider_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Vazba OAuth user → player token (pro propojení se Socket.io session)
+CREATE TABLE user_player_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    player_token VARCHAR(36) NOT NULL,
+    room_code VARCHAR(6) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 ## 🔌 Lobby — Socket.io architektura
@@ -186,17 +214,21 @@ Server používá Socket.io **rooms** pro izolaci:
 
 ## 👤 Player Profile
 
-Globální profil hráče uložený v `localStorage['playerProfile']` (JSON: `{nickname, locale}`).
+Globální profil hráče uložený v `localStorage['playerProfile']` (JSON: `{nickname, locale}`). Volitelně propojený s OAuth účtem (Google/Discord).
 
-**`profileStore.ts`** (Pinia): `nickname`, `locale`, computed `avatarUrl` (DiceBear bottts CDN), `hasProfile`, `init()`, `save()`.
+**`profileStore.ts`** (Pinia): `nickname`, `locale`, computed `avatarUrl` (DiceBear bottts CDN), `hasProfile`, `isAuthenticated`, `oauthUser`, `init()`, `save()`, `saveAvatar()`, `logout()`. Exportuje helper `buildDiceBearUrl(style, seed)`.
 
-**Inicializace:** `App.vue` volá `profileStore.init()` při mountu. Pokud `!hasProfile`, zobrazí `PlayerProfileModal` (setup mode) a blokuje `RouterView` dokud profil není vyplněn.
+**Inicializace:** `App.vue` volá `profileStore.init()` při mountu — nejprve zkusí `GET /api/me` (OAuth session), pak fallback na `localStorage`. Pokud `!hasProfile`, zobrazí `PlayerProfileModal` (setup mode) a blokuje `RouterView` dokud profil není vyplněn.
 
-**Editace:** `AppHeader.vue` (uvnitř `GameLayout.vue`) zobrazuje `PlayerAvatar` v pravém rohu — kliknutím otevře `PlayerProfileModal` (edit mode). Backdrop + tlačítko ✕ zavřou modal.
+**OAuth:** `PlayerProfileModal` v setup modu zobrazuje tlačítka Google/Discord (odkazují na `VITE_BACKEND_URL/auth/{provider}`). Po úspěšném OAuth callbacku server přesměruje na `?auth=new|success|error`. `App.vue` zpracuje query param — nový uživatel → oauthSetup modal, error → modal s chybovou hláškou.
+
+**Editace:** `AppHeader.vue` (uvnitř `GameLayout.vue`) zobrazuje `PlayerAvatar` v pravém rohu — kliknutím otevře `PlayerProfileModal` (edit mode). Přihlášení uživatelé mohou volit mezi OAuth avatarem a DiceBear, propojit/odpojit účet.
 
 **Přihlášení do místnosti:** `RoomView` a `HomeView` čtou `profileStore.nickname` — žádný inline formulář pro přezdívku. Při reconnectu (existující `playerToken`) se předá prázdný nickname (server použije token).
 
 **Lokalizace:** `save()` okamžitě přepne `i18n.global.locale` + uloží do `localStorage['locale']`. Podporované: `cs`, `en`, `ru`, `uk`, `es`.
+
+**Validace:** Nickname max 24 znaků — konzistentně na frontendu (`maxlength="24"`), v Socket.io validaci (`validation.ts`) i v REST API (`auth.ts`, Zod schema). `PATCH /api/me` validuje všechny fieldy přes Zod.
 
 ## 🌐 REST API
 
@@ -205,6 +237,11 @@ Globální profil hráče uložený v `localStorage['playerProfile']` (JSON: `{n
 | GET | `/api/card-sets` | Seznam sad s počty karet (`blackCardCount`, `whiteCardCount`) |
 | GET | `/api/cards/translations` | Překlad karet: `?lang=ru&blackIds=1,2&whiteIds=3,4` → `{black:{}, white:{}}` |
 | GET | `/api/rooms/:code/preview` | Náhled místnosti: status, hráči (nickname+isAfk), kapacita |
+| GET | `/api/me` | Vrací profil přihlášeného uživatele (vyžaduje JWT cookie `kpl_token`) |
+| PATCH | `/api/me` | Aktualizace profilu (nickname, locale, avatar) — Zod validace, nickname max 24 znaků |
+| POST | `/auth/logout` | Smaže JWT cookie |
+| GET | `/auth/google/callback` | OAuth callback pro Google (redirect z Google OAuth) |
+| GET | `/auth/discord/callback` | OAuth callback pro Discord (redirect z Discord OAuth) |
 | GET | `/health` | Health check |
 
 `CardSetSummary` typ je definován v `lobbyStore.ts` (frontend) — obsahuje `id, name, description, slug, isPublic, blackCardCount, whiteCardCount`.
@@ -218,6 +255,12 @@ Globální profil hráče uložený v `localStorage['playerProfile']` (JSON: `{n
 | `FRONTEND_URL` | Backend CORS + Socket.io CORS | `http://10.5.10.150:5173` |
 | `VITE_BACKEND_URL` | Frontend (socket + fetch) | `http://10.5.10.150:3000` |
 | `SNAPSHOT_PATH` | Backend — cesta k souboru snapshotu stavu her | `/tmp/kpl-snapshot.json` |
+| `JWT_SECRET` | Backend — secret pro podepisování JWT tokenů | (random string) |
+| `GOOGLE_CLIENT_ID` | Backend — Google OAuth2 client ID | `...apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Backend — Google OAuth2 client secret | — |
+| `DISCORD_CLIENT_ID` | Backend — Discord OAuth2 client ID | — |
+| `DISCORD_CLIENT_SECRET` | Backend — Discord OAuth2 client secret | — |
+| `PUBLIC_BACKEND_URL` | Backend — veřejná URL pro OAuth callback URI | `https://kpl.example.com` |
 
 > **Pozor:** Vite načítá `.env` z kořene monorepa díky `envDir: '../../'` v `vite.config.ts`. Pro LAN/mobilní dev nastav obě URL na IP adresy (ne localhost).
 
@@ -256,5 +299,5 @@ Na `SIGTERM` (PM2 deploy) se celý stav `RoomManager` + `GameEngine` serializuje
 - [x] Vícejazyčná verze — 5 jazyků (cs, en, ru, uk, es), překlad karet přes REST
 - [x] Finální vzhled (layout, design)
 - [x] Perzistence stavu her — rozehrané hry přežijí restart serveru (SIGTERM snapshot + client reload)
-- [ ] Profily hráčů — OAuth (Google, Facebook)
+- [x] Profily hráčů — OAuth (Google, Discord) + JWT cookie + propojení účtů
 - [ ] REST API — CRUD pro správu sad a karet (admin)
