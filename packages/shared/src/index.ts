@@ -51,12 +51,21 @@ export interface AnonymousSubmission {
   cards: WhiteCard[];
 }
 
+export interface VoteResultEntry {
+  submissionId: string;
+  playerId: string;
+  nickname: string;
+  cards: WhiteCard[];
+  voteCount: number;
+}
+
 export interface RoundResult {
   winnerId: string | null;        // null = kolo přeskočeno
   winnerNickname: string | null;
   winningCards: WhiteCard[];
   scores: Record<string, number>;
   winnerIds?: string[];           // czar_is_dead: více vítězů (remíza)
+  voteResults?: VoteResultEntry[]; // czar_is_dead: výsledky hlasování
 }
 
 export interface GameStateSync {

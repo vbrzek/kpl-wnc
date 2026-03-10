@@ -409,12 +409,36 @@ export class GameEngine {
       ? 'Rando Cardrissian'
       : (this.players.find(p => p.id === firstWinnerId)?.nickname ?? null);
 
+    // Build vote results for all submissions
+    const voteResults: { submissionId: string; playerId: string; nickname: string; cards: WhiteCard[]; voteCount: number }[] = [];
+    for (const [pid, sub] of this.submissions.entries()) {
+      const player = this.players.find(p => p.id === pid);
+      voteResults.push({
+        submissionId: sub.submissionId,
+        playerId: pid,
+        nickname: player?.nickname ?? pid,
+        cards: sub.cards,
+        voteCount: voteCounts.get(sub.submissionId) ?? 0,
+      });
+    }
+    if (this.randoSubmission) {
+      voteResults.push({
+        submissionId: this.randoSubmission.submissionId,
+        playerId: GameEngine.RANDO_ID,
+        nickname: 'Rando Cardrissian',
+        cards: this.randoSubmission.cards,
+        voteCount: voteCounts.get(this.randoSubmission.submissionId) ?? 0,
+      });
+    }
+    voteResults.sort((a, b) => b.voteCount - a.voteCount);
+
     return {
       winnerId: firstWinnerId,
       winnerNickname: firstWinnerNickname,
       winningCards,
       scores,
       winnerIds,
+      voteResults,
     };
   }
 

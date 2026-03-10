@@ -16,8 +16,11 @@ const { play } = useSound();
 watch(
   [() => roomStore.roundResult, locale],
   async () => {
-    const ids = roomStore.roundResult?.winningCards.map((c) => c.id) ?? [];
-    await cardTranslations.fetchTranslations([], ids);
+    const result = roomStore.roundResult;
+    const winningIds = result?.winningCards.map((c) => c.id) ?? [];
+    const voteIds = result?.voteResults?.flatMap((v) => v.cards.map((c) => c.id)) ?? [];
+    const allIds = [...new Set([...winningIds, ...voteIds])];
+    await cardTranslations.fetchTranslations([], allIds);
   },
   { immediate: true },
 );
@@ -28,6 +31,15 @@ const translatedWinningCards = computed(() =>
     text: cardTranslations.getWhite(c.id, c.text),
   })) ?? [],
 );
+
+const translatedVoteResults = computed(() =>
+  roomStore.roundResult?.voteResults?.map((v) => ({
+    ...v,
+    cards: v.cards.map((c) => ({ ...c, text: cardTranslations.getWhite(c.id, c.text) })),
+  })) ?? [],
+);
+
+const hasVoteResults = computed(() => translatedVoteResults.value.length > 0);
 
 const winnerNames = computed(() => {
   const result = roomStore.roundResult;
@@ -130,8 +142,36 @@ async function onEndGame() {
       </h2>
     </div>
 
-    <!-- Vítězné karty -->
-    <div class="flex flex-wrap gap-3 justify-center">
+    <!-- Výsledky hlasování (czar_is_dead) -->
+    <div v-if="hasVoteResults" class="space-y-3 max-w-sm mx-auto">
+      <div
+        v-for="(entry, index) in translatedVoteResults"
+        :key="entry.submissionId"
+        class="vote-result-card rounded-2xl p-4 text-left shadow-xl border-2 transition-all"
+        :class="roomStore.roundResult?.winnerIds?.includes(entry.playerId)
+          ? 'bg-white border-yellow-400'
+          : 'bg-white/90 border-transparent'"
+        :style="{ animationDelay: `${400 + index * 200}ms` }"
+      >
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-black uppercase tracking-wider text-gray-500">{{ entry.nickname }}</span>
+          <span
+            class="text-xs font-black px-2 py-0.5 rounded-full"
+            :class="roomStore.roundResult?.winnerIds?.includes(entry.playerId)
+              ? 'bg-yellow-400 text-black'
+              : 'bg-gray-100 text-gray-500'"
+          >
+            {{ t('game.results.voteCount', { count: entry.voteCount }) }}
+          </span>
+        </div>
+        <div v-for="(card, cardIndex) in entry.cards" :key="card.id" :class="cardIndex > 0 ? 'mt-2 pt-2 border-t border-gray-100' : ''">
+          <p class="text-gray-900 font-bold leading-snug text-sm">{{ card.text }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vítězné karty (classic/meritocracy/god_mode) -->
+    <div v-else class="flex flex-wrap gap-3 justify-center">
       <div
         v-for="(card, index) in translatedWinningCards"
         :key="card.id"
@@ -198,6 +238,10 @@ async function onEndGame() {
 
 .winning-card {
   animation: card-pop 0.35s ease-out both, card-glow 1.6s ease-in-out 0.8s infinite alternate;
+}
+
+.vote-result-card {
+  animation: card-pop 0.35s ease-out both;
 }
 
 .scoreboard-fadein {
