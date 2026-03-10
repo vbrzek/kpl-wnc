@@ -3,10 +3,12 @@ import { computed } from 'vue';
 
 const props = withDefaults(defineProps<{
   nickname: string;
+  avatarUrl?: string;
   size?: number;
 }>(), { size: 40 });
 
 const avatarUrl = computed(() =>
+  props.avatarUrl ||
   `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(props.nickname || 'default')}`
 );
 </script>

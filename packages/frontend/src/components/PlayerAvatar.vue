@@ -13,6 +13,6 @@ const profileStore = useProfileStore();
     class="rounded-full hover:ring-2 hover:ring-indigo-400 transition-all flex-shrink-0 cursor-pointer"
     :title="profileStore.nickname"
   >
-    <Avatar :nickname="profileStore.nickname" :size="size" />
+    <Avatar :nickname="profileStore.nickname" :avatar-url="profileStore.avatarUrl" :size="size" />
   </button>
 </template>
