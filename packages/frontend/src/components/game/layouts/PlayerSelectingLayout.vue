@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { BlackCard, WhiteCard, Player } from '@kpl/shared'
+import type { BlackCard, WhiteCard, Player, CzarMode } from '@kpl/shared'
 import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
 import CardHand from '../atoms/CardHand.vue'
@@ -19,6 +19,7 @@ const props = defineProps<{
   canTrade: boolean
   roundSkipped: boolean
   czarNickname: string
+  czarMode?: CzarMode
   canBet?: boolean
   betPlaced?: boolean
   currentBet?: number
@@ -62,7 +63,7 @@ function toggleBetSlider() {
         <Countdown :secondsLeft="secondsLeft" :totalSeconds="totalSeconds" />
       </div>
       <BlackCardAtom :text="blackCard.text" :pick="blackCard.pick" />
-      <CzarBadge :czarNickname="czarNickname" :isMe="false" />
+      <CzarBadge :czarNickname="czarNickname" :isMe="false" :czarMode="czarMode" />
     </div>
 
     <div class="flex-1 min-h-0 overflow-y-auto pb-24">

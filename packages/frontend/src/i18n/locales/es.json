@@ -134,7 +134,8 @@
       "forceAdvanceHint": "Se acabó el tiempo. Puedes avanzar el juego.",
       "label": "Zar de Cartas",
       "youAreCzar": "Eres el Zar de cartas",
-      "willPick": "{name} elegirá al ganador"
+      "willPick": "{name} elegirá al ganador",
+      "votingDecides": "El ganador se decidirá por votación"
     },
     "waiting": {
       "czarPicking": "El Zar de Cartas está eligiendo al ganador...",
@@ -154,7 +155,8 @@
       "lastRoundNext": "La siguiente es la última ronda",
       "scoreGoal": "El objetivo es conseguir {score} puntos",
       "nextRound": "La nueva ronda comienza en 5 segundos...",
-      "endGame": "Terminar juego"
+      "endGame": "Terminar juego",
+      "voteCount": "{count} votos"
     },
     "finished": {
       "title": "¡Juego terminado!",
@@ -171,5 +173,61 @@
     "inLobby": "Sala",
     "inGame": "En juego",
     "finished": "Terminado"
+  },
+  "specialRules": {
+    "active": "Activas",
+    "button": "Reglas especiales",
+    "rando_cardrissian": {
+      "name": "Rando Cardrissian",
+      "desc": "Un bot juega una carta blanca aleatoria cada ronda. Si gana, todos pierden."
+    },
+    "wheatons_law": {
+      "name": "Ley de Wheaton",
+      "desc": "Antes de cada ronda, el Zar de Cartas elige cuál de dos cartas negras se jugará."
+    },
+    "rebooting_universe": {
+      "name": "Reiniciar el universo",
+      "desc": "Un jugador puede descartar su mano y robar 10 cartas nuevas a cambio de 1 punto."
+    },
+    "high_stakes": {
+      "name": "Apuestas altas",
+      "desc": "Antes de jugar, apuesta puntos. Si ganas, los cobras; si pierdes, los pierdes."
+    },
+    "randoWon": "¡Rando Cardrissian gana — todos pierden!",
+    "czarPicksBlackCard": "El Zar de Cartas está eligiendo una carta negra...",
+    "pickBlackCardTitle": "Elige la carta negra para esta ronda",
+    "placeBet": "Hacer apuesta",
+    "betLabel": "Tu apuesta",
+    "betConfirm": "Confirmar apuesta",
+    "betActive": "Apuesta: {amount}",
+    "betPlaced": "Apuesta de {amount} puntos realizada",
+    "czarMode": {
+      "label": "Zar de Cartas",
+      "classic": {
+        "name": "Clásico",
+        "desc": "El Zar de Cartas rota en sentido horario."
+      },
+      "meritocracy": {
+        "name": "Meritocracia",
+        "desc": "El ganador de la ronda anterior se convierte en el siguiente Zar de Cartas."
+      },
+      "god_mode": {
+        "name": "Modo Dios",
+        "desc": "El anfitrión permanece como Zar de Cartas durante toda la partida."
+      },
+      "czar_is_dead": {
+        "name": "El Zar ha muerto",
+        "desc": "No hay Zar de Cartas — todos votan. Gana la respuesta con más votos. No puedes votar por ti mismo."
+      }
+    },
+    "voteProgress": "{voted} de {total} jugadores han votado",
+    "skipVoting": "No esperar más",
+    "yourVoteCast": "Tu voto ha sido registrado",
+    "voting": {
+      "title": "Votación — ¡elige la mejor respuesta!",
+      "waiting": "Esperando resultados de la votación...",
+      "yourCards": "Tus cartas",
+      "vote": "Votar"
+    }
   }
 }

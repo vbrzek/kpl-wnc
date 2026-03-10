@@ -134,7 +134,8 @@
       "forceAdvanceHint": "Time's up. You can move the game forward.",
       "label": "card czar",
       "youAreCzar": "You are the Card Czar",
-      "willPick": "{name} will pick the winner"
+      "willPick": "{name} will pick the winner",
+      "votingDecides": "The winner will be decided by vote"
     },
     "waiting": {
       "czarPicking": "The Card Czar is picking a winner...",
@@ -154,7 +155,8 @@
       "lastRoundNext": "Next round is the last one",
       "scoreGoal": "First to {score} points wins",
       "nextRound": "New round starts in 5 seconds...",
-      "endGame": "End game"
+      "endGame": "End game",
+      "voteCount": "{count} votes"
     },
     "finished": {
       "title": "Game over!",
@@ -179,10 +181,6 @@
       "name": "Rando Cardrissian",
       "desc": "A bot randomly plays a white card each round. If it wins, everyone loses."
     },
-    "god_mode": {
-      "name": "God Mode",
-      "desc": "The host remains Card Czar for the entire game while everyone entertains them."
-    },
     "wheatons_law": {
       "name": "Wheaton's Law",
       "desc": "Before each round, the Card Czar picks which of two black cards to play."
@@ -190,10 +188,6 @@
     "rebooting_universe": {
       "name": "Rebooting the Universe",
       "desc": "A player can discard their hand and draw 10 new cards at the cost of 1 point."
-    },
-    "meritocracy": {
-      "name": "Meritocracy",
-      "desc": "The winner of the previous round becomes the next Card Czar. If Rando wins, the Czar stays."
     },
     "high_stakes": {
       "name": "High Stakes",
@@ -206,6 +200,34 @@
     "betLabel": "Your bet",
     "betConfirm": "Confirm bet",
     "betActive": "Bet: {amount}",
-    "betPlaced": "{amount} point bet placed"
+    "betPlaced": "{amount} point bet placed",
+    "czarMode": {
+      "label": "Card Czar",
+      "classic": {
+        "name": "Classic",
+        "desc": "The Card Czar rotates clockwise."
+      },
+      "meritocracy": {
+        "name": "Meritocracy",
+        "desc": "The winner of the previous round becomes the next Card Czar."
+      },
+      "god_mode": {
+        "name": "God Mode",
+        "desc": "The host remains Card Czar for the entire game."
+      },
+      "czar_is_dead": {
+        "name": "Czar is Dead",
+        "desc": "No Card Czar — everyone votes. The submission with the most votes wins. You cannot vote for yourself."
+      }
+    },
+    "voteProgress": "{voted} of {total} players voted",
+    "skipVoting": "Skip waiting",
+    "yourVoteCast": "Your vote has been cast",
+    "voting": {
+      "title": "Vote — pick the best answer!",
+      "waiting": "Waiting for voting results...",
+      "yourCards": "Your cards",
+      "vote": "Vote"
+    }
   }
 }

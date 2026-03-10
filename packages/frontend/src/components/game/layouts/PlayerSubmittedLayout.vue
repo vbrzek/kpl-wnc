@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BlackCard, Player } from '@kpl/shared'
+import type { BlackCard, Player, CzarMode } from '@kpl/shared'
 import { useI18n } from 'vue-i18n'
 import Countdown from '../atoms/Countdown.vue'
 import BlackCardAtom from '../atoms/BlackCard.vue'
@@ -17,6 +17,7 @@ defineProps<{
   retracting: boolean
   roundSkipped: boolean
   czarNickname: string
+  czarMode?: CzarMode
 }>()
 
 const emit = defineEmits<{
@@ -33,7 +34,7 @@ const emit = defineEmits<{
     </div>
 
     <div class="flex-1 flex flex-col items-center justify-center text-center px-6">
-      <CzarBadge :czarNickname="czarNickname" :isMe="false" class="mb-6" />
+      <CzarBadge :czarNickname="czarNickname" :isMe="false" :czarMode="czarMode" class="mb-6" />
 
       <h2 class="text-xl font-black leading-tight mb-2">
         {{ t('game.submitted.waiting') }}

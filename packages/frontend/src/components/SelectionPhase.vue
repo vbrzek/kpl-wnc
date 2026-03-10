@@ -183,6 +183,7 @@ watch(() => roomStore.room?.status, () => {
       :retracting="retracting"
       :roundSkipped="roomStore.roundSkipped"
       :czarNickname="czarNickname"
+      :czarMode="roomStore.czarMode"
       @retract="retract"
     />
     <PlayerSelectingLayout
@@ -203,6 +204,7 @@ watch(() => roomStore.room?.status, () => {
       :roundSkipped="roomStore.roundSkipped"
       @toggleCard="roomStore.toggleCardSelection"
       :czarNickname="czarNickname"
+      :czarMode="roomStore.czarMode"
       @submit="submit"
       @trade="onTradeRequest"
       @placeBet="onPlaceBet"

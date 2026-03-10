@@ -134,7 +134,8 @@
       "forceAdvanceHint": "Čas vypršel. Můžeš hru posunout dál.",
       "label": "karetní král",
       "youAreCzar": "Ty jsi karetní král",
-      "willPick": "{name} vybere vítěze"
+      "willPick": "{name} vybere vítěze",
+      "votingDecides": "O vítězi rozhodne hlasování"
     },
     "waiting": {
       "czarPicking": "Karetní král vybírá vítěze...",
@@ -180,10 +181,6 @@
       "name": "Rando Cardrissian",
       "desc": "Bot přidává náhodnou bílou kartu do každého kola. Pokud vyhraje, všichni prohrají."
     },
-    "god_mode": {
-      "name": "God Mode",
-      "desc": "Hostitel zůstává karetním králem po celou dobu hry a ostatní ho baví."
-    },
     "wheatons_law": {
       "name": "Wheaton's Law",
       "desc": "Před každým kolem si karetní král vybere, která ze dvou černých karet se bude hrát."
@@ -191,10 +188,6 @@
     "rebooting_universe": {
       "name": "Rebooting the Universe",
       "desc": "Hráč může zahodit celou ruku a dobrat 10 nových karet za cenu 1 bodu."
-    },
-    "meritocracy": {
-      "name": "Meritocracy",
-      "desc": "Karetním králem se vždy stává vítěz minulého kola. Pokud vyhraje Rando, karetní král zůstane stejný."
     },
     "high_stakes": {
       "name": "High Stakes",
