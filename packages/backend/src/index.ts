@@ -34,6 +34,8 @@ const PUBLIC_BACKEND_URL = process.env.PUBLIC_BACKEND_URL ?? 'http://localhost:3
 
 await app.register(cookie);
 
+const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   await app.register(oauth2Plugin, {
     name: 'googleOAuth2',
@@ -49,6 +51,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     callbackUri: `${PUBLIC_BACKEND_URL}/auth/google/callback`,
     callbackUriParams: { access_type: 'online' },
   });
+} else {
+  app.get('/auth/google', async (_req, reply) =>
+    reply.redirect(`${FRONTEND_URL}/?auth=error`));
 }
 
 if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
@@ -70,6 +75,9 @@ if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
     startRedirectPath: '/auth/discord',
     callbackUri: `${PUBLIC_BACKEND_URL}/auth/discord/callback`,
   });
+} else {
+  app.get('/auth/discord', async (_req, reply) =>
+    reply.redirect(`${FRONTEND_URL}/?auth=error`));
 }
 
 await app.register(authRoutes);
