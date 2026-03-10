@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { socket } from './socket';
 import GameLayout from './layouts/GameLayout.vue';
@@ -11,6 +11,7 @@ const route = useRoute();
 const router = useRouter();
 const showProfileModal = ref(false);
 const oauthSetup = ref(false);
+const isPublicPage = computed(() => !!route.meta.public);
 
 onMounted(async () => {
   socket.connect();
@@ -28,21 +29,27 @@ onMounted(async () => {
     // 'success' or 'error' — profile already loaded by init()
   }
 
-  if (!profileStore.hasProfile) showProfileModal.value = true;
+  if (!profileStore.hasProfile && !isPublicPage.value) showProfileModal.value = true;
 });
 
 onUnmounted(() => socket.disconnect());
 </script>
 
 <template>
-  <GameLayout>
-    <RouterView v-if="profileStore.hasProfile" />
-  </GameLayout>
+  <!-- Public pages (privacy, terms) — standalone, no GameLayout, no profile gate -->
+  <RouterView v-if="isPublicPage" />
 
-  <PlayerProfileModal
-    v-if="showProfileModal"
-    :is-edit="false"
-    :is-oauth-setup="oauthSetup"
-    @close="showProfileModal = false; oauthSetup = false"
-  />
+  <!-- Game app — requires profile -->
+  <template v-else>
+    <GameLayout>
+      <RouterView v-if="profileStore.hasProfile" />
+    </GameLayout>
+
+    <PlayerProfileModal
+      v-if="showProfileModal"
+      :is-edit="false"
+      :is-oauth-setup="oauthSetup"
+      @close="showProfileModal = false; oauthSetup = false"
+    />
+  </template>
 </template>

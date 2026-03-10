@@ -9,6 +9,16 @@ const router = createRouter({
       path: '/room/:token',
       component: () => import('../views/RoomView.vue'),
     },
+    {
+      path: '/privacy',
+      component: () => import('../views/PrivacyView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/terms-of-service',
+      component: () => import('../views/TermsView.vue'),
+      meta: { public: true },
+    },
   ],
 });
 
