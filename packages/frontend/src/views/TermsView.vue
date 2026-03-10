@@ -81,7 +81,7 @@
         <h2 class="text-lg font-bold text-white">8. Kontakt</h2>
         <p class="text-slate-300 leading-relaxed">
           Dotazy a podněty zasílejte na:
-          <a href="mailto:kpl@example.com" class="text-white underline hover:text-slate-300">kpl@example.com</a>
+          <a href="mailto:kpl@wnc.cz" class="text-white underline hover:text-slate-300">kpl@wnc.cz</a>
         </p>
       </section>
 
