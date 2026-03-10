@@ -89,7 +89,7 @@ DISCORD_CLIENT_ID=...
 DISCORD_CLIENT_SECRET=...
 
 # JWT secret (min. 32 znaků)
-JWT_SECRET=Flcgkda3A,sS.cmAsH30SFkslda0mskw
+JWT_SECRET=abcdefghijklmnostuvwxyz123456789
 
 # Veřejná URL backendu (pro OAuth callback URI)
 PUBLIC_BACKEND_URL=http://localhost:3000
