@@ -42,6 +42,10 @@ watch(() => props.canBet, (newVal) => {
   if (!newVal) { showBetSlider.value = false; localBetAmount.value = 0; }
 });
 
+watch(() => props.betPlaced, (newVal) => {
+  if (newVal) showBetSlider.value = false;
+});
+
 function toggleBetSlider() {
   showBetSlider.value = !showBetSlider.value;
   if (showBetSlider.value && props.betPlaced) {
