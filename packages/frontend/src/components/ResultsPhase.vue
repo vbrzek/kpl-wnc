@@ -120,8 +120,8 @@ async function onEndGame() {
 
 <template>
   <div class="space-y-8 text-center">
-    <!-- Rando Cardrissian win -->
-    <div v-if="roomStore.roundResult?.winnerId === 'rando_cardrissian'" class="winner-entrance space-y-3">
+    <!-- Rando Cardrissian win (solo) -->
+    <div v-if="roomStore.roundResult?.winnerId === 'rando_cardrissian' && !isMultiWinner" class="winner-entrance space-y-3">
       <div class="text-5xl">🎲</div>
       <p class="text-2xl font-black text-red-400">{{ t('specialRules.randoWon') }}</p>
     </div>
