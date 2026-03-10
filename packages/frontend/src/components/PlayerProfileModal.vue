@@ -3,6 +3,11 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useProfileStore, buildDiceBearUrl } from '../stores/profileStore';
 import type { SupportedLocale } from '../stores/profileStore';
+import czFlag from 'flag-icons/flags/4x3/cz.svg';
+import gbFlag from 'flag-icons/flags/4x3/gb.svg';
+import ruFlag from 'flag-icons/flags/4x3/ru.svg';
+import uaFlag from 'flag-icons/flags/4x3/ua.svg';
+import esFlag from 'flag-icons/flags/4x3/es.svg';
 import { useSound } from '../composables/useSound';
 
 const props = withDefaults(defineProps<{ isEdit?: boolean; isOauthSetup?: boolean; authError?: boolean }>(), {
@@ -50,12 +55,12 @@ const previewAvatarUrl = computed(() => {
 
 const canSave = computed(() => nicknameInput.value.trim().length > 0);
 
-const languages: { code: SupportedLocale; label: string; flagClass: string }[] = [
-  { code: 'cs', label: 'Čeština', flagClass: 'fi fi-cz' },
-  { code: 'en', label: 'English', flagClass: 'fi fi-gb' },
-  { code: 'ru', label: 'Русский', flagClass: 'fi fi-ru' },
-  { code: 'uk', label: 'Українська', flagClass: 'fi fi-ua' },
-  { code: 'es', label: 'Español', flagClass: 'fi fi-es' },
+const languages: { code: SupportedLocale; label: string; flagSrc: string }[] = [
+  { code: 'cs', label: 'Čeština', flagSrc: czFlag },
+  { code: 'en', label: 'English', flagSrc: gbFlag },
+  { code: 'ru', label: 'Русский', flagSrc: ruFlag },
+  { code: 'uk', label: 'Ukrajinština', flagSrc: uaFlag },
+  { code: 'es', label: 'Español', flagSrc: esFlag },
 ];
 
 async function submit() {
@@ -233,7 +238,7 @@ function onBackdropClick() {
                     : 'bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/15 hover:text-slate-300',
                 ]"
               >
-                <span :class="lang.flagClass"></span> {{ lang.label }}
+                <img :src="lang.flagSrc" class="w-5 h-auto inline-block" /> {{ lang.label }}
               </button>
             </div>
           </div>
