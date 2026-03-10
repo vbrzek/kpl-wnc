@@ -1,0 +1,31 @@
+# Závislosti
+node_modules/
+packages/*/node_modules/
+
+# Build výstupy
+dist/
+packages/*/dist/
+
+# Prostředí a tajné hodnoty
+.env
+.env.*
+*.local
+
+# Databáze
+*.sqlite
+*.db
+*.db-journal
+
+# Logy
+*.log
+logs/
+
+# Systémové soubory
+.DS_Store
+.worktrees/
+
+# Seed data (velké soubory)
+packages/backend/src/db/seeds/
+
+# Vygenerované soubory
+package-lock.json
