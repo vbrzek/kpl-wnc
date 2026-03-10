@@ -5,9 +5,9 @@ import { useProfileStore, buildDiceBearUrl } from '../stores/profileStore';
 import type { SupportedLocale } from '../stores/profileStore';
 import { useSound } from '../composables/useSound';
 
-const props = withDefaults(defineProps<{ isEdit?: boolean; isOAuthSetup?: boolean; authError?: boolean }>(), {
+const props = withDefaults(defineProps<{ isEdit?: boolean; isOauthSetup?: boolean; authError?: boolean }>(), {
   isEdit: false,
-  isOAuthSetup: false,
+  isOauthSetup: false,
   authError: false,
 });
 
@@ -18,7 +18,7 @@ const { t } = useI18n();
 const profileStore = useProfileStore();
 const { muted, toggleMute } = useSound();
 
-const isSetupMode = computed(() => !props.isEdit && !props.isOAuthSetup);
+const isSetupMode = computed(() => !props.isEdit && !props.isOauthSetup);
 
 const nicknameInput = ref(profileStore.nickname);
 const selectedLocale = ref<SupportedLocale>(profileStore.locale);
