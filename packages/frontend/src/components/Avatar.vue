@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { buildDiceBearUrl } from '../stores/profileStore';
 
 const props = withDefaults(defineProps<{
   nickname: string;
-  avatarUrl?: string;
+  avatarUrl?: string | null;
   size?: number;
 }>(), { size: 40 });
 
 const avatarUrl = computed(() =>
-  props.avatarUrl ||
-  `https://api.dicebear.com/9.x/bottts/svg?seed=${encodeURIComponent(props.nickname || 'default')}`
+  props.avatarUrl || buildDiceBearUrl('bottts', props.nickname)
 );
 </script>
 
