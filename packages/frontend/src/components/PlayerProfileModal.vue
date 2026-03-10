@@ -85,8 +85,8 @@ function onBackdropClick() {
       class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click.self="onBackdropClick"
     >
-      <div class="bg-[#0d1117] border border-white/10 rounded-2xl w-full max-w-sm">
-        <div class="p-6 space-y-5">
+      <div class="bg-[#0d1117] border border-white/10 rounded-2xl w-full max-w-sm flex flex-col max-h-[90dvh]">
+        <div class="p-6 space-y-5 overflow-y-auto">
 
           <!-- Header -->
           <div class="flex items-center justify-between">
