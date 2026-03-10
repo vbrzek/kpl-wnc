@@ -15,7 +15,6 @@ const { t } = useI18n();
 const profileStore = useProfileStore();
 const { muted, toggleMute } = useSound();
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
 const isSetupMode = computed(() => !props.isEdit && !props.isOAuthSetup);
 
 const nicknameInput = ref(profileStore.nickname);
@@ -108,7 +107,7 @@ function onBackdropClick() {
           <!-- OAuth login (jen v setup modu, ne edit ani isOAuthSetup) -->
           <template v-if="isSetupMode">
             <a
-              :href="`${BACKEND_URL}/auth/google`"
+              href="/auth/google"
               class="flex items-center justify-center gap-3 w-full py-3 bg-white text-black text-sm font-bold rounded-2xl hover:bg-gray-100 transition-colors"
             >
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -120,7 +119,7 @@ function onBackdropClick() {
               {{ t('profile.loginWithGoogle') }}
             </a>
             <a
-              :href="`${BACKEND_URL}/auth/discord`"
+              href="/auth/discord"
               class="flex items-center justify-center gap-3 w-full py-3 bg-[#5865F2] text-white text-sm font-bold rounded-2xl hover:bg-[#4752c4] transition-colors"
             >
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -258,13 +257,13 @@ function onBackdropClick() {
           <div v-if="isEdit && !profileStore.isAuthenticated" class="border-t border-white/10 pt-4 space-y-2">
             <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{{ t('profile.linkAccount') }}</p>
             <a
-              :href="`${BACKEND_URL}/auth/google`"
+              href="/auth/google"
               class="flex items-center justify-center gap-2 w-full py-2.5 bg-white/5 border border-white/10 text-slate-300 text-xs font-bold rounded-xl hover:bg-white/10 transition-colors"
             >
               <span>G</span> {{ t('profile.loginWithGoogle') }}
             </a>
             <a
-              :href="`${BACKEND_URL}/auth/discord`"
+              href="/auth/discord"
               class="flex items-center justify-center gap-2 w-full py-2.5 bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#c0c5ff] text-xs font-bold rounded-xl hover:bg-[#5865F2]/30 transition-colors"
             >
               <span>D</span> {{ t('profile.loginWithDiscord') }}

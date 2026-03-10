@@ -59,7 +59,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
   await app.register(oauth2Plugin, {
     name: 'discordOAuth2',
-    scope: ['identify'],
+    scope: ['identify', 'email'],
     credentials: {
       client: {
         id: process.env.DISCORD_CLIENT_ID,

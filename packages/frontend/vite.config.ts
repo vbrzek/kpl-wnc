@@ -45,6 +45,7 @@ export default defineConfig({
           /^\/api\//,       // REST API — vždy na server
           /^\/socket\.io/,  // Socket.io — vždy na server
           /^\/health/,      // Health check
+          /^\/auth\//,      // OAuth callbacks — vždy na server
         ],
         runtimeCaching: [
           {
@@ -67,5 +68,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    proxy: {
+      '/auth': {
+        target: 'http://localhost:3000',
+        changeOrigin: false,
+      },
+    },
   },
 })

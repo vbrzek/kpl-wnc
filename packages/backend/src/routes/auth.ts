@@ -6,6 +6,7 @@ export interface UserRow {
   id: number;
   provider: string;
   provider_id: string;
+  email: string | null;
   nickname: string | null;
   locale: string;
   avatar_type: 'oauth' | 'dicebear';
@@ -44,6 +45,58 @@ function formatUser(user: UserRow) {
     dicebearStyle: user.dicebear_style,
     dicebearSeed: user.dicebear_seed,
   };
+}
+
+/**
+ * Find an existing user by email (cross-provider) or by provider+provider_id,
+ * or insert a new record. Returns userId and whether it was newly created.
+ *
+ * Priority:
+ *  1. email match  → link account regardless of provider (preserves nickname/avatar settings)
+ *  2. provider+provider_id match → same provider re-login (update avatar_url only)
+ *  3. insert new record
+ */
+async function findOrCreateUser(params: {
+  email: string | null;
+  provider: 'google' | 'discord';
+  providerId: string;
+  avatarUrl: string | null;
+}): Promise<{ userId: number; isNew: boolean }> {
+  const { email, provider, providerId, avatarUrl } = params;
+
+  // 1. Cross-provider linking by email
+  if (email) {
+    const byEmail = await db<UserRow>('users').where({ email }).first();
+    if (byEmail) {
+      await db('users').where({ id: byEmail.id }).update({
+        provider,
+        provider_id: providerId,
+        avatar_url: avatarUrl,
+      });
+      return { userId: byEmail.id, isNew: false };
+    }
+  }
+
+  // 2. Same-provider re-login
+  const byProvider = await db<UserRow>('users')
+    .where({ provider, provider_id: providerId })
+    .first();
+  if (byProvider) {
+    await db('users').where({ id: byProvider.id }).update({
+      avatar_url: avatarUrl,
+      ...(email && !byProvider.email ? { email } : {}),
+    });
+    return { userId: byProvider.id, isNew: false };
+  }
+
+  // 3. New user
+  const [insertedId] = await db('users').insert({
+    provider,
+    provider_id: providerId,
+    email,
+    avatar_url: avatarUrl,
+  });
+  return { userId: insertedId, isNew: true };
 }
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
@@ -87,27 +140,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         headers: { Authorization: `Bearer ${token.access_token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch Google user info');
-      const googleUser = await res.json() as { sub: string; picture?: string };
+      const googleUser = await res.json() as { sub: string; email?: string; picture?: string };
 
-      const existing = await db<UserRow>('users')
-        .where({ provider: 'google', provider_id: googleUser.sub })
-        .first();
-
-      let userId: number;
-      let isNew = false;
-
-      if (existing) {
-        await db('users').where({ id: existing.id }).update({ avatar_url: googleUser.picture ?? null });
-        userId = existing.id;
-      } else {
-        const [insertedId] = await db('users').insert({
-          provider: 'google',
-          provider_id: googleUser.sub,
-          avatar_url: googleUser.picture ?? null,
-        });
-        userId = insertedId;
-        isNew = true;
-      }
+      const { userId, isNew } = await findOrCreateUser({
+        email: googleUser.email ?? null,
+        provider: 'google',
+        providerId: googleUser.sub,
+        avatarUrl: googleUser.picture ?? null,
+      });
 
       setJwtCookie(reply, { userId, provider: 'google' });
       return reply.redirect(`${frontendUrl}/?auth=${isNew ? 'new' : 'success'}`);
@@ -125,30 +165,17 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         headers: { Authorization: `Bearer ${token.access_token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch Discord user info');
-      const discordUser = await res.json() as { id: string; avatar?: string };
+      const discordUser = await res.json() as { id: string; email?: string; avatar?: string };
       const avatarUrl = discordUser.avatar
         ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png?size=256`
         : null;
 
-      const existing = await db<UserRow>('users')
-        .where({ provider: 'discord', provider_id: discordUser.id })
-        .first();
-
-      let userId: number;
-      let isNew = false;
-
-      if (existing) {
-        await db('users').where({ id: existing.id }).update({ avatar_url: avatarUrl });
-        userId = existing.id;
-      } else {
-        const [insertedId] = await db('users').insert({
-          provider: 'discord',
-          provider_id: discordUser.id,
-          avatar_url: avatarUrl,
-        });
-        userId = insertedId;
-        isNew = true;
-      }
+      const { userId, isNew } = await findOrCreateUser({
+        email: discordUser.email ?? null,
+        provider: 'discord',
+        providerId: discordUser.id,
+        avatarUrl,
+      });
 
       setJwtCookie(reply, { userId, provider: 'discord' });
       return reply.redirect(`${frontendUrl}/?auth=${isNew ? 'new' : 'success'}`);
