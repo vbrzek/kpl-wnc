@@ -21,15 +21,19 @@ onMounted(async () => {
   const authParam = route.query.auth as string | undefined;
   if (authParam) {
     router.replace({ query: {} }); // clean URL
-    if (authParam === 'new') {
+    if (authParam === 'new' || (authParam === 'success' && profileStore.isAuthenticated && !profileStore.hasProfile)) {
+      // New OAuth user, or returning OAuth user who never finished setting up nickname
       oauthSetup.value = true;
       showProfileModal.value = true;
       return;
     }
-    // 'success' or 'error' — profile already loaded by init()
   }
 
-  if (!profileStore.hasProfile && !isPublicPage.value) showProfileModal.value = true;
+  if (!profileStore.hasProfile && !isPublicPage.value) {
+    // Authenticated user without nickname → skip to nickname setup (don't show OAuth buttons)
+    if (profileStore.isAuthenticated) oauthSetup.value = true;
+    showProfileModal.value = true;
+  }
 });
 
 onUnmounted(() => socket.disconnect());
