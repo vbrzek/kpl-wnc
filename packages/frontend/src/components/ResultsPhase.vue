@@ -34,7 +34,7 @@ const scoreboard = computed(() => {
   const players = roomStore.room?.players ?? [];
   if (!result) return [];
   return players
-    .map(p => ({ id: p.id, nickname: p.nickname, score: result.scores[p.id] ?? 0 }))
+    .map(p => ({ id: p.id, nickname: p.nickname, avatarUrl: p.avatarUrl, score: result.scores[p.id] ?? 0 }))
     .sort((a, b) => b.score - a.score);
 });
 

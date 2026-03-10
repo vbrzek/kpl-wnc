@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { socket } from '../socket';
 import type { PublicRoomSummary, GameRoom, SpecialRule, WinCondition } from '@kpl/shared';
+import { useProfileStore } from './profileStore';
 
 export interface CardSetSummary {
   id: number;
@@ -74,8 +75,9 @@ export const useLobbyStore = defineStore('lobby', () => {
     targetRounds?: number;
     gameTimeLimit?: number;
   }): Promise<{ room: GameRoom; code: string; playerToken: string; playerId: string } | { error: string }> {
+    const profileStore = useProfileStore();
     return new Promise((resolve) => {
-      socket.emit('lobby:create', settings, (result) => {
+      socket.emit('lobby:create', { ...settings, avatarUrl: profileStore.avatarUrl }, (result) => {
         if ('error' in result) {
           resolve(result);
         } else {
@@ -90,11 +92,12 @@ export const useLobbyStore = defineStore('lobby', () => {
     code: string,
     nickname: string
   ): Promise<{ room: GameRoom; code: string; playerToken: string; playerId: string } | { error: string }> {
+    const profileStore = useProfileStore();
     const playerToken = loadPlayerToken(code) ?? undefined;
     return new Promise((resolve) => {
       socket.emit(
         'lobby:join',
-        { code, nickname, playerToken },
+        { code, nickname, avatarUrl: profileStore.avatarUrl, playerToken },
         (result) => {
           if ('error' in result) {
             resolve(result);

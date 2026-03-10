@@ -25,6 +25,7 @@ const scoreboard = computed(() =>
   (roomStore.finishedState?.finalScores ?? []).map(p => ({
     id: p.playerId,
     nickname: p.nickname,
+    avatarUrl: p.avatarUrl,
     score: p.score,
     rank: p.rank,
   }))

@@ -183,6 +183,11 @@ export const useRoomStore = defineStore('room', () => {
     });
   }
 
+  function updateAvatar(avatarUrl: string | null) {
+    if (!room.value) return;
+    socket.emit('lobby:updateAvatar', avatarUrl);
+  }
+
   function clearFinishedState() {
     finishedState.value = null;
   }
@@ -271,7 +276,7 @@ export const useRoomStore = defineStore('room', () => {
     roundSkipped, finishedState,
     specialRules, hasRule, blackCardCandidates, myBet,
     init, setRoom, setMyPlayerId, leave,
-    updateSettings, kickPlayer, startGame, endGame, updateNickname, clearFinishedState, cleanup,
+    updateSettings, kickPlayer, startGame, endGame, updateNickname, updateAvatar, clearFinishedState, cleanup,
     playCards, judgeSelect, toggleCardSelection, retractCards, tradeCards, czarForceAdvance, skipCzarJudging,
     chooseBlackCard, placeBet,
   };

@@ -98,6 +98,9 @@ export const useProfileStore = defineStore('profile', () => {
 
     nickname.value = trimmed;
 
+    // Sync avatar to current room (if in one) — nickname change may affect DiceBear URL
+    if (roomStore.room) roomStore.updateAvatar(avatarUrl.value);
+
     if (isAuthenticated.value) {
       try {
         const res = await fetch(`${BACKEND_URL}/api/me`, {
@@ -146,6 +149,9 @@ export const useProfileStore = defineStore('profile', () => {
     } catch {
       // non-critical
     }
+    // Sync new avatarUrl to current room
+    const roomStore = useRoomStore();
+    if (roomStore.room) roomStore.updateAvatar(avatarUrl.value);
   }
 
   async function logout(): Promise<void> {

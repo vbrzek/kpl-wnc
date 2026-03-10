@@ -18,12 +18,15 @@ const winCondition = z.enum(VALID_WIN_CONDITIONS as [WinCondition, ...WinConditi
 
 // --- Schémata pro jednotlivé eventy ---
 
+const avatarUrl = z.string().max(500).nullable().optional();
+
 export const CreateRoomSchema = z.object({
   name: z.string().min(1).max(30).trim(),
   isPublic: z.boolean(),
   selectedSetIds: z.array(z.number().int().positive()).min(1),
   maxPlayers: z.number().int().min(3).max(10),
   nickname,
+  avatarUrl,
   targetScore: z.number().int().refine(v => [8, 10, 15, 20, 30].includes(v), {
     message: 'Cílový počet bodů musí být 8, 10, 15, 20 nebo 30',
   }),
@@ -38,8 +41,11 @@ export const CreateRoomSchema = z.object({
 export const JoinRoomSchema = z.object({
   code: roomCode,
   nickname: z.string().max(24).trim(),
+  avatarUrl,
   playerToken: z.string().uuid().optional(),
 });
+
+export const UpdateAvatarSchema = z.string().max(500).nullable();
 
 export const UpdateSettingsSchema = z.object({
   name: z.string().min(1).max(30).trim().optional(),

@@ -18,6 +18,7 @@ export interface Player {
   socketId: string | null;
   isOnline: boolean;
   nickname: string;
+  avatarUrl: string | null;
   score: number;
   isCardCzar: boolean;
   hasPlayed: boolean;
@@ -78,6 +79,7 @@ export interface GameOverPayload {
   finalScores: Array<{
     playerId: string;
     nickname: string;
+    avatarUrl: string | null;
     score: number;
     rank: number;      // 1 = vítěz
   }>;
@@ -145,6 +147,7 @@ export interface ClientToServerEvents {
       selectedSetIds: number[];
       maxPlayers: number;
       nickname: string;
+      avatarUrl?: string | null;
       targetScore: number;
       specialRules: SpecialRule[];
       winCondition?: WinCondition;
@@ -154,9 +157,10 @@ export interface ClientToServerEvents {
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
   'lobby:join': (
-    data: { code: string; nickname: string; playerToken?: string },
+    data: { code: string; nickname: string; avatarUrl?: string | null; playerToken?: string },
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
+  'lobby:updateAvatar': (avatarUrl: string | null) => void;
   'lobby:subscribePublic': () => void;
   'lobby:unsubscribePublic': () => void;
   'lobby:leave': () => void;

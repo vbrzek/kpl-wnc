@@ -19,7 +19,7 @@ async function linkPlayerToken(cookieHeader: string, playerToken: string, roomCo
 }
 import { GameEngine } from '../game/GameEngine.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
-import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, validate } from './validation.js';
+import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, UpdateAvatarSchema, validate } from './validation.js';
 import { checkRateLimit, cleanupSocket } from './rateLimiter.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 import { eventLogger } from '../analytics/EventLogger.js';
@@ -47,7 +47,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     }
     const data = validate(CreateRoomSchema, settings, callback);
     if (!data) return;
-    const { room, playerToken } = roomManager.createRoom(data);
+    const { room, playerToken } = roomManager.createRoom({ ...data, avatarUrl: data.avatarUrl ?? null });
 
     // Attach socket to the host player
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
@@ -74,7 +74,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     }
     const data = validate(JoinRoomSchema, input, callback);
     if (!data) return;
-    const result = roomManager.joinRoom(data.code, data.nickname, data.playerToken);
+    const result = roomManager.joinRoom(data.code, data.nickname, data.playerToken, data.avatarUrl ?? null);
 
     if ('error' in result) {
       callback(result);
@@ -261,6 +261,17 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
 
     io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
     callback({ ok: true });
+  });
+
+  // Update avatar URL (fire-and-forget, no callback)
+  socket.on('lobby:updateAvatar', (avatarUrl) => {
+    const playerToken = socketToToken.get(socket.id);
+    if (!playerToken) return;
+    const validated = validate(UpdateAvatarSchema, avatarUrl);
+    if (validated === null && avatarUrl !== null) return;
+    const result = roomManager.updateAvatar(playerToken, avatarUrl);
+    if ('error' in result) return;
+    io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
   });
 
   // Disconnect — start AFK timer, emit state update

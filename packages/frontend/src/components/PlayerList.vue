@@ -23,7 +23,7 @@ const { t } = useI18n();
       class="flex items-center justify-between bg-gray-700 px-4 py-2 rounded"
     >
       <span class="flex items-center gap-2">
-        <Avatar :nickname="player.nickname" :size="32" />
+        <Avatar :nickname="player.nickname" :avatar-url="player.avatarUrl" :size="32" />
         {{ player.nickname }}
         <span v-if="player.id === hostId" class="text-xs text-yellow-400">({{ t('player.host') }})</span>
         <span v-if="player.id === myPlayerId" class="text-xs text-green-400">({{ t('player.you') }})</span>

@@ -2,7 +2,7 @@
 import Avatar from '../../Avatar.vue';
 
 defineProps<{
-  entries: { id: string; nickname: string; score: number }[]
+  entries: { id: string; nickname: string; avatarUrl?: string | null; score: number }[]
 }>()
 </script>
 
@@ -12,7 +12,7 @@ defineProps<{
     <div v-if="entries[1]" class="text-center podium-entry" style="animation-delay: 300ms">
       <div class="bg-gray-600 rounded-t-lg px-4 py-6 w-24">
         <div class="flex justify-center mb-2">
-          <Avatar :nickname="entries[1].nickname" :size="36" />
+          <Avatar :nickname="entries[1].nickname" :avatar-url="entries[1].avatarUrl" :size="36" />
         </div>
         <p class="font-bold truncate">{{ entries[1].nickname }}</p>
         <p class="text-2xl font-bold text-gray-300">{{ entries[1].score }}</p>
@@ -24,7 +24,7 @@ defineProps<{
     <div v-if="entries[0]" class="text-center podium-entry podium-first" style="animation-delay: 700ms">
       <div class="bg-yellow-700 rounded-t-lg px-4 py-8 w-28">
         <div class="flex justify-center mb-2">
-          <Avatar :nickname="entries[0].nickname" :size="48" />
+          <Avatar :nickname="entries[0].nickname" :avatar-url="entries[0].avatarUrl" :size="48" />
         </div>
         <p class="font-bold truncate">{{ entries[0].nickname }}</p>
         <p class="text-2xl font-bold text-yellow-300">{{ entries[0].score }}</p>
@@ -36,7 +36,7 @@ defineProps<{
     <div v-if="entries[2]" class="text-center podium-entry" style="animation-delay: 100ms">
       <div class="bg-gray-700 rounded-t-lg px-4 py-4 w-24">
         <div class="flex justify-center mb-2">
-          <Avatar :nickname="entries[2].nickname" :size="36" />
+          <Avatar :nickname="entries[2].nickname" :avatar-url="entries[2].avatarUrl" :size="36" />
         </div>
         <p class="font-bold truncate">{{ entries[2].nickname }}</p>
         <p class="text-2xl font-bold text-gray-400">{{ entries[2].score }}</p>

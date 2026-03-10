@@ -2,7 +2,7 @@
 import Avatar from '../../Avatar.vue';
 
 defineProps<{
-  entries: { id: string; rank?: number; nickname: string; score: number }[]
+  entries: { id: string; rank?: number; nickname: string; avatarUrl?: string | null; score: number }[]
   showRank?: boolean
 }>()
 </script>
@@ -16,7 +16,7 @@ defineProps<{
     >
       <span v-if="showRank && entry.rank" class="text-gray-400 w-6">{{ entry.rank }}.</span>
       <span class="flex items-center gap-2" :class="showRank ? 'flex-1 ml-2' : 'flex-1'">
-        <Avatar :nickname="entry.nickname" :size="32" />
+        <Avatar :nickname="entry.nickname" :avatar-url="entry.avatarUrl" :size="32" />
         {{ entry.nickname }}
       </span>
       <span class="font-bold text-yellow-400">{{ entry.score }}</span>

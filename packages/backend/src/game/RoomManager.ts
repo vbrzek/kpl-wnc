@@ -53,6 +53,7 @@ export interface CreateRoomSettings {
   selectedSetIds: number[];
   maxPlayers: number;
   nickname: string;
+  avatarUrl?: string | null;
   targetScore: number;
   specialRules: SpecialRule[];
   winCondition?: WinCondition;
@@ -104,6 +105,7 @@ export class RoomManager {
       socketId: null,
       isOnline: true,
       nickname: settings.nickname,
+      avatarUrl: settings.avatarUrl ?? null,
       score: 0,
       isCardCzar: false,
       hasPlayed: false,
@@ -142,7 +144,7 @@ export class RoomManager {
 
   // ------------------------------------------------------------------ joinRoom
 
-  joinRoom(code: string, nickname: string, playerToken?: string): JoinResult {
+  joinRoom(code: string, nickname: string, playerToken?: string, avatarUrl?: string | null): JoinResult {
     const room = this.rooms.get(code);
     if (!room) {
       return { error: 'Místnost nebyla nalezena.' };
@@ -154,6 +156,12 @@ export class RoomManager {
       if (existingRoomCode === code) {
         const reconnected = this.reconnect(playerToken, null);
         if (reconnected) {
+          // Update avatarUrl on reconnect (player may have changed it)
+          if (avatarUrl !== undefined) {
+            const pid = this.tokenToPlayerId.get(playerToken);
+            const p = reconnected.players.find(pl => pl.id === pid);
+            if (p) p.avatarUrl = avatarUrl;
+          }
           return { room: reconnected, playerToken, wasReconnect: true };
         }
       }
@@ -187,6 +195,7 @@ export class RoomManager {
       socketId: null,
       isOnline: true,
       nickname,
+      avatarUrl: avatarUrl ?? null,
       score: 0,
       isCardCzar: false,
       hasPlayed: false,
@@ -371,6 +380,25 @@ export class RoomManager {
     return { room };
   }
 
+  // ------------------------------------------------------------------ updateAvatar
+
+  updateAvatar(playerToken: string, avatarUrl: string | null): ActionResult {
+    const code = this.playerRooms.get(playerToken);
+    if (!code) return { error: 'Nejsi v žádné místnosti.' };
+
+    const room = this.rooms.get(code);
+    if (!room) return { error: 'Místnost nebyla nalezena.' };
+
+    const playerId = this.tokenToPlayerId.get(playerToken);
+    if (!playerId) return { error: 'Hráč nenalezen.' };
+
+    const player = room.players.find(p => p.id === playerId);
+    if (!player) return { error: 'Hráč nenalezen.' };
+
+    player.avatarUrl = avatarUrl;
+    return { room };
+  }
+
   // ------------------------------------------------------------------ startGame
 
   startGame(hostToken: string): ActionResult {
@@ -527,6 +555,7 @@ export class RoomManager {
       finalScores: sorted.map((p, i) => ({
         playerId: p.id,
         nickname: p.nickname,
+        avatarUrl: p.avatarUrl,
         score: p.score,
         rank: i + 1,
       })),
