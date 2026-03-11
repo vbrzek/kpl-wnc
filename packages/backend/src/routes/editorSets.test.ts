@@ -25,10 +25,15 @@ describe('GET /api/editor/sets', () => {
   });
 
   it('returns empty array when user has no sets', async () => {
-    mockDb.mockReturnValue({
-      where: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      orderBy: vi.fn().mockResolvedValue([]),
+    let callCount = 0;
+    mockDb.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return { where: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue({ role: 'user' }) };
+      return {
+        select: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([]),
+      };
     });
     const res = await app.inject({ method: 'GET', url: '/api/editor/sets' });
     expect(res.statusCode).toBe(200);
@@ -36,17 +41,22 @@ describe('GET /api/editor/sets', () => {
   });
 
   it('returns user sets with card counts', async () => {
-    mockDb.mockReturnValue({
-      where: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      orderBy: vi.fn().mockResolvedValue([
-        { id: 1, name: 'Moje sada', description: null, is_public: 0, black_count: '5', white_count: '10' },
-      ]),
+    let callCount = 0;
+    mockDb.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return { where: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue({ role: 'user' }) };
+      return {
+        select: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([
+          { id: 1, name: 'Moje sada', description: null, is_public: 0, user_id: 1, black_count: '5', white_count: '10', owner_nickname: 'Test' },
+        ]),
+      };
     });
     const res = await app.inject({ method: 'GET', url: '/api/editor/sets' });
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
-    expect(body[0]).toEqual({ id: 1, name: 'Moje sada', description: null, isPublic: false, blackCount: 5, whiteCount: 10 });
+    expect(body[0]).toEqual({ id: 1, name: 'Moje sada', description: null, isPublic: false, isOwn: true, ownerNickname: 'Test', blackCount: 5, whiteCount: 10 });
   });
 });
 
@@ -62,8 +72,11 @@ describe('POST /api/editor/sets', () => {
   });
 
   it('creates a new set and returns it', async () => {
-    mockDb.mockReturnValue({
-      insert: vi.fn().mockResolvedValue([42]),
+    let callCount = 0;
+    mockDb.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return { where: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue({ role: 'user' }) };
+      return { insert: vi.fn().mockResolvedValue([42]) };
     });
     const res = await app.inject({
       method: 'POST',
@@ -100,9 +113,11 @@ describe('DELETE /api/editor/sets/:id', () => {
   });
 
   it('returns 404 when set does not belong to user', async () => {
-    mockDb.mockReturnValue({
-      where: vi.fn().mockReturnThis(),
-      first: vi.fn().mockResolvedValue(null),
+    let callCount = 0;
+    mockDb.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return { where: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue({ role: 'user' }) };
+      return { where: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue(null) };
     });
     const res = await app.inject({ method: 'DELETE', url: '/api/editor/sets/99' });
     expect(res.statusCode).toBe(404);
@@ -110,11 +125,15 @@ describe('DELETE /api/editor/sets/:id', () => {
 
   it('deletes set and returns ok', async () => {
     let callCount = 0;
-    mockDb.mockImplementation(() => ({
-      where: vi.fn().mockReturnThis(),
-      first: vi.fn().mockResolvedValue({ id: 1 }),
-      delete: vi.fn().mockResolvedValue(1),
-    }));
+    mockDb.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return { where: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue({ role: 'user' }) };
+      return {
+        where: vi.fn().mockReturnThis(),
+        first: vi.fn().mockResolvedValue({ id: 1 }),
+        delete: vi.fn().mockResolvedValue(1),
+      };
+    });
     const res = await app.inject({ method: 'DELETE', url: '/api/editor/sets/1' });
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body)).toEqual({ ok: true });

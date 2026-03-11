@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import type { UserCardSet } from '@kpl/shared';
-import { useI18n } from 'vue-i18n';
 
-const props = defineProps<{ set: UserCardSet }>();
+const props = defineProps<{ set: UserCardSet; isCardMaster?: boolean }>();
 const emit = defineEmits<{ edit: [id: number]; delete: [id: number] }>();
-const { t } = useI18n();
 </script>
 
 <template>
@@ -18,7 +16,8 @@ const { t } = useI18n();
       <span>{{ set.blackCount }} černých</span>
       <span>{{ set.whiteCount }} bílých</span>
     </div>
-    <div class="flex gap-2 mt-1">
+    <p v-if="!set.isOwn && set.ownerNickname" class="text-xs text-zinc-400 dark:text-zinc-500">od {{ set.ownerNickname }}</p>
+    <div v-if="set.isOwn || isCardMaster" class="flex gap-2 mt-1">
       <button @click="emit('edit', set.id)" class="flex-1 text-sm bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 text-zinc-700 dark:text-zinc-200 rounded-lg px-3 py-1.5 transition">
         Upravit
       </button>

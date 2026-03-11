@@ -13,31 +13,35 @@ const selectedWhite = ref<Set<number>>(new Set());
 const activeType = ref<'black' | 'white'>('black');
 const saving = ref(false);
 
+async function loadSelectedCards() {
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
+  // Načti aktuální membership nové sady
+  let page = 1;
+  while (true) {
+    const res = await fetch(`${BACKEND_URL}/api/editor/cards?type=black&setId=${props.setId}&page=${page}`, { credentials: 'include' });
+    if (!res.ok) break;
+    const data = await res.json();
+    data.cards.forEach((c: EditorCard) => selectedBlack.value.add(c.id));
+    if (data.cards.length < 15) break;
+    page++;
+  }
+  page = 1;
+  while (true) {
+    const res = await fetch(`${BACKEND_URL}/api/editor/cards?type=white&setId=${props.setId}&page=${page}`, { credentials: 'include' });
+    if (!res.ok) break;
+    const data = await res.json();
+    data.cards.forEach((c: EditorCard) => selectedWhite.value.add(c.id));
+    if (data.cards.length < 15) break;
+    page++;
+  }
+}
+
 onMounted(async () => {
-  // Pokud replikace, načti karty zdrojové sady a předvyber
   if (props.replicateSetId) {
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
-    // Načti všechny black karty zdrojové sady
-    let page = 1, total = Infinity;
-    while (selectedBlack.value.size < total) {
-      const res = await fetch(`${BACKEND_URL}/api/editor/cards?type=black&setId=${props.replicateSetId}&page=${page}`, { credentials: 'include' });
-      if (!res.ok) break;
-      const data = await res.json();
-      total = data.total;
-      data.cards.forEach((c: EditorCard) => selectedBlack.value.add(c.id));
-      if (data.cards.length < 50) break;
-      page++;
-    }
-    page = 1; total = Infinity;
-    while (selectedWhite.value.size < total) {
-      const res = await fetch(`${BACKEND_URL}/api/editor/cards?type=white&setId=${props.replicateSetId}&page=${page}`, { credentials: 'include' });
-      if (!res.ok) break;
-      const data = await res.json();
-      total = data.total;
-      data.cards.forEach((c: EditorCard) => selectedWhite.value.add(c.id));
-      if (data.cards.length < 50) break;
-      page++;
-    }
+    saving.value = true;
+    await editorStore.replicateSet(props.setId, props.replicateSetId);
+    await loadSelectedCards();
+    saving.value = false;
   }
 });
 

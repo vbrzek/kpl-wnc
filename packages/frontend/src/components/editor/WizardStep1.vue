@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useLobbyStore } from '../../stores/lobbyStore';
+import { useProfileStore } from '../../stores/profileStore';
 
 const emit = defineEmits<{
   submit: [data: { name: string; description: string; isPublic: boolean; replicateSetId: number | null }]
 }>();
 
 const lobbyStore = useLobbyStore();
+const profileStore = useProfileStore();
+const isCardMaster = computed(() => profileStore.oauthUser?.role === 'card-master');
 const name = ref('');
 const description = ref('');
 const isPublic = ref(false);
@@ -32,9 +35,9 @@ function submit() {
       <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Popis</label>
       <textarea v-model="description" maxlength="255" rows="2" class="w-full rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-2.5 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="Volitelný popis sady" />
     </div>
-    <div class="flex items-center gap-3">
+    <div v-if="isCardMaster" class="flex items-center gap-3">
       <button @click="isPublic = !isPublic" :class="isPublic ? 'bg-indigo-600' : 'bg-zinc-300 dark:bg-zinc-600'" class="relative w-10 h-6 rounded-full transition-colors">
-        <span :class="isPublic ? 'translate-x-4' : 'translate-x-0.5'" class="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" />
+        <span :class="isPublic ? 'translate-x-[18px]' : 'translate-x-0.5'" class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" />
       </button>
       <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ isPublic ? 'Veřejná sada (viditelná všem hráčům)' : 'Soukromá sada' }}</span>
     </div>

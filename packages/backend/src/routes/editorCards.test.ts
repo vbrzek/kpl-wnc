@@ -66,9 +66,11 @@ describe('POST /api/editor/cards', () => {
   });
 
   it('returns 403 when set does not belong to user', async () => {
-    mockDb.mockReturnValue({
-      where: vi.fn().mockReturnThis(),
-      first: vi.fn().mockResolvedValue(null),
+    let callCount = 0;
+    mockDb.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return { where: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue({ role: 'user' }) };
+      return { where: vi.fn().mockReturnThis(), first: vi.fn().mockResolvedValue(null) };
     });
     const res = await app.inject({
       method: 'POST', url: '/api/editor/cards',

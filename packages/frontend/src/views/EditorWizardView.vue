@@ -26,7 +26,7 @@ function onFinish() { router.push('/editor'); }
 
 <template>
   <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-4 md:p-8">
-    <div class="max-w-2xl mx-auto">
+    <div>
       <div class="mb-6">
         <button @click="router.push('/editor')" class="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 mb-2">&larr; Zpět</button>
         <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Nová sada karet</h1>

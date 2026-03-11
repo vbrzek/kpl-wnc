@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { UserCardSet, EditorCard, EditorCardsPage } from '@kpl/shared';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
@@ -12,12 +12,15 @@ export const useEditorStore = defineStore('editor', () => {
   const cardsPage = ref(1);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const ownSets = computed(() => mySets.value.filter((s) => s.isOwn));
+  const otherSets = computed(() => mySets.value.filter((s) => !s.isOwn));
 
-  async function fetchMySets(): Promise<void> {
+  async function fetchMySets(view?: 'mine' | 'all'): Promise<void> {
     loading.value = true;
     error.value = null;
     try {
-      const res = await fetch(`${BACKEND_URL}/api/editor/sets`, { credentials: 'include' });
+      const url = view === 'all' ? `${BACKEND_URL}/api/editor/sets?view=all` : `${BACKEND_URL}/api/editor/sets`;
+      const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) throw new Error('Nepodařilo se načíst sady.');
       mySets.value = await res.json();
     } catch (e: any) {
@@ -64,11 +67,14 @@ export const useEditorStore = defineStore('editor', () => {
     if (currentSet.value?.id === id) currentSet.value = null;
   }
 
-  async function fetchCards(params: { type: 'black' | 'white'; search?: string; setId?: number; page?: number }): Promise<void> {
+  async function fetchCards(params: { type: 'black' | 'white'; search?: string; setId?: number; excludeSetId?: number; untranslated?: boolean; unassigned?: boolean; page?: number }): Promise<void> {
     const url = new URL(`${BACKEND_URL}/api/editor/cards`);
     url.searchParams.set('type', params.type);
     if (params.search) url.searchParams.set('search', params.search);
     if (params.setId) url.searchParams.set('setId', String(params.setId));
+    if (params.excludeSetId) url.searchParams.set('excludeSetId', String(params.excludeSetId));
+    if (params.untranslated) url.searchParams.set('untranslated', 'true');
+    if (params.unassigned) url.searchParams.set('unassigned', 'true');
     url.searchParams.set('page', String(params.page ?? 1));
     const res = await fetch(url.toString(), { credentials: 'include' });
     if (!res.ok) return;
@@ -92,6 +98,36 @@ export const useEditorStore = defineStore('editor', () => {
     });
   }
 
+  async function replicateSet(targetSetId: number, sourceSetId: number): Promise<{ blackCount: number; whiteCount: number } | null> {
+    const res = await fetch(`${BACKEND_URL}/api/editor/sets/${targetSetId}/replicate`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ sourceSetId }),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  }
+
+  async function fetchCardDetail(type: 'black' | 'white', id: number): Promise<any | null> {
+    const res = await fetch(`${BACKEND_URL}/api/editor/cards/${type}/${id}`, { credentials: 'include' });
+    if (!res.ok) return null;
+    return res.json();
+  }
+
+  async function updateCard(type: 'black' | 'white', id: number, data: { text?: string; pick?: number; translations?: Record<string, string> }): Promise<boolean> {
+    const res = await fetch(`${BACKEND_URL}/api/editor/cards/${type}/${id}`, {
+      method: 'PATCH', credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.ok;
+  }
+
+  async function deleteCard(type: 'black' | 'white', id: number): Promise<boolean> {
+    const res = await fetch(`${BACKEND_URL}/api/editor/cards/${type}/${id}`, { method: 'DELETE', credentials: 'include' });
+    return res.ok;
+  }
+
   async function createCard(data: {
     type: 'black' | 'white'; text: string; pick?: number; setId: number;
     translations?: Partial<Record<'en' | 'ru' | 'uk' | 'es', string>>;
@@ -106,8 +142,8 @@ export const useEditorStore = defineStore('editor', () => {
   }
 
   return {
-    mySets, currentSet, cards, cardsTotal, cardsPage, loading, error,
+    mySets, ownSets, otherSets, currentSet, cards, cardsTotal, cardsPage, loading, error,
     fetchMySets, fetchSet, createSet, updateSet, deleteSet,
-    fetchCards, addCardToSet, removeCardFromSet, createCard,
+    fetchCards, fetchCardDetail, updateCard, deleteCard, addCardToSet, removeCardFromSet, replicateSet, createCard,
   };
 });

@@ -21,6 +21,11 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/editor/cards',
+      component: () => import('../views/EditorCardsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/editor/:id',
       component: () => import('../views/EditorSetView.vue'),
       meta: { requiresAuth: true },
@@ -38,9 +43,10 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (to.meta.requiresAuth) {
     const profileStore = useProfileStore();
+    await profileStore.init();
     if (!profileStore.isAuthenticated) return '/';
   }
 });

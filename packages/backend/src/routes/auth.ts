@@ -18,6 +18,7 @@ export interface UserRow {
   avatar_url: string | null;
   dicebear_style: string | null;
   dicebear_seed: string | null;
+  role: string;
 }
 
 // #8 — Zod schema for PATCH /api/me (#9 — nickname max 24)
@@ -50,6 +51,7 @@ function formatUser(user: UserRow) {
     avatarUrl: user.avatar_url,
     dicebearStyle: user.dicebear_style,
     dicebearSeed: user.dicebear_seed,
+    role: user.role,
   };
 }
 

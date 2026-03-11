@@ -49,18 +49,17 @@ async function removeAdded(card: EditorCard) {
     <p class="text-sm text-zinc-500 dark:text-zinc-400">Přidej nové karty do sady. Tuto část můžeš přeskočit &mdash; karty lze přidávat i později.</p>
 
     <div class="flex rounded-xl overflow-hidden border border-zinc-300 dark:border-zinc-600 w-fit">
-      <button @click="type = 'white'" :class="type === 'white' ? 'bg-zinc-100 dark:bg-zinc-600 font-semibold' : 'bg-white dark:bg-zinc-800'" class="px-4 py-2 text-sm transition">Bílá</button>
-      <button @click="type = 'black'" :class="type === 'black' ? 'bg-zinc-900 text-white font-semibold' : 'bg-white dark:bg-zinc-800 dark:text-zinc-300'" class="px-4 py-2 text-sm transition border-l border-zinc-300 dark:border-zinc-600">Černá</button>
+      <button @click="type = 'white'" :class="type === 'white' ? 'bg-white text-zinc-900 font-bold' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'" class="px-4 py-2 text-sm transition">Bílá</button>
+      <button @click="type = 'black'" :class="type === 'black' ? 'bg-zinc-900 text-yellow-400 font-bold' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'" class="px-4 py-2 text-sm transition border-l border-zinc-300 dark:border-zinc-600">Černá</button>
     </div>
 
     <textarea v-model="text" :placeholder="type === 'black' ? 'Text otázky (použij ____ pro doplnění)' : 'Text karty'" rows="3" class="w-full rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-3 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
 
     <div v-if="type === 'black'" class="flex items-center gap-3">
       <span class="text-sm text-zinc-600 dark:text-zinc-400">Počet karet k výběru:</span>
-      <select v-model="pick" class="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm">
-        <option :value="1">1</option>
-        <option :value="2">2</option>
-      </select>
+      <div class="flex gap-1">
+        <button v-for="n in 4" :key="n" @click="pick = n" :class="pick === n ? 'bg-indigo-600 text-white font-bold' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400'" class="w-9 h-9 rounded-lg text-sm transition">{{ n }}</button>
+      </div>
     </div>
 
     <div>

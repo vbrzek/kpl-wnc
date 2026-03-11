@@ -19,12 +19,20 @@ const editorStore = useEditorStore();
 const type = ref<'black' | 'white'>(props.cardType);
 const search = ref('');
 const filterSetId = ref<number | null>(props.initialFilterSetId ?? null);
+const selectionFilter = ref<'all' | 'selected' | 'unselected'>('all');
 
 async function load() {
-  await editorStore.fetchCards({ type: type.value, search: search.value, setId: filterSetId.value ?? undefined, page: editorStore.cardsPage });
+  let setIdParam = filterSetId.value ?? undefined;
+  let excludeSetIdParam: number | undefined;
+  if (selectionFilter.value === 'selected') {
+    setIdParam = props.setId;
+  } else if (selectionFilter.value === 'unselected') {
+    excludeSetIdParam = props.setId;
+  }
+  await editorStore.fetchCards({ type: type.value, search: search.value, setId: setIdParam, excludeSetId: excludeSetIdParam, page: editorStore.cardsPage });
 }
 
-watch([type, search, filterSetId], () => { editorStore.cardsPage = 1; load(); });
+watch([type, search, filterSetId, selectionFilter], () => { editorStore.cardsPage = 1; load(); });
 onMounted(load);
 
 function changePage(p: number) {
@@ -39,11 +47,12 @@ function changePage(p: number) {
       v-model:type="type"
       v-model:search="search"
       v-model:filterSetId="filterSetId"
+      v-model:selectionFilter="selectionFilter"
     />
     <div class="text-xs text-zinc-400 mb-2">
       {{ editorStore.cardsTotal }} karet celkem · strana {{ editorStore.cardsPage }}
     </div>
-    <div class="flex flex-col gap-1 max-h-96 overflow-y-auto pr-1">
+    <div class="flex flex-col gap-1">
       <label
         v-for="card in editorStore.cards"
         :key="card.id"
@@ -61,10 +70,10 @@ function changePage(p: number) {
         </span>
       </label>
     </div>
-    <div v-if="editorStore.cardsTotal > 50" class="flex justify-between items-center mt-3">
-      <button @click="changePage(editorStore.cardsPage - 1)" :disabled="editorStore.cardsPage <= 1" class="text-sm px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-700 disabled:opacity-40">&larr; Předchozí</button>
-      <span class="text-xs text-zinc-400">{{ editorStore.cardsPage }} / {{ Math.ceil(editorStore.cardsTotal / 50) }}</span>
-      <button @click="changePage(editorStore.cardsPage + 1)" :disabled="editorStore.cardsPage >= Math.ceil(editorStore.cardsTotal / 50)" class="text-sm px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-700 disabled:opacity-40">Další &rarr;</button>
+    <div v-if="editorStore.cardsTotal > 15" class="flex justify-between items-center mt-3">
+      <button @click="changePage(editorStore.cardsPage - 1)" :disabled="editorStore.cardsPage <= 1" class="text-sm px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-30 disabled:hover:bg-indigo-600 transition">&larr; Předchozí</button>
+      <span class="text-xs text-zinc-400">{{ editorStore.cardsPage }} / {{ Math.ceil(editorStore.cardsTotal / 15) }}</span>
+      <button @click="changePage(editorStore.cardsPage + 1)" :disabled="editorStore.cardsPage >= Math.ceil(editorStore.cardsTotal / 15)" class="text-sm px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-30 disabled:hover:bg-indigo-600 transition">Další &rarr;</button>
     </div>
   </div>
 </template>

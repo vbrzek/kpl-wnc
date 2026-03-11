@@ -217,6 +217,8 @@ export interface UserCardSet {
   name: string;
   description: string | null;
   isPublic: boolean;
+  isOwn: boolean;
+  ownerNickname: string | null;
   blackCount: number;
   whiteCount: number;
 }
