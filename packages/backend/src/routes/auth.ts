@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import db from '../db/db.js';
-import { verifyToken, signToken } from '../auth/jwt.js';
-import type { JwtPayload } from '../auth/jwt.js';
+import { signToken } from '../auth/jwt.js';
+import { verifyJwt } from '../auth/middleware.js';
 
 // #7 — single FRONTEND_URL constant
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
@@ -18,13 +18,6 @@ export interface UserRow {
   avatar_url: string | null;
   dicebear_style: string | null;
   dicebear_seed: string | null;
-}
-
-// #6 — Fastify type augmentation for jwtUser
-declare module 'fastify' {
-  interface FastifyRequest {
-    jwtUser?: JwtPayload;
-  }
 }
 
 // #8 — Zod schema for PATCH /api/me (#9 — nickname max 24)
@@ -45,14 +38,6 @@ function setJwtCookie(reply: FastifyReply, payload: { userId: number; provider: 
     maxAge: 60 * 60 * 24 * 30,
     path: '/',
   });
-}
-
-async function verifyJwt(request: FastifyRequest, reply: FastifyReply) {
-  const token = (request.headers.cookie ?? '').match(/kpl_token=([^;]+)/)?.[1];
-  if (!token) return reply.status(401).send({ error: 'Unauthorized' });
-  const payload = verifyToken(decodeURIComponent(token));
-  if (!payload) return reply.status(401).send({ error: 'Unauthorized' });
-  request.jwtUser = payload; // #6 — type-safe access
 }
 
 function formatUser(user: UserRow) {
