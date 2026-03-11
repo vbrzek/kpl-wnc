@@ -209,3 +209,27 @@ export interface ClientToServerEvents {
   'game:vote': (submissionId: string) => void;
   'game:skipVoting': () => void;
 }
+
+// ── Editor types ──────────────────────────────────────────────────────────────
+
+export interface UserCardSet {
+  id: number;
+  name: string;
+  description: string | null;
+  isPublic: boolean;
+  blackCount: number;
+  whiteCount: number;
+}
+
+export interface EditorCard {
+  id: number;
+  type: 'black' | 'white';
+  text: string;
+  pick?: number; // only for black cards
+}
+
+export interface EditorCardsPage {
+  cards: EditorCard[];
+  total: number;
+  page: number;
+}
