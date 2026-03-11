@@ -17,6 +17,8 @@ import cardSetsRoutes from './routes/cardSets.js';
 import cardTranslationsRoute from './routes/cardTranslations.js';
 import roomsRoutes from './routes/rooms.js';
 import authRoutes from './routes/auth.js';
+import editorSetsRoutes from './routes/editorSets.js';
+import editorCardsRoutes from './routes/editorCards.js';
 
 config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
 
@@ -93,6 +95,8 @@ app.get('/health', async () => ({ status: 'ok' }));
 await app.register(cardSetsRoutes, { prefix: '/api' });
 await app.register(cardTranslationsRoute, { prefix: '/api' });
 await app.register(roomsRoutes, { prefix: '/api' });
+await app.register(editorSetsRoutes, { prefix: '/api' });
+await app.register(editorCardsRoutes, { prefix: '/api' });
 
 io.on('connection', (socket) => {
   socket.emit('server:hello', STARTUP_ID);
