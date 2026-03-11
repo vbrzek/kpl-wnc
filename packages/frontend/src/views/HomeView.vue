@@ -174,6 +174,15 @@ function onJoinPrivate(code: string) {
       </button>
     </div>
 
+    <div v-if="profileStore.isAuthenticated" class="mt-4 text-center">
+      <button
+        @click="router.push('/editor')"
+        class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+      >
+        Spravovat moje sady karet &rarr;
+      </button>
+    </div>
+
     <div class="flex-1 flex flex-col min-h-0">
       <div class="flex items-center justify-between mb-3 px-2">
         <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
