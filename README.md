@@ -199,9 +199,10 @@ systemctl reload apache2
 - [x] Možnost aktivace rozšířených pravidel
 - [x] Volba cíle hry (počet bodů, počet kol, čas)
 - [x] Profily hráčů — OAuth (Google, Discord) + JWT cookie + propojení účtů
-- [ ] CRUD pro správu sad a karet (admin) a sdílení sad karet s ostatními hráči
-- [ ] Friendship managment
-- [ ] Dlouhodobé statistiky a achievmenty
+- [x] Editor sad karet — OAuth uživatelé mohou vytvářet vlastní sady (průvodce + editace)
+- [ ] Sdílení sad karet s ostatními hráči (veřejné sady od ostatních uživatelů)
+- [ ] Friendship management
+- [ ] Dlouhodobé statistiky a achievementy
 
 
 ---

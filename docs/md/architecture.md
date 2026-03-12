@@ -30,12 +30,15 @@ kpl-wnc/
 │   │   │   ├── roundUtils.ts       # Sdílené utility pro přechody kol (startNextRound, finishGame…)
 │   │   │   └── socketState.ts      # Sdílený roomManager singleton pro socket handlery
 │   │   ├── auth/
-│   │   │   └── jwt.ts              # signToken, verifyToken, extractUserIdFromCookieHeader
+│   │   │   ├── jwt.ts              # signToken, verifyToken, extractUserIdFromCookieHeader
+│   │   │   └── middleware.ts       # verifyJwt preHandler (sdílený mezi auth + editor routes)
 │   │   ├── routes/
 │   │   │   ├── auth.ts             # OAuth routes: GET/PATCH /api/me, POST /auth/logout, Google/Discord callbacks
 │   │   │   ├── cardSets.ts         # GET /api/card-sets
 │   │   │   ├── cardTranslations.ts # GET /api/cards/translations (COALESCE fallback na cs)
-│   │   │   └── rooms.ts            # GET /api/rooms/:code/preview
+│   │   │   ├── rooms.ts            # GET /api/rooms/:code/preview
+│   │   │   ├── editorSets.ts       # CRUD /api/editor/sets + správa členství karet (auth required)
+│   │   │   └── editorCards.ts      # GET /api/editor/cards (browse+filter+page), POST /api/editor/cards (auth required)
 │   │   └── db/
 │   │       ├── db.ts               # Knex singleton
 │   │       ├── knexfile.ts         # Knex config (migrations + seeds)
@@ -43,11 +46,14 @@ kpl-wnc/
 │   │       └── seeds/
 │   │           └── 01_all_cards.ts # Auto-generated seed (all cards + sets)
 │   └── frontend/src/
-│       ├── router/index.ts         # Vue Router: / a /room/:token
+│       ├── router/index.ts         # Vue Router: /, /room/:token, /editor, /editor/new, /editor/:id
 │       ├── layouts/GameLayout.vue  # Wrapper layoutu hry (AppHeader + slot)
 │       ├── views/
-│       │   ├── HomeView.vue        # Seznam stolů, vytvoř/připoj se
-│       │   └── RoomView.vue        # Lobby nebo hra (podle room.status)
+│       │   ├── HomeView.vue              # Seznam stolů, vytvoř/připoj se; tlačítko editoru pro OAuth uživatele
+│       │   ├── RoomView.vue              # Lobby nebo hra (podle room.status)
+│       │   ├── EditorDashboardView.vue   # /editor — seznam vlastních sad karet
+│       │   ├── EditorWizardView.vue      # /editor/new — 3-krokový průvodce novou sadou
+│       │   └── EditorSetView.vue         # /editor/:id — editace existující sady
 │       ├── components/
 │       │   ├── AppHeader.vue       # Horní lišta + PlayerAvatar (edit profilu)
 │       │   ├── LobbyPanel.vue, PlayerList.vue, PlayerAvatar.vue, Avatar.vue
@@ -57,14 +63,17 @@ kpl-wnc/
 │       │   ├── SelectionPhase.vue, JudgingPhase.vue, ResultsPhase.vue, FinishedPhase.vue
 │       │   ├── SpecialRulesPanel.vue   # Aktivní speciální pravidla kola
 │       │   ├── game/atoms/         # BlackCard, CardHand, Scoreboard, Podium, SubmissionGrid…
-│       │   └── game/layouts/       # PlayerSelectingLayout, CzarJudgingLayout, …
+│       │   ├── game/layouts/       # PlayerSelectingLayout, CzarJudgingLayout, …
+│       │   ├── editor/             # SetCard, WizardStep1-3, CardBrowser, CardFilterBar
+│       │   └── ui/                 # ToggleSwitch (sdílené UI atomy)
 │       ├── composables/
 │       │   ├── useCardTranslations.ts # Fetch + module-level cache; reaktivní cacheVersion
 │       │   └── useSound.ts
 │       ├── stores/
 │       │   ├── lobbyStore.ts       # Veřejné stoly, create/join, fetchCardSets, localStorage token
 │       │   ├── roomStore.ts        # Stav aktuálního stolu, isHost, kick, startGame
-│       │   └── profileStore.ts     # nickname, locale, avatarUrl (DiceBear), OAuth
+│       │   ├── profileStore.ts     # nickname, locale, avatarUrl (DiceBear), OAuth; initPromise (singleton)
+│       │   └── editorStore.ts      # CRUD sad, browse karet, přidávání/odebírání členství
 │       ├── i18n/locales/           # cs.json, en.json, ru.json, uk.json, es.json
 │       └── socket/index.ts         # Socket.io client (URL z VITE_BACKEND_URL, withCredentials: true)
 ├── docs/plans/                     # Implementační plány

@@ -11,7 +11,9 @@ CREATE TABLE card_sets (
     description TEXT,
     is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    slug VARCHAR(50) UNIQUE
+    slug VARCHAR(50) UNIQUE,
+    user_id INT UNSIGNED,                           -- NULL = systémová sada; hodnota = vlastník (OAuth user)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE black_cards (
@@ -73,6 +75,7 @@ CREATE TABLE users (
     avatar_url TEXT,
     dicebear_style VARCHAR(50),
     dicebear_seed VARCHAR(100),
+    role VARCHAR(20) DEFAULT 'user',                -- 'user' | 'admin'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (provider, provider_id),

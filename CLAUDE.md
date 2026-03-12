@@ -18,7 +18,7 @@ npm run dev:frontend                              # Vite dev (port 5173)
 npm run build                                     # Build všech balíčků
 npm run migrate --workspace=packages/backend      # DB migrace
 npm run seed --workspace=packages/backend         # Seed dat (destruktivní!)
-npm test --workspace=packages/backend             # Vitest — 119 testů
+npm test --workspace=packages/backend             # Vitest — 141 testů
 npx tsx packages/backend/scripts/generate-seeds.ts  # Regeneruje seed z DB
 ```
 
@@ -31,6 +31,7 @@ npx tsx packages/backend/scripts/generate-seeds.ts  # Regeneruje seed z DB
 - **Vite .env:** čte z kořene monorepa (`envDir: '../../'`) — pro LAN/mobil použij IP místo localhost
 - **Nickname validace:** max 24 znaků všude (frontend `maxlength`, Socket.io, Zod v REST API)
 - **OAuth:** Google + Discord, podmíněná registrace podle env vars; JWT `kpl_token` httpOnly cookie
+- **Editor karet:** `/editor` — OAuth uživatelé tvoří vlastní sady; `card_sets.user_id = NULL` = systémová sada; auth přes `src/auth/middleware.ts` (`verifyJwt`)
 
 ## Doporučení pro práci s AI (úspor tokenů)
 

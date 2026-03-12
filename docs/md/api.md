@@ -13,8 +13,19 @@
 | GET | `/auth/google/callback` | OAuth callback pro Google |
 | GET | `/auth/discord/callback` | OAuth callback pro Discord |
 | GET | `/health` | Health check |
+| GET | `/api/editor/sets` | Moje sady karet (auth required) → `UserCardSet[]` |
+| POST | `/api/editor/sets` | Nová sada (auth required) — body: `{name, description?, isPublic}` |
+| GET | `/api/editor/sets/:id` | Detail sady (auth required, pouze vlastní) |
+| PATCH | `/api/editor/sets/:id` | Aktualizace sady (auth required, pouze vlastní) |
+| DELETE | `/api/editor/sets/:id` | Smazání sady (auth required, pouze vlastní) |
+| POST | `/api/editor/sets/:id/cards` | Přidej kartu do sady — body: `{type: 'black'\|'white', cardId}` |
+| DELETE | `/api/editor/sets/:id/cards/:type/:cardId` | Odeber kartu ze sady |
+| GET | `/api/editor/cards` | Browse karet — `?type=black\|white&search=&setId=&page=` (50/stránka) |
+| POST | `/api/editor/cards` | Nová karta + přidání do sady — body: `{type, text, pick?, setId, translations?}` |
 
 `CardSetSummary` typ je definován v `lobbyStore.ts` (frontend): `id, name, description, slug, isPublic, blackCardCount, whiteCardCount`.
+
+`UserCardSet` typ (editor): `id, name, description, isPublic, blackCount, whiteCount` — definován v `@kpl/shared`.
 
 ## Environment proměnné
 
