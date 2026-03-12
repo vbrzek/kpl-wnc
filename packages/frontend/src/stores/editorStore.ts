@@ -141,9 +141,20 @@ export const useEditorStore = defineStore('editor', () => {
     return res.json();
   }
 
+  async function translateCard(text: string): Promise<Record<string, string> | null> {
+    const res = await fetch(`${BACKEND_URL}/api/editor/cards/translate`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.translations ?? null;
+  }
+
   return {
     mySets, ownSets, otherSets, currentSet, cards, cardsTotal, cardsPage, loading, error,
     fetchMySets, fetchSet, createSet, updateSet, deleteSet,
-    fetchCards, fetchCardDetail, updateCard, deleteCard, addCardToSet, removeCardFromSet, replicateSet, createCard,
+    fetchCards, fetchCardDetail, updateCard, deleteCard, addCardToSet, removeCardFromSet, replicateSet, createCard, translateCard,
   };
 });
