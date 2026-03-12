@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useEditorStore } from '../../stores/editorStore';
+import { useProfileStore } from '../../stores/profileStore';
 import type { EditorCard } from '@kpl/shared';
 
 const props = defineProps<{ setId: number }>();
 const emit = defineEmits<{ finish: [] }>();
 
 const editorStore = useEditorStore();
+const profileStore = useProfileStore();
+const isCardMaster = computed(() => profileStore.oauthUser?.role === 'card-master');
 const type = ref<'black' | 'white'>('white');
 const text = ref('');
 const pick = ref(1);
@@ -15,6 +18,7 @@ const translations = ref({ en: '', ru: '', uk: '', es: '' });
 const addedCards = ref<EditorCard[]>([]);
 const error = ref('');
 const saving = ref(false);
+const translating = ref(false);
 
 async function addCard() {
   if (!text.value.trim()) { error.value = 'Text karty je povinný.'; return; }
@@ -36,6 +40,18 @@ async function addCard() {
   pick.value = 1;
   translations.value = { en: '', ru: '', uk: '', es: '' };
   showTranslations.value = false;
+}
+
+async function translateText() {
+  if (!text.value.trim()) return;
+  translating.value = true;
+  const result = await editorStore.translateCard(text.value.trim());
+  if (result) {
+    for (const lang of ['en', 'ru', 'uk', 'es'] as const) {
+      if (result[lang]) translations.value[lang] = result[lang];
+    }
+  }
+  translating.value = false;
 }
 
 async function removeAdded(card: EditorCard) {
@@ -66,6 +82,15 @@ async function removeAdded(card: EditorCard) {
       <button @click="showTranslations = !showTranslations" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
         {{ showTranslations ? 'Skrýt překlady' : 'Přidat překlady (volitelné)' }}
       </button>
+      <div v-if="isCardMaster && showTranslations" class="mt-2">
+        <button
+          @click="translateText"
+          :disabled="translating || !text.trim()"
+          class="w-full rounded-xl border border-indigo-400 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400 px-4 py-2 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {{ translating ? 'Překládám…' : 'Přeložit pomocí AI' }}
+        </button>
+      </div>
       <div v-if="showTranslations" class="grid grid-cols-2 gap-3 mt-2">
         <div v-for="lang in ['en', 'ru', 'uk', 'es']" :key="lang">
           <label class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase mb-1 block">{{ lang }}</label>
