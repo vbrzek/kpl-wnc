@@ -261,7 +261,8 @@ Rules:
 
     let translations: Record<string, string>;
     try {
-      translations = JSON.parse(content.text);
+      const raw = content.text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+      translations = JSON.parse(raw);
     } catch {
       return reply.status(500).send({ error: 'AI vrátila neplatný formát.' });
     }
