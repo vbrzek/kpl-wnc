@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditorStore } from '../stores/editorStore';
 import { useLobbyStore } from '../stores/lobbyStore';
+import { useProfileStore } from '../stores/profileStore';
 import type { EditorCard } from '@kpl/shared';
 
 const router = useRouter();
 const editorStore = useEditorStore();
 const lobbyStore = useLobbyStore();
+const profileStore = useProfileStore();
+const isCardMaster = computed(() => profileStore.oauthUser?.role === 'card-master');
 
 const type = ref<'black' | 'white'>('black');
 const search = ref('');
@@ -22,6 +25,7 @@ const modalText = ref('');
 const modalPick = ref(1);
 const modalTranslations = ref<Record<string, string>>({});
 const modalSaving = ref(false);
+const modalTranslating = ref(false);
 const confirmDelete = ref(false);
 
 onMounted(() => {
@@ -89,6 +93,18 @@ async function handleDelete() {
   modalSaving.value = false;
   confirmDelete.value = false;
   await load();
+}
+
+async function translateModal() {
+  if (!modalText.value.trim()) return;
+  modalTranslating.value = true;
+  const result = await editorStore.translateCard(modalText.value.trim());
+  if (result) {
+    for (const lang of ['en', 'ru', 'uk', 'es']) {
+      if (result[lang]) modalTranslations.value[lang] = result[lang];
+    }
+  }
+  modalTranslating.value = false;
 }
 </script>
 
@@ -192,6 +208,17 @@ async function handleDelete() {
                 :class="modalPick === n ? 'bg-indigo-600 text-white font-bold' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'"
                 class="w-10 h-10 rounded-lg text-sm transition">{{ n }}</button>
             </div>
+          </div>
+
+          <!-- AI překlad -->
+          <div v-if="isCardMaster">
+            <button
+              @click="translateModal"
+              :disabled="modalTranslating || !modalText.trim()"
+              class="w-full rounded-xl border border-indigo-400 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400 px-4 py-2 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {{ modalTranslating ? 'Překládám…' : 'Přeložit pomocí AI' }}
+            </button>
           </div>
 
           <!-- Překlady -->
