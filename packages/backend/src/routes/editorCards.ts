@@ -4,6 +4,18 @@ import db from '../db/db.js';
 import { verifyJwt } from '../auth/middleware.js';
 import Anthropic from '@anthropic-ai/sdk';
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.warn('[editorCards] ANTHROPIC_API_KEY is not set — /editor/cards/translate will return 503.');
+}
+
+const anthropicClient = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
+
+const TranslateSchema = z.object({
+  text: z.string().min(1).max(500).trim(),
+});
+
 async function canAccessSet(setId: number, userId: number): Promise<boolean> {
   const user = await db('users').where({ id: userId }).select('role').first();
   if (user?.role === 'card-master') {
@@ -217,20 +229,19 @@ const editorCardsRoutes: FastifyPluginAsync = async (fastify) => {
     const { userId } = request.jwtUser!;
     if (!(await isCardMaster(userId))) return reply.status(403).send({ error: 'Nemáš přístup.' });
 
-    const TranslateSchema = z.object({
-      text: z.string().min(1).max(500).trim(),
-      type: z.enum(['black', 'white']),
-    });
     const parsed = TranslateSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: parsed.error.issues[0]?.message });
 
     const { text } = parsed.data;
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: `You are a translation assistant for a Cards Against Humanity style party game called KPL.
+    if (!anthropicClient) return reply.status(503).send({ error: 'Překlad není k dispozici (chybí API klíč).' });
+
+    let message;
+    try {
+      message = await anthropicClient.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: `You are a translation assistant for a Cards Against Humanity style party game called KPL.
 Translate the given Czech card text into English, Russian, Ukrainian, and Spanish.
 
 Rules:
@@ -239,8 +250,11 @@ Rules:
 - The game contains adult, politically incorrect, and dark humor — translate faithfully without softening
 - Return ONLY valid JSON in this exact format: {"en":"...","ru":"...","uk":"...","es":"..."}
 - No explanations, no markdown, just the JSON object`,
-      messages: [{ role: 'user', content: text }],
-    });
+        messages: [{ role: 'user', content: text }],
+      });
+    } catch (err: any) {
+      return reply.status(503).send({ error: 'Překlad selhal. Zkus to znovu.' });
+    }
 
     const content = message.content[0];
     if (content.type !== 'text') return reply.status(500).send({ error: 'Neplatná odpověď z AI.' });

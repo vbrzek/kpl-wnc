@@ -8,14 +8,14 @@ vi.mock('../auth/middleware.js', () => ({
   verifyJwt: vi.fn(async (request: any) => { request.jwtUser = { userId: 1, provider: 'google' }; }),
 }));
 
+const mockCreate = vi.hoisted(() => vi.fn().mockResolvedValue({
+  content: [{ type: 'text', text: '{"en":"Test card","ru":"Тестовая карта","uk":"Тестова картка","es":"Tarjeta de prueba"}' }],
+}));
+
 vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: {
-      create: vi.fn().mockResolvedValue({
-        content: [{ type: 'text', text: '{"en":"Test card","ru":"Тестовая карта","uk":"Тестова картка","es":"Tarjeta de prueba"}' }],
-      }),
-    },
-  })),
+  default: vi.fn().mockImplementation(function () {
+    return { messages: { create: mockCreate } };
+  }),
 }));
 
 import db from '../db/db.js';
@@ -97,15 +97,9 @@ describe('POST /api/editor/cards/translate', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
-    vi.mocked(Anthropic).mockImplementation(function () {
-      return {
-        messages: {
-          create: vi.fn().mockResolvedValue({
-            content: [{ type: 'text', text: '{"en":"Test card","ru":"Тестовая карта","uk":"Тестова картка","es":"Tarjeta de prueba"}' }],
-          }),
-        },
-      };
-    } as any);
+    mockCreate.mockResolvedValue({
+      content: [{ type: 'text', text: '{"en":"Test card","ru":"Тестовая карта","uk":"Тестова картка","es":"Tarjeta de prueba"}' }],
+    });
     app = Fastify({ logger: false });
     await app.register(cookie);
     await app.register(editorCardsRoutes, { prefix: '/api' });
@@ -121,7 +115,7 @@ describe('POST /api/editor/cards/translate', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/editor/cards/translate',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text: 'Testovací karta', type: 'white' }),
+      body: JSON.stringify({ text: 'Testovací karta' }),
     });
     expect(res.statusCode).toBe(403);
   });
@@ -135,7 +129,7 @@ describe('POST /api/editor/cards/translate', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/editor/cards/translate',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text: '', type: 'white' }),
+      body: JSON.stringify({ text: '' }),
     });
     expect(res.statusCode).toBe(400);
   });
@@ -149,7 +143,7 @@ describe('POST /api/editor/cards/translate', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/editor/cards/translate',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ text: 'Testovací karta', type: 'white' }),
+      body: JSON.stringify({ text: 'Testovací karta' }),
     });
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
