@@ -8,6 +8,16 @@ vi.mock('../auth/middleware.js', () => ({
   verifyJwt: vi.fn(async (request: any) => { request.jwtUser = { userId: 1, provider: 'google' }; }),
 }));
 
+vi.mock('@anthropic-ai/sdk', () => ({
+  default: vi.fn().mockImplementation(() => ({
+    messages: {
+      create: vi.fn().mockResolvedValue({
+        content: [{ type: 'text', text: '{"en":"Test card","ru":"Тестовая карта","uk":"Тестова картка","es":"Tarjeta de prueba"}' }],
+      }),
+    },
+  })),
+}));
+
 import db from '../db/db.js';
 const mockDb = db as unknown as ReturnType<typeof vi.fn>;
 
@@ -78,5 +88,64 @@ describe('POST /api/editor/cards', () => {
       body: JSON.stringify({ type: 'white', text: 'Nová karta', setId: 99 }),
     });
     expect(res.statusCode).toBe(403);
+  });
+});
+
+describe('POST /api/editor/cards/translate', () => {
+  let app: ReturnType<typeof Fastify>;
+
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    app = Fastify({ logger: false });
+    await app.register(cookie);
+    await app.register(editorCardsRoutes, { prefix: '/api' });
+    await app.ready();
+  });
+
+  it('returns 403 when user is not card-master', async () => {
+    mockDb.mockReturnValue({
+      where: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      first: vi.fn().mockResolvedValue({ role: 'user' }),
+    });
+    const res = await app.inject({
+      method: 'POST', url: '/api/editor/cards/translate',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: 'Testovací karta', type: 'white' }),
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('returns 400 when text is empty', async () => {
+    mockDb.mockReturnValue({
+      where: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      first: vi.fn().mockResolvedValue({ role: 'card-master' }),
+    });
+    const res = await app.inject({
+      method: 'POST', url: '/api/editor/cards/translate',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: '', type: 'white' }),
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('returns translations when card-master calls with valid text', async () => {
+    mockDb.mockReturnValue({
+      where: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      first: vi.fn().mockResolvedValue({ role: 'card-master' }),
+    });
+    const res = await app.inject({
+      method: 'POST', url: '/api/editor/cards/translate',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ text: 'Testovací karta', type: 'white' }),
+    });
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.translations).toHaveProperty('en');
+    expect(body.translations).toHaveProperty('ru');
+    expect(body.translations).toHaveProperty('uk');
+    expect(body.translations).toHaveProperty('es');
   });
 });
