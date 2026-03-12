@@ -19,6 +19,7 @@ vi.mock('@anthropic-ai/sdk', () => ({
 }));
 
 import db from '../db/db.js';
+import Anthropic from '@anthropic-ai/sdk';
 const mockDb = db as unknown as ReturnType<typeof vi.fn>;
 
 describe('GET /api/editor/cards', () => {
@@ -96,6 +97,15 @@ describe('POST /api/editor/cards/translate', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
+    vi.mocked(Anthropic).mockImplementation(function () {
+      return {
+        messages: {
+          create: vi.fn().mockResolvedValue({
+            content: [{ type: 'text', text: '{"en":"Test card","ru":"Тестовая карта","uk":"Тестова картка","es":"Tarjeta de prueba"}' }],
+          }),
+        },
+      };
+    } as any);
     app = Fastify({ logger: false });
     await app.register(cookie);
     await app.register(editorCardsRoutes, { prefix: '/api' });

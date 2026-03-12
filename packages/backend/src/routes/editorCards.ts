@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import db from '../db/db.js';
 import { verifyJwt } from '../auth/middleware.js';
+import Anthropic from '@anthropic-ai/sdk';
 
 async function canAccessSet(setId: number, userId: number): Promise<boolean> {
   const user = await db('users').where({ id: userId }).select('role').first();
@@ -209,6 +210,49 @@ const editorCardsRoutes: FastifyPluginAsync = async (fastify) => {
       await db('white_cards').where({ id: cardId }).delete();
     }
     return { ok: true };
+  });
+
+  // POST /api/editor/cards/translate — AI překlad do EN, RU, UK, ES — card-master only
+  fastify.post('/editor/cards/translate', { preHandler: verifyJwt }, async (request, reply) => {
+    const { userId } = request.jwtUser!;
+    if (!(await isCardMaster(userId))) return reply.status(403).send({ error: 'Nemáš přístup.' });
+
+    const TranslateSchema = z.object({
+      text: z.string().min(1).max(500).trim(),
+      type: z.enum(['black', 'white']),
+    });
+    const parsed = TranslateSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ error: parsed.error.issues[0]?.message });
+
+    const { text } = parsed.data;
+
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      system: `You are a translation assistant for a Cards Against Humanity style party game called KPL.
+Translate the given Czech card text into English, Russian, Ukrainian, and Spanish.
+
+Rules:
+- Preserve the original meaning, tone, and humor exactly
+- Keep proper nouns and cultural references unchanged (do not adapt them)
+- The game contains adult, politically incorrect, and dark humor — translate faithfully without softening
+- Return ONLY valid JSON in this exact format: {"en":"...","ru":"...","uk":"...","es":"..."}
+- No explanations, no markdown, just the JSON object`,
+      messages: [{ role: 'user', content: text }],
+    });
+
+    const content = message.content[0];
+    if (content.type !== 'text') return reply.status(500).send({ error: 'Neplatná odpověď z AI.' });
+
+    let translations: Record<string, string>;
+    try {
+      translations = JSON.parse(content.text);
+    } catch {
+      return reply.status(500).send({ error: 'AI vrátila neplatný formát.' });
+    }
+
+    return { translations };
   });
 };
 
