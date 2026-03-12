@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import db from '../db/db.js';
+import { verifyToken } from '../auth/jwt.js';
 
 interface CardSetRow {
   id: number;
@@ -12,8 +13,12 @@ interface CardSetRow {
 }
 
 const cardSetsRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/card-sets', async (_request, reply) => {
+  fastify.get('/card-sets', async (request, reply) => {
     try {
+      const token = (request.headers.cookie ?? '').match(/kpl_token=([^;]+)/)?.[1];
+      const jwtUser = token ? verifyToken(decodeURIComponent(token)) : null;
+      const userId = jwtUser?.userId ?? null;
+
       const rows = await db('card_sets').select<CardSetRow[]>(
         'id',
         'name',
@@ -22,7 +27,10 @@ const cardSetsRoutes: FastifyPluginAsync = async (fastify) => {
         db.raw('is_public as isPublic'),
         db.raw('(SELECT COUNT(*) FROM card_set_black_cards WHERE card_set_id = card_sets.id) as blackCardCount'),
         db.raw('(SELECT COUNT(*) FROM card_set_white_cards WHERE card_set_id = card_sets.id) as whiteCardCount'),
-      ).orderBy('name');
+      ).where(function () {
+        this.where('is_public', true);
+        if (userId !== null) this.orWhere('user_id', userId);
+      }).orderBy('name');
 
       return rows.map((r) => ({
         id: r.id,

@@ -57,7 +57,7 @@ export const useLobbyStore = defineStore('lobby', () => {
   async function fetchCardSets(): Promise<void> {
     if (cardSetsLoaded.value) return;
     const backendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
-    const res = await fetch(`${backendUrl}/api/card-sets`);
+    const res = await fetch(`${backendUrl}/api/card-sets`, { credentials: 'include' });
     if (!res.ok) throw new Error(`Failed to fetch card sets: ${res.status}`);
     cardSets.value = await res.json() as CardSetSummary[];
     cardSetsLoaded.value = true;
