@@ -15,6 +15,7 @@ export interface OAuthUser {
   avatarUrl: string | null;
   dicebearStyle: string | null;
   dicebearSeed: string | null;
+  role: string;
 }
 
 interface PlayerProfile {
@@ -35,6 +36,7 @@ export const useProfileStore = defineStore('profile', () => {
   const soundMuted = ref(localStorage.getItem('soundMuted') === 'true');
   const isAuthenticated = ref(false);
   const oauthUser = ref<OAuthUser | null>(null);
+  let initPromise: Promise<void> | null = null;
 
   const avatarUrl = computed(() => {
     if (isAuthenticated.value && oauthUser.value) {
@@ -59,7 +61,12 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  async function init() {
+  function init() {
+    if (!initPromise) initPromise = doInit();
+    return initPromise;
+  }
+
+  async function doInit() {
     // Try OAuth session first
     let oauthLoaded = false;
     try {
@@ -173,7 +180,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   return {
     nickname, locale, soundMuted, avatarUrl, hasProfile,
-    isAuthenticated, oauthUser,
+    isAuthenticated, oauthUser, initPromise,
     init, save, saveAvatar, logout, toggleSoundMuted,
   };
 });

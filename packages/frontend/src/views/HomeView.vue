@@ -172,6 +172,14 @@ function onJoinPrivate(code: string) {
       >
         {{ t('home.joinWithCode') }}
       </button>
+
+      <button
+        v-if="profileStore.isAuthenticated"
+        @click="router.push('/editor')"
+        class="col-span-2 bg-slate-900/40 border border-slate-700/50 hover:border-indigo-500/40 text-slate-400 hover:text-indigo-400 text-xs font-bold uppercase tracking-widest py-3 rounded-xl transition-all"
+      >
+        Spravovat moje sady karet &rarr;
+      </button>
     </div>
 
     <div class="flex-1 flex flex-col min-h-0">
@@ -187,7 +195,7 @@ function onJoinPrivate(code: string) {
           :rooms="lobbyStore.publicRooms"
           @preview="onJoinPublic"
         />
-      
+
     </div>
 
     <CreateTableModal v-if="showCreate" @close="showCreate = false" @create="onCreateRoom" />
