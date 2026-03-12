@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useEditorStore } from '../stores/editorStore';
 import { useProfileStore } from '../stores/profileStore';
+import ToggleSwitch from '../components/ui/ToggleSwitch.vue';
 import CardBrowser from '../components/editor/CardBrowser.vue';
 import WizardStep3 from '../components/editor/WizardStep3.vue';
 import type { EditorCard } from '@kpl/shared';
@@ -117,9 +118,7 @@ async function toggle(card: EditorCard, selected: boolean) {
             <textarea v-model="descInput" maxlength="255" rows="2" class="w-full rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-2.5 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="Volitelný popis sady" />
           </div>
           <div v-if="isCardMaster" class="flex items-center gap-3">
-            <button @click="publicInput = !publicInput" :class="publicInput ? 'bg-indigo-600' : 'bg-zinc-300 dark:bg-zinc-600'" class="relative w-10 h-6 rounded-full transition-colors">
-              <span :class="publicInput ? 'translate-x-[18px]' : 'translate-x-0.5'" class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" />
-            </button>
+            <ToggleSwitch v-model="publicInput" />
             <span class="text-sm text-zinc-700 dark:text-zinc-300">{{ publicInput ? 'Veřejná sada' : 'Soukromá sada' }}</span>
           </div>
           <div class="flex gap-3">

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useEditorStore } from '../stores/editorStore';
 import { useProfileStore } from '../stores/profileStore';
 import SetCard from '../components/editor/SetCard.vue';
+import ToggleSwitch from '../components/ui/ToggleSwitch.vue';
 
 const router = useRouter();
 const editorStore = useEditorStore();
@@ -67,9 +68,7 @@ async function handleDelete(id: number) {
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold text-zinc-900 dark:text-white">Další sady karet</h2>
             <label v-if="isCardMaster" class="flex items-center gap-2 cursor-pointer">
-              <button @click="showAll = !showAll" :class="showAll ? 'bg-indigo-600' : 'bg-zinc-300 dark:bg-zinc-600'" class="relative w-10 h-6 rounded-full transition-colors">
-                <span :class="showAll ? 'translate-x-[18px]' : 'translate-x-0.5'" class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" />
-              </button>
+              <ToggleSwitch v-model="showAll" />
               <span class="text-xs text-zinc-500 dark:text-zinc-400">Všichni hráči</span>
             </label>
           </div>
