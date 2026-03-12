@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useEditorStore } from '../../stores/editorStore';
 import CardFilterBar from './CardFilterBar.vue';
 import type { EditorCard } from '@kpl/shared';
 
 const props = defineProps<{
   setId: number;
-  selectedCardIds: Set<number>;
+  selectedBlackIds: Set<number>;
+  selectedWhiteIds: Set<number>;
   cardType: 'black' | 'white';
   initialFilterSetId?: number | null;
 }>();
@@ -17,6 +18,7 @@ const emit = defineEmits<{
 
 const editorStore = useEditorStore();
 const type = ref<'black' | 'white'>(props.cardType);
+const activeSelectedIds = computed(() => type.value === 'black' ? props.selectedBlackIds : props.selectedWhiteIds);
 const search = ref('');
 const filterSetId = ref<number | null>(props.initialFilterSetId ?? null);
 const selectionFilter = ref<'all' | 'selected' | 'unselected'>('all');
@@ -60,7 +62,7 @@ function changePage(p: number) {
       >
         <input
           type="checkbox"
-          :checked="selectedCardIds.has(card.id)"
+          :checked="activeSelectedIds.has(card.id)"
           @change="emit('toggle', card, ($event.target as HTMLInputElement).checked)"
           class="mt-0.5 accent-indigo-600 shrink-0"
         />

@@ -100,7 +100,8 @@ async function toggle(card: EditorCard, selected: boolean) {
       <div class="bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 p-5">
         <CardBrowser v-if="activeTab === 'cards'"
           :set-id="setId"
-          :selected-card-ids="selectedBlack"
+          :selected-black-ids="selectedBlack"
+          :selected-white-ids="selectedWhite"
           card-type="black"
           @toggle="toggle"
         />
