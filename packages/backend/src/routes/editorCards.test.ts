@@ -19,7 +19,6 @@ vi.mock('@anthropic-ai/sdk', () => ({
 }));
 
 import db from '../db/db.js';
-import Anthropic from '@anthropic-ai/sdk';
 const mockDb = db as unknown as ReturnType<typeof vi.fn>;
 
 describe('GET /api/editor/cards', () => {
