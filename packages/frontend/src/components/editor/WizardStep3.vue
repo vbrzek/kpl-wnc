@@ -13,7 +13,6 @@ const isCardMaster = computed(() => profileStore.oauthUser?.role === 'card-maste
 const type = ref<'black' | 'white'>('white');
 const text = ref('');
 const pick = ref(1);
-const showTranslations = ref(false);
 const translations = ref({ en: '', ru: '', uk: '', es: '' });
 const addedCards = ref<EditorCard[]>([]);
 const error = ref('');
@@ -39,7 +38,6 @@ async function addCard() {
   text.value = '';
   pick.value = 1;
   translations.value = { en: '', ru: '', uk: '', es: '' };
-  showTranslations.value = false;
 }
 
 async function translateText() {
@@ -78,11 +76,8 @@ async function removeAdded(card: EditorCard) {
       </div>
     </div>
 
-    <div>
-      <button @click="showTranslations = !showTranslations" class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
-        {{ showTranslations ? 'Skrýt překlady' : 'Přidat překlady (volitelné)' }}
-      </button>
-      <div v-if="isCardMaster && showTranslations" class="mt-2">
+    <div class="flex flex-col gap-2">
+      <div v-if="isCardMaster">
         <button
           @click="translateText"
           :disabled="translating || !text.trim()"
@@ -91,7 +86,7 @@ async function removeAdded(card: EditorCard) {
           {{ translating ? 'Překládám…' : 'Přeložit pomocí AI' }}
         </button>
       </div>
-      <div v-if="showTranslations" class="grid grid-cols-2 gap-3 mt-2">
+      <div class="grid grid-cols-2 gap-3">
         <div v-for="lang in ['en', 'ru', 'uk', 'es']" :key="lang">
           <label class="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase mb-1 block">{{ lang }}</label>
           <textarea v-model="translations[lang as keyof typeof translations]" rows="2" class="w-full rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
