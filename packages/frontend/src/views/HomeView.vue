@@ -215,5 +215,40 @@ function onJoinPrivate(code: string) {
         {{ t('common.loading') }}
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="mt-12 pt-8 border-t border-white/5 text-center space-y-2">
+      <p class="text-xs text-slate-500 leading-relaxed">
+        {{ t('home.title') }}
+        {{ t('footer.basedOn') }}
+        <a href="https://www.cardsagainsthumanity.com/" target="_blank" rel="noopener noreferrer"
+           class="text-slate-400 hover:text-white underline underline-offset-2 transition-colors">
+          Cards Against Humanity
+        </a>
+        &nbsp;·&nbsp;
+        {{ t('footer.madeBy') }}
+        <a href="mailto:kpl@wnc.cz"
+           class="text-slate-400 hover:text-white underline underline-offset-2 transition-colors">
+          Wanaču
+        </a>
+      </p>
+      <p class="text-xs text-slate-600">
+        <RouterLink to="/terms-of-service" class="hover:text-slate-400 transition-colors">
+          {{ t('footer.terms') }}
+        </RouterLink>
+        &nbsp;·&nbsp;
+        <RouterLink to="/privacy" class="hover:text-slate-400 transition-colors">
+          {{ t('footer.privacy') }}
+        </RouterLink>
+        &nbsp;·&nbsp;
+        <a href="https://github.com/vbrzek/kpl-wnc/" target="_blank" rel="noopener noreferrer"
+           class="hover:text-slate-400 transition-colors">
+          {{ t('footer.sourceCode') }}
+        </a>
+      </p>
+      <p class="text-xs text-slate-700">
+        {{ t('footer.license') }}
+      </p>
+    </footer>
   </div>
 </template>
