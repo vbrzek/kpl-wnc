@@ -19,7 +19,7 @@ watch(
   [() => roomStore.currentBlackCard, () => roomStore.hand, locale],
   async () => {
     const blackIds = roomStore.currentBlackCard ? [roomStore.currentBlackCard.id] : [];
-    const whiteIds = roomStore.hand.map((c) => c.id);
+    const whiteIds = roomStore.hand.filter(c => !c.isBlank).map(c => c.id);
     await cardTranslations.fetchTranslations(blackIds, whiteIds);
   },
   { immediate: true },
@@ -32,13 +32,17 @@ const translatedBlackCard = computed(() => {
 });
 
 const translatedHand = computed(() =>
-  roomStore.hand.map((c) => ({ ...c, text: cardTranslations.getWhite(c.id, c.text) })),
+  roomStore.hand.map((c) =>
+    c.isBlank ? c : { ...c, text: cardTranslations.getWhite(c.id, c.text) }
+  ),
 );
 
 const pick = computed(() => roomStore.currentBlackCard?.pick ?? 1);
 const canSubmit = computed(() => roomStore.selectedCards.length === pick.value);
 const retracting = ref(false);
 const showTradeConfirm = ref(false);
+const showBlankCardModal = ref(false);
+const blankCardText = ref('');
 
 const canTrade = computed(
   () => roomStore.hasRule('rebooting_universe') && !roomStore.me?.tradedThisRound && (roomStore.me?.score ?? 0) >= 1 && !roomStore.me?.hasPlayed && !roomStore.isCardCzar
@@ -82,7 +86,26 @@ onUnmounted(() => {
 // --- Submit / retract ---
 function submit() {
   if (!canSubmit.value) return;
+  const hasBlank = roomStore.selectedCards.some(c => c.isBlank);
+  if (hasBlank) {
+    blankCardText.value = '';
+    showBlankCardModal.value = true;
+    return;
+  }
   roomStore.playCards(roomStore.selectedCards.map(c => c.id));
+}
+
+function confirmBlankCard() {
+  if (!blankCardText.value.trim()) return;
+  showBlankCardModal.value = false;
+  roomStore.playCards(
+    roomStore.selectedCards.map(c => c.id),
+    blankCardText.value.trim(),
+  );
+}
+
+function cancelBlankCard() {
+  showBlankCardModal.value = false;
 }
 
 function retract() {
@@ -232,6 +255,44 @@ watch(() => roomStore.room?.status, () => {
             class="flex-1 py-3 rounded-xl font-black text-black bg-yellow-500 hover:bg-yellow-400 transition-colors shadow-[0_4px_0_rgb(161,98,7)] active:shadow-none active:translate-y-0.5"
           >
             {{ t('game.selection.tradeConfirm') }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Carte Blanche: blank card text input modal -->
+    <div
+      v-if="showBlankCardModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      @click.self="cancelBlankCard"
+    >
+      <div class="bg-gray-900 border border-yellow-400/20 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xl">✏️</span>
+          <h2 class="text-lg font-bold text-white">{{ t('specialRules.carte_blanche_modal.title') }}</h2>
+        </div>
+        <p class="text-yellow-400/60 text-xs mb-4">{{ t('specialRules.carte_blanche_modal.hint') }}</p>
+        <textarea
+          v-model="blankCardText"
+          :placeholder="t('specialRules.carte_blanche_modal.placeholder')"
+          maxlength="200"
+          rows="3"
+          autofocus
+          class="w-full bg-gray-800 border border-gray-700 rounded-xl p-3 text-white text-sm resize-none focus:outline-none focus:border-yellow-400/40 mb-1"
+        />
+        <div class="text-right text-xs text-gray-500 mb-4">{{ blankCardText.length }}/200</div>
+        <div class="flex gap-3">
+          <button
+            @click="cancelBlankCard"
+            class="flex-1 py-3 rounded-xl font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors"
+          >
+            {{ t('specialRules.carte_blanche_modal.cancel') }}
+          </button>
+          <button
+            @click="confirmBlankCard"
+            :disabled="!blankCardText.trim()"
+            class="flex-1 py-3 rounded-xl font-black text-black bg-yellow-500 hover:bg-yellow-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_0_rgb(161,98,7)] active:shadow-none active:translate-y-0.5"
+          >
+            {{ t('specialRules.carte_blanche_modal.confirm') }}
           </button>
         </div>
       </div>

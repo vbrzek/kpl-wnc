@@ -30,6 +30,7 @@ export const useRoomStore = defineStore('room', () => {
 
   const czarMode = computed<CzarMode>(() => room.value?.czarMode ?? 'classic');
   const specialRules = computed(() => room.value?.specialRules ?? []);
+  const hasBlankCard = computed(() => hand.value.some(c => c.isBlank));
   const hasRule = (rule: SpecialRule) => specialRules.value.includes(rule);
   const blackCardCandidates = computed(() => room.value?.blackCardCandidates ?? null);
 
@@ -209,9 +210,9 @@ export const useRoomStore = defineStore('room', () => {
     finishedState.value = null;
   }
 
-  function playCards(cardIds: number[]) {
+  function playCards(cardIds: number[], blankCardText?: string) {
     lastPlayedCards.value = [...selectedCards.value];
-    socket.emit('game:playCards', cardIds);
+    socket.emit('game:playCards', { cardIds, blankCardText });
     selectedCards.value = [];
   }
 
@@ -264,7 +265,9 @@ export const useRoomStore = defineStore('room', () => {
   }
 
   function toggleCardSelection(card: WhiteCard) {
-    const idx = selectedCards.value.findIndex(c => c.id === card.id);
+    const idx = card.isBlank
+      ? selectedCards.value.findIndex(c => c.isBlank)
+      : selectedCards.value.findIndex(c => c.id === card.id);
     if (idx === -1) {
       const limit = currentBlackCard.value?.pick ?? 1;
       if (selectedCards.value.length >= limit) return;
@@ -309,7 +312,7 @@ export const useRoomStore = defineStore('room', () => {
     room, myPlayerId, isHost, me,
     hand, currentBlackCard, czarId, submissions, roundResult, selectedCards, isCardCzar,
     roundSkipped, finishedState,
-    czarMode, specialRules, hasRule, blackCardCandidates, myBet, setMyBet,
+    czarMode, specialRules, hasRule, hasBlankCard, blackCardCandidates, myBet, setMyBet,
     voteProgress, myVotedSubmissionId, mySubmissionId,
     init, setRoom, setMyPlayerId, leave,
     updateSettings, kickPlayer, startGame, endGame, updateNickname, updateAvatar, clearFinishedState, cleanup,
