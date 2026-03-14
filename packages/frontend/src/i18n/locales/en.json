@@ -193,6 +193,17 @@
       "name": "High Stakes",
       "desc": "Before playing, wager points. Win and collect, lose and forfeit."
     },
+    "carte_blanche": {
+      "name": "Carte Blanche",
+      "desc": "Each player gets one blank card. Write anything you want — but you only get it once per game."
+    },
+    "carte_blanche_modal": {
+      "title": "Write your text",
+      "placeholder": "Write your card text...",
+      "hint": "You only have this card once per game.",
+      "confirm": "Submit",
+      "cancel": "Cancel"
+    },
     "randoWon": "Rando Cardrissian wins — everyone loses!",
     "czarPicksBlackCard": "Card Czar is picking a black card...",
     "pickBlackCardTitle": "Pick the black card for this round",

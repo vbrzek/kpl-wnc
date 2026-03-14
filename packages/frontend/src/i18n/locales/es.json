@@ -193,6 +193,17 @@
       "name": "Apuestas altas",
       "desc": "Antes de jugar, apuesta puntos. Si ganas, los cobras; si pierdes, los pierdes."
     },
+    "carte_blanche": {
+      "name": "Carte Blanche",
+      "desc": "Cada jugador recibe una carta en blanco. Escribe lo que quieras — pero solo la tienes una vez por partida."
+    },
+    "carte_blanche_modal": {
+      "title": "Escribe tu texto",
+      "placeholder": "Escribe el texto de tu carta...",
+      "hint": "Solo tienes esta carta una vez por partida.",
+      "confirm": "Enviar",
+      "cancel": "Cancelar"
+    },
     "randoWon": "¡Rando Cardrissian gana — todos pierden!",
     "czarPicksBlackCard": "El Zar de Cartas está eligiendo una carta negra...",
     "pickBlackCardTitle": "Elige la carta negra para esta ronda",

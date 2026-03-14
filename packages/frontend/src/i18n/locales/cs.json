@@ -193,6 +193,17 @@
       "name": "High Stakes",
       "desc": "Před výběrem karty lze vsadit body. Výhra přináší vsazené body navíc, prohra je bere."
     },
+    "carte_blanche": {
+      "name": "Carte Blanche",
+      "desc": "Každý hráč dostane jednu prázdnou kartu. Napiš co chceš — ale máš ji jen jednou za celou hru."
+    },
+    "carte_blanche_modal": {
+      "title": "Napiš svůj text",
+      "placeholder": "Napiš text své karty...",
+      "hint": "Tuto kartu máš jen jednou za celou hru.",
+      "confirm": "Odeslat",
+      "cancel": "Zrušit"
+    },
     "randoWon": "Rando Cardrissian vyhrál — všichni prohráli!",
     "czarPicksBlackCard": "Karetní král vybírá černou kartu...",
     "pickBlackCardTitle": "Vyber černou kartu pro toto kolo",
