@@ -1,9 +1,17 @@
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(
+      JSON.parse(readFileSync(resolve(__dirname, '../../package.json'), 'utf-8')).version
+    ),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     vue(),
     tailwindcss(),

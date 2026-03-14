@@ -7,6 +7,7 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'editProfile'): void;
   (e: 'openRules'): void;
+  (e: 'openAbout'): void;
 }>();
 
 const router = useRouter();
@@ -60,7 +61,7 @@ async function logout() {
         class="w-full text-left px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
         {{ t('nav.rules') }}
       </button>
-      <button @click="navigate('/about')"
+      <button @click="emit('openAbout'); emit('close')"
         class="w-full text-left px-4 py-2.5 text-sm text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
         {{ t('nav.about') }}
       </button>
