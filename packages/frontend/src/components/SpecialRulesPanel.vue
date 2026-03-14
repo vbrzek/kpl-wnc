@@ -20,6 +20,7 @@ const RULES: RuleInfo[] = [
   { id: 'wheatons_law', icon: '🃏' },
   { id: 'rebooting_universe', icon: '♻️' },
   { id: 'high_stakes', icon: '💰' },
+  { id: 'carte_blanche', icon: '✏️' },
 ];
 
 function toggle(id: SpecialRule) {
