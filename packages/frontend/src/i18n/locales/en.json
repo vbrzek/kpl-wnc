@@ -235,7 +235,93 @@
     "cardEditor": "Card Editor",
     "friends": "Friends",
     "rules": "Rules",
-    "about": "About"
+    "about": "About",
+    "logout": "Log out"
+  },
+  "rules": {
+    "title": "Rules",
+    "tabs": {
+      "basic": "Basic",
+      "modes": "Game Modes",
+      "homerules": "House Rules"
+    },
+    "basic": [
+      {
+        "title": "Setup",
+        "items": [
+          "Each player draws 10 white cards — that's their hand.",
+          "One player becomes the Card Czar. In the first round, this is the host.",
+          "The Card Czar draws a black card and reads it aloud."
+        ]
+      },
+      {
+        "title": "Round Flow",
+        "items": [
+          "All other players (except the Czar) choose white card(s) from their hand — how many depends on the black card — and pass them anonymously to the Card Czar.",
+          "The Czar reads all responses and picks the best or funniest one (ideally the most offensive, but humor and how well it fits the black card also count).",
+          "The winner gets 1 point.",
+          "All players refill their hand back to 10 cards.",
+          "The Czar role passes to the next player in order."
+        ]
+      },
+      {
+        "title": "End of Game",
+        "items": [
+          "The game ends when someone reaches the target score, time runs out, or enough rounds have been played.",
+          "The player with the highest score at game end wins.",
+          "Ties are broken by whoever won the last round."
+        ]
+      }
+    ],
+    "modesIntro": "Choose how the Card Czar is selected",
+    "modes": [
+      {
+        "icon": "🔄",
+        "name": "Classic",
+        "desc": "The Czar role rotates clockwise (player order is determined by the order in which they joined). Every player gets to be the Czar equally often."
+      },
+      {
+        "icon": "🏆",
+        "name": "Meritocracy",
+        "desc": "The winner of each round becomes the Card Czar in the next round. Winning comes with responsibility!"
+      },
+      {
+        "icon": "👑",
+        "name": "God Mode",
+        "desc": "The host remains Card Czar for the entire game. Everyone else spends the whole game trying to impress them.",
+        "note": "Note: the host never earns points since they never submit white cards."
+      },
+      {
+        "icon": "☠️",
+        "name": "Czar is Dead",
+        "desc": "There is no Card Czar — the winner of each round is decided by a vote of all players. Players cannot vote for themselves. The player with the most votes wins the round."
+      }
+    ],
+    "homerulesIntro": "Optional expansions that the host can enable before the game",
+    "homerules": [
+      {
+        "icon": "🤖",
+        "name": "Rando Cardrissian",
+        "desc": "Every round, a bot named Rando plays a random white card from the deck. If Rando wins a round, everyone loses that round!",
+        "note": "If playing Meritocracy at the same time, when Rando wins the Czar stays."
+      },
+      {
+        "icon": "⚖️",
+        "name": "Wheaton's Law",
+        "desc": "Before each round, the Card Czar chooses from one of two randomly drawn black cards. More power, more responsibility."
+      },
+      {
+        "icon": "♻️",
+        "name": "Rebooting the Universe",
+        "desc": "At any point during the selection phase, a player may discard their entire hand and immediately draw 10 new white cards. This costs 1 point.",
+        "note": "Cannot be used after cards are submitted. Score can go below zero."
+      },
+      {
+        "icon": "🎲",
+        "name": "High Stakes",
+        "desc": "Before submitting cards, a player may wager points. If they win the round, they gain the wagered amount as a bonus. If they lose, they forfeit those points. You can only bet what you have."
+      }
+    ]
   },
   "footer": {
     "madeBy": "made with ❤️ by",

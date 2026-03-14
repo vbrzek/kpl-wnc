@@ -235,7 +235,93 @@
     "cardEditor": "Editor karet",
     "friends": "Přátelé",
     "rules": "Pravidla",
-    "about": "O aplikaci"
+    "about": "O aplikaci",
+    "logout": "Odhlásit se"
+  },
+  "rules": {
+    "title": "Pravidla",
+    "tabs": {
+      "basic": "Základní",
+      "modes": "Herní módy",
+      "homerules": "Domácí pravidla"
+    },
+    "basic": [
+      {
+        "title": "Příprava",
+        "items": [
+          "Každý hráč dostane 10 bílých karet – to je jeho ruka.",
+          "Jeden hráč se stane karetním králem (Czar). V prvním kole je to hostitel.",
+          "Karetní král lízne černou kartu a přečte ji nahlas."
+        ]
+      },
+      {
+        "title": "Průběh kola",
+        "items": [
+          "Ostatní hráči (kromě karetního krále) vyberou ze své ruky bílou kartu (nebo více, záleží na čísle na černé kartě) a anonymně ji předají karetnímu králi.",
+          "Karetní král přečte všechny odpovědi a vybere tu nejlepší nebo nejzábavnější (ideálně tu, které je nejvíce nelidská, ale hodnotí se i vtipnost a to jak se karta hodí k černé).",
+          "Vítěz kola získá 1 bod.",
+          "Všichni hráči doplní ruku na 10 karet.",
+          "Role karetního krále přejde na dalšího hráče v pořadí."
+        ]
+      },
+      {
+        "title": "Konec hry",
+        "items": [
+          "Hra skončí, jakmile někdo dosáhne cílového počtu bodů, vyprší čas, nebo se odehraje dostatečný počet kol.",
+          "Hráč s nejvyšším skóre v okamžiku konce hry vyhrává.",
+          "Při remíze rozhoduje pořadí podle posledního vyhraného kola."
+        ]
+      }
+    ],
+    "modesIntro": "Zvolte, jak se bude vybírat karetní král",
+    "modes": [
+      {
+        "icon": "🔄",
+        "name": "Klasický",
+        "desc": "Karetní král se střídá po směru hodinových ručiček (pořadí hráčů v kruhu určuje pořadí v jakém se do hry připojili). Každý hráč si vyzkouší roli karetního krále stejně často."
+      },
+      {
+        "icon": "🏆",
+        "name": "Meritocracy",
+        "desc": "Vítěz každého kola se stává karetním králem v kole následujícím. Výhra přináší odpovědnost!"
+      },
+      {
+        "icon": "👑",
+        "name": "God Mode",
+        "desc": "Hostitel zůstává karetním králem po celou dobu hry. Všichni ostatní se mu po celou dobu snaží zalíbit.",
+        "note": "Pozor: hostitel nezíská body, protože nikdy nevybírá bílé karty."
+      },
+      {
+        "icon": "☠️",
+        "name": "Czar is Dead",
+        "desc": "Žádný karetní král neexistuje — o vítězi každého kola rozhoduje hlasování všech hráčů. Hráč nesmí hlasovat pro sebe. Vyhrává ten, kdo získá nejvíce hlasů."
+      }
+    ],
+    "homerulesIntro": "Volitelná rozšíření, která aktivuje hostitel před hrou",
+    "homerules": [
+      {
+        "icon": "🤖",
+        "name": "Rando Cardrissian",
+        "desc": "Do každého kola vstupuje robot Rando, který hraje náhodnou bílou kartu z balíčku. Pokud Rando vyhraje kolo, všichni prohrávají kolo!",
+        "note": "Pokud hrajete zároveň Meritocracy, pokud vyhraje Rando, karetní král zůstává."
+      },
+      {
+        "icon": "⚖️",
+        "name": "Wheaton's Law",
+        "desc": "Před každým kolem si karetní král vybírá z jedné ze dvou náhodně vylosovaných černých karet tu, se kterou se bude hrát. Více moci, více odpovědnosti."
+      },
+      {
+        "icon": "♻️",
+        "name": "Rebooting the Universe",
+        "desc": "Kdykoli ve fázi výběru může hráč odhodit celou svou ruku a okamžitě si dobrat 10 nových bílých karet. Tato akce stojí 1 bod.",
+        "note": "Nelze použít po odeslání karet. Body jdou dolů i při záporném skóre."
+      },
+      {
+        "icon": "🎲",
+        "name": "High Stakes",
+        "desc": "Před odevzdáním karet si hráč může vsadit body. Pokud vyhraje kolo, získá vsazené body navíc. Pokud prohraje, přijde o ně. Sázet lze jen tolik, kolik hráč má."
+      }
+    ]
   },
   "footer": {
     "madeBy": "s ❤️ vyrobil",

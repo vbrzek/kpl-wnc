@@ -5,6 +5,7 @@ import { useRoomStore } from '../stores/roomStore';
 import { useProfileStore } from '../stores/profileStore';
 import PlayerAvatar from './PlayerAvatar.vue';
 import AppMenuDropdown from './AppMenuDropdown.vue';
+import RulesModal from './RulesModal.vue';
 
 const emit = defineEmits<{
   (e: 'editProfile'): void;
@@ -19,6 +20,7 @@ const isInGame = computed(() => roomStore.room !== null && roomStore.room.status
 const myScore = computed(() => roomStore.me?.score ?? 0);
 
 const menuOpen = ref(false);
+const showRulesModal = ref(false);
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value;
@@ -83,9 +85,12 @@ function onEditProfile() {
             v-if="menuOpen"
             @close="closeMenu"
             @edit-profile="onEditProfile"
+            @open-rules="showRulesModal = true"
           />
         </div>
       </div>
     </div>
   </header>
+
+  <RulesModal v-if="showRulesModal" @close="showRulesModal = false" />
 </template>

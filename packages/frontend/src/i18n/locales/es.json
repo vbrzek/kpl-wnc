@@ -235,7 +235,93 @@
     "cardEditor": "Editor karet",
     "friends": "Přátelé",
     "rules": "Pravidla",
-    "about": "O aplikaci"
+    "about": "O aplikaci",
+    "logout": "Odhlásit se"
+  },
+  "rules": {
+    "title": "Reglas",
+    "tabs": {
+      "basic": "Básicas",
+      "modes": "Modos de juego",
+      "homerules": "Reglas caseras"
+    },
+    "basic": [
+      {
+        "title": "Preparación",
+        "items": [
+          "Cada jugador roba 10 cartas blancas — esa es su mano.",
+          "Un jugador se convierte en el Zar de Cartas. En la primera ronda, es el anfitrión.",
+          "El Zar roba una carta negra y la lee en voz alta."
+        ]
+      },
+      {
+        "title": "Desarrollo de la ronda",
+        "items": [
+          "El resto de jugadores (excepto el Zar) eligen cartas blancas de su mano — cuántas depende de la carta negra — y las pasan de forma anónima al Zar de Cartas.",
+          "El Zar lee todas las respuestas y elige la mejor o la más divertida (idealmente la más inhumana, pero también cuentan el humor y cómo encaja con la carta negra).",
+          "El ganador de la ronda recibe 1 punto.",
+          "Todos los jugadores reponen su mano hasta 10 cartas.",
+          "El rol de Zar pasa al siguiente jugador en orden."
+        ]
+      },
+      {
+        "title": "Fin del juego",
+        "items": [
+          "El juego termina cuando alguien alcanza la puntuación objetivo, se acaba el tiempo o se han jugado suficientes rondas.",
+          "El jugador con mayor puntuación al final de la partida gana.",
+          "En caso de empate, gana quien ganó la última ronda."
+        ]
+      }
+    ],
+    "modesIntro": "Elige cómo se selecciona el Zar de Cartas",
+    "modes": [
+      {
+        "icon": "🔄",
+        "name": "Clásico",
+        "desc": "El rol de Zar rota en el sentido de las agujas del reloj (el orden de los jugadores lo determina el orden en que se unieron). Cada jugador será Zar el mismo número de veces."
+      },
+      {
+        "icon": "🏆",
+        "name": "Meritocracy",
+        "desc": "El ganador de cada ronda se convierte en el Zar de la siguiente. ¡Ganar conlleva responsabilidad!"
+      },
+      {
+        "icon": "👑",
+        "name": "God Mode",
+        "desc": "El anfitrión permanece como Zar durante toda la partida. El resto intenta impresionarle constantemente.",
+        "note": "Nota: el anfitrión no acumula puntos porque nunca juega cartas blancas."
+      },
+      {
+        "icon": "☠️",
+        "name": "Czar is Dead",
+        "desc": "No hay Zar de Cartas — el ganador de cada ronda se decide por votación de todos los jugadores. No se puede votar por uno mismo. Gana quien recibe más votos."
+      }
+    ],
+    "homerulesIntro": "Expansiones opcionales que el anfitrión puede activar antes de la partida",
+    "homerules": [
+      {
+        "icon": "🤖",
+        "name": "Rando Cardrissian",
+        "desc": "En cada ronda, un bot llamado Rando juega una carta blanca aleatoria del mazo. Si Rando gana una ronda, ¡todos pierden esa ronda!",
+        "note": "Si se juega con Meritocracy al mismo tiempo y Rando gana, el Zar no cambia."
+      },
+      {
+        "icon": "⚖️",
+        "name": "Wheaton's Law",
+        "desc": "Antes de cada ronda, el Zar elige entre dos cartas negras sacadas al azar. Más poder, más responsabilidad."
+      },
+      {
+        "icon": "♻️",
+        "name": "Rebooting the Universe",
+        "desc": "En cualquier momento de la fase de selección, un jugador puede descartar su mano y robar inmediatamente 10 nuevas cartas blancas. Esto cuesta 1 punto.",
+        "note": "No se puede usar tras enviar las cartas. La puntuación puede bajar de cero."
+      },
+      {
+        "icon": "🎲",
+        "name": "High Stakes",
+        "desc": "Antes de enviar las cartas, un jugador puede apostar puntos. Si gana la ronda, recibe los puntos apostados como bonus. Si pierde, los pierde. Solo se puede apostar lo que se tiene."
+      }
+    ]
   },
   "footer": {
     "madeBy": "s ❤️ vyrobil",
