@@ -397,6 +397,19 @@ export class GameEngine {
       }
     }
 
+    // High Stakes: apply bets
+    if (this.specialRules.has('high_stakes')) {
+      for (const [pid, bet] of this.bets.entries()) {
+        const betPlayer = this.players.find(p => p.id === pid);
+        if (!betPlayer) continue;
+        if (winnerIds.includes(pid)) {
+          betPlayer.score += bet;
+        } else {
+          betPlayer.score = Math.max(0, betPlayer.score - bet);
+        }
+      }
+    }
+
     const scores: Record<string, number> = {};
     for (const p of this.players) scores[p.id] = p.score;
 
@@ -451,6 +464,14 @@ export class GameEngine {
 
     // Rando Cardrissian win
     if (submissionId === GameEngine.RANDO_ID && this.randoSubmission) {
+      // High Stakes: nobody won → all bettors lose their bet
+      if (this.specialRules.has('high_stakes')) {
+        for (const [pid, bet] of this.bets.entries()) {
+          const betPlayer = this.players.find(p => p.id === pid);
+          if (!betPlayer) continue;
+          betPlayer.score = Math.max(0, betPlayer.score - bet);
+        }
+      }
       const scores: Record<string, number> = {};
       for (const p of this.players) scores[p.id] = p.score;
       this.lastRoundWinnerId = czar.id; // Rando won → meritocracy keeps the same czar

@@ -623,6 +623,71 @@ describe('high_stakes', () => {
     expect(result.scores[winnerId]).toBe(winnerInitial + 1 + winnerBet);
     expect(result.scores[loserId]).toBe(Math.max(0, loserInitial - loserBet));
   });
+
+  it('bets are applied when rando cardrissian wins (all bettors lose)', () => {
+    // Enable rando_cardrissian + high_stakes together
+    const randoPlayers = [
+      makePlayer('r1', 'Alice'),
+      makePlayer('r2', 'Bob'),
+      makePlayer('r3', 'Charlie'),
+    ];
+    const randoEng = new GameEngine(randoPlayers, makeBlackCards(10), makeWhiteCards(50), ['high_stakes', 'rando_cardrissian'], 'r1');
+    randoEng.startRound();
+    const randoCzar = randoPlayers.find(p => p.isCardCzar)!;
+    const [randoNonCzar1, randoNonCzar2] = randoPlayers.filter(p => !p.isCardCzar);
+    randoNonCzar1.score = 3;
+    randoNonCzar2.score = 2;
+
+    randoEng.placeBet(randoNonCzar1.id, 2);
+    randoEng.placeBet(randoNonCzar2.id, 1);
+    randoEng.submitCards(randoNonCzar1.id, [randoEng.getPlayerHand(randoNonCzar1.id)[0].id]);
+    randoEng.submitCards(randoNonCzar2.id, [randoEng.getPlayerHand(randoNonCzar2.id)[0].id]);
+    // Force rando win
+    const result = randoEng.selectWinner(randoCzar.id, 'rando_cardrissian');
+    if ('error' in result) throw new Error('unexpected error');
+    // All bettors should lose their bets
+    expect(result.scores[randoNonCzar1.id]).toBe(Math.max(0, 3 - 2)); // 1
+    expect(result.scores[randoNonCzar2.id]).toBe(Math.max(0, 2 - 1)); // 1
+  });
+
+  it('bets are applied in czar_is_dead mode via resolveVotes', () => {
+    // In czar_is_dead mode there is no czar — all players submit and vote
+    const votePlayers = [
+      makePlayer('v1', 'Alice'),
+      makePlayer('v2', 'Bob'),
+      makePlayer('v3', 'Charlie'),
+    ];
+    const voteEng = new GameEngine(votePlayers, makeBlackCards(10), makeWhiteCards(50), ['high_stakes'], 'v1', 'czar_is_dead');
+    voteEng.startRound();
+    const [vp1, vp2, vp3] = votePlayers;
+    vp1.score = 3;
+    vp2.score = 2;
+    vp3.score = 4;
+
+    voteEng.placeBet(vp1.id, 2);
+    voteEng.placeBet(vp2.id, 1);
+    // vp3 doesn't bet
+    voteEng.submitCards(vp1.id, [voteEng.getPlayerHand(vp1.id)[0].id]);
+    voteEng.submitCards(vp2.id, [voteEng.getPlayerHand(vp2.id)[0].id]);
+    voteEng.submitCards(vp3.id, [voteEng.getPlayerHand(vp3.id)[0].id]);
+
+    const sub1Id = voteEng.getSubmissionId(vp1.id)!;
+    const sub2Id = voteEng.getSubmissionId(vp2.id)!;
+    // vp1 wins: gets votes from vp2 and vp3
+    voteEng.castVote(vp2.id, sub1Id);
+    voteEng.castVote(vp3.id, sub1Id);
+    voteEng.castVote(vp1.id, sub2Id);
+
+    const result = voteEng.resolveVotes();
+    // vp1 wins (2 votes)
+    expect(result.winnerId).toBe(vp1.id);
+    // vp1: 3 (initial) + 1 (win) + 2 (bet won) = 6
+    expect(result.scores[vp1.id]).toBe(6);
+    // vp2: 2 (initial) - 1 (bet lost) = 1
+    expect(result.scores[vp2.id]).toBe(1);
+    // vp3: 4 (initial, no bet) = 4
+    expect(result.scores[vp3.id]).toBe(4);
+  });
 });
 
 // --- czarMode ---
