@@ -63,13 +63,13 @@ function handlePostRound(room: GameRoom, engine: GameEngine, result: RoundResult
 export function registerGameHandlers(io: IO, socket: AppSocket) {
 
   // Player submits white cards during SELECTION
-  socket.on('game:playCards', (cardIds) => {
+  socket.on('game:playCards', (data) => {
     if (!checkRateLimit(socket.id, 'game:playCards')) {
       socket.emit('game:error', 'Příliš mnoho požadavků. Zkus to za chvíli.');
       return;
     }
-    const ids = validate(PlayCardsSchema, cardIds);
-    if (!ids) { socket.emit('game:error', 'Neplatná data karet.'); return; }
+    const parsed = validate(PlayCardsSchema, data);
+    if (!parsed) { socket.emit('game:error', 'Neplatná data karet.'); return; }
 
     const playerToken = socketToToken.get(socket.id);
     if (!playerToken) return;
@@ -86,19 +86,17 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     if (!engine) { socket.emit('game:error', 'Herní engine nenalezen.'); return; }
 
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
-    const result = engine.submitCards(playerId, ids);
+    const result = engine.submitCards(playerId, parsed.cardIds, parsed.blankCardText);
 
     if ('error' in result) {
       socket.emit('game:error', result.error);
       return;
     }
 
-    // Emit submissionId back to the player (needed for czar_is_dead voting UI)
     const subId = engine.getSubmissionId(playerId);
     if (subId) socket.emit('game:mySubmissionId', subId);
 
     if (result.allSubmitted) {
-      // Zruš round timer a přejdi do JUDGING
       roomManager.clearRoundTimer(room.code);
       startJudgingPhase(room, engine, io);
     } else {

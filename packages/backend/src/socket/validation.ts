@@ -8,7 +8,7 @@ const roomCode = z.string().toUpperCase().regex(/^[A-Z2-9]{6}$/, 'Neplatný kód
 
 const VALID_RULES: SpecialRule[] = [
   'rando_cardrissian', 'wheatons_law',
-  'rebooting_universe', 'high_stakes',
+  'rebooting_universe', 'high_stakes', 'carte_blanche',
 ];
 
 const specialRules = z.array(z.enum(VALID_RULES as [SpecialRule, ...SpecialRule[]])).default([]);
@@ -71,7 +71,10 @@ export const UpdateSettingsSchema = z.object({
 export const ChooseBlackCardSchema = z.number().int().positive();
 export const PlaceBetSchema = z.number().int().min(0).max(100);
 
-export const PlayCardsSchema = z.array(z.number().int().positive()).min(1).max(3);
+export const PlayCardsSchema = z.object({
+  cardIds: z.array(z.number().int().min(0)).min(1).max(3),
+  blankCardText: z.string().max(200).optional(),
+});
 
 export const VoteSchema = z.union([
   z.string().uuid(),
