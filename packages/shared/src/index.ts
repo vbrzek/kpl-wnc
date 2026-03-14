@@ -6,7 +6,8 @@ export type SpecialRule =
   | 'rando_cardrissian'
   | 'wheatons_law'
   | 'rebooting_universe'
-  | 'high_stakes';
+  | 'high_stakes'
+  | 'carte_blanche';
 
 // Czar Mode — nahrazuje god_mode a meritocracy ze SpecialRule
 export type CzarMode = 'classic' | 'meritocracy' | 'god_mode' | 'czar_is_dead';
@@ -36,7 +37,10 @@ export interface BlackCard {
 export interface WhiteCard {
   id: number;
   text: string;
+  isBlank?: true;
 }
+
+export const BLANK_CARD_ID = 0;
 
 export interface GameRoundStart {
   blackCard: BlackCard;
@@ -198,7 +202,7 @@ export interface ClientToServerEvents {
     callback: (result: { ok: true } | { error: string }) => void
   ) => void;
   'game:leave': () => void;
-  'game:playCards': (cardIds: number[]) => void;
+  'game:playCards': (data: { cardIds: number[]; blankCardText?: string }) => void;
   'game:judgeSelect': (submissionId: string) => void;
   'game:retractCards': () => void;
   'game:tradeCards': () => void;
