@@ -21,6 +21,7 @@ export interface EngineSnapshot {
   bets: Record<string, number>;
   czarMode: CzarMode;
   votes: Record<string, string>;
+  blankCardsUsed: string[];
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -47,6 +48,7 @@ export class GameEngine {
   private randoSubmission: { submissionId: 'rando_cardrissian'; cards: WhiteCard[] } | null = null;
   private bets = new Map<string, number>();
   private votes = new Map<string, string>(); // playerId → submissionId
+  private blankCardsUsed = new Set<string>(); // playerIds who used their Carte Blanche card
 
   currentBlackCard: BlackCard | null = null;
   roundNumber = 0;
@@ -79,7 +81,7 @@ export class GameEngine {
 
     // Move last round's submitted cards to the used pile before clearing
     for (const sub of this.submissions.values()) {
-      this.usedWhiteCards.push(...sub.cards);
+      this.usedWhiteCards.push(...sub.cards.filter(c => !c.isBlank));
     }
     this.submissions.clear();
     this.tradedThisRound.clear();
@@ -175,6 +177,7 @@ export class GameEngine {
   submitCards(
     playerId: string,
     cardIds: number[],
+    blankCardText?: string,
   ): { ok: true; allSubmitted: boolean } | { error: string } {
     const player = this.players.find(p => p.id === playerId);
     if (!player) return { error: 'Hráč nenalezen.' };
@@ -187,14 +190,29 @@ export class GameEngine {
       return { error: `Musíš vybrat přesně ${required} karet.` };
     }
 
+    const usesBlank = cardIds.includes(0);
+    if (usesBlank) {
+      if (!this.specialRules.has('carte_blanche')) return { error: 'Carte Blanche není aktivní.' };
+      if (this.blankCardsUsed.has(playerId)) return { error: 'Prázdnou kartu jsi již použil.' };
+      if (!blankCardText?.trim()) return { error: 'Text prázdné karty nesmí být prázdný.' };
+      if (blankCardText.length > 200) return { error: 'Text prázdné karty je příliš dlouhý (max 200 znaků).' };
+    }
+
+    const normalIds = cardIds.filter(id => id !== 0);
     const hand = this.playerHands.get(playerId) ?? [];
     const selectedCards: WhiteCard[] = [];
-    for (const id of cardIds) {
+
+    for (const id of normalIds) {
       const idx = hand.findIndex(c => c.id === id);
       if (idx === -1) return { error: 'Karta není v tvé ruce.' };
       selectedCards.push(hand.splice(idx, 1)[0]);
     }
     this.playerHands.set(playerId, hand);
+
+    if (usesBlank) {
+      selectedCards.push({ id: 0, text: blankCardText!.trim(), isBlank: true });
+      this.blankCardsUsed.add(playerId);
+    }
 
     this.submissions.set(playerId, { submissionId: randomUUID(), cards: selectedCards });
     player.hasPlayed = true;
@@ -216,10 +234,14 @@ export class GameEngine {
     if (!submission) return { error: 'Odeslání nebylo nalezeno.' };
 
     const hand = this.playerHands.get(playerId) ?? [];
-    hand.push(...submission.cards);
+    hand.push(...submission.cards.filter(c => !c.isBlank));
     this.playerHands.set(playerId, hand);
-    this.submissions.delete(playerId);
 
+    if (submission.cards.some(c => c.isBlank)) {
+      this.blankCardsUsed.delete(playerId);
+    }
+
+    this.submissions.delete(playerId);
     player.hasPlayed = false;
     return { ok: true };
   }
@@ -519,7 +541,11 @@ export class GameEngine {
   }
 
   getPlayerHand(playerId: string): WhiteCard[] {
-    return [...(this.playerHands.get(playerId) ?? [])];
+    const hand = [...(this.playerHands.get(playerId) ?? [])];
+    if (this.specialRules.has('carte_blanche') && !this.blankCardsUsed.has(playerId)) {
+      hand.push({ id: 0, text: '', isBlank: true });
+    }
+    return hand;
   }
 
   toSnapshot(): EngineSnapshot {
@@ -543,6 +569,7 @@ export class GameEngine {
       bets: Object.fromEntries(this.bets),
       czarMode: this.czarMode,
       votes: Object.fromEntries(this.votes),
+      blankCardsUsed: Array.from(this.blankCardsUsed),
     };
   }
 
@@ -564,6 +591,7 @@ export class GameEngine {
     engine.bets = new Map(Object.entries(snap.bets ?? {}));
     engine.czarMode = snap.czarMode ?? 'classic';
     engine.votes = new Map(Object.entries(snap.votes ?? {}));
+    engine.blankCardsUsed = new Set(snap.blankCardsUsed ?? []);
     return engine;
   }
 }

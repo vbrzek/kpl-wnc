@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { GameEngine } from './GameEngine.js';
 import type { Player, BlackCard, WhiteCard } from '@kpl/shared';
+import { BLANK_CARD_ID } from '@kpl/shared';
 
 function makePlayer(id: string, nickname: string): Player {
   return { id, socketId: 'socket-' + id, nickname, score: 0, isCardCzar: false, hasPlayed: false, tradedThisRound: false, isAfk: false } as Player;
@@ -806,5 +807,110 @@ describe('czar_is_dead voting', () => {
     const result = engine.resolveVotes();
     expect(result.winnerIds).toEqual([]);
     expect(result.winnerId).toBeNull();
+  });
+});
+
+describe('carte_blanche', () => {
+  let players: Player[];
+  let engine: GameEngine;
+
+  beforeEach(() => {
+    players = [
+      makePlayer('p1', 'Alice'),
+      makePlayer('p2', 'Bob'),
+      makePlayer('p3', 'Charlie'),
+    ];
+    engine = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100), ['carte_blanche']);
+  });
+
+  it('hand includes blank card for all non-czar players after startRound', () => {
+    engine.startRound();
+    for (const p of players) {
+      const hand = engine.getPlayerHand(p.id);
+      expect(hand).toHaveLength(11);
+      expect(hand.some(c => c.isBlank)).toBe(true);
+    }
+  });
+
+  it('blank card is not in hand without the rule', () => {
+    const e2 = new GameEngine(players, makeBlackCards(20), makeWhiteCards(100));
+    e2.startRound();
+    expect(e2.getPlayerHand(players[0].id).some(c => c.isBlank)).toBe(false);
+    expect(e2.getPlayerHand(players[0].id)).toHaveLength(10);
+  });
+
+  it('submitCards succeeds with blank card and text', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    const result = engine.submitCards(nonCzar.id, [BLANK_CARD_ID], 'My custom text');
+    expect('ok' in result).toBe(true);
+    const subs = engine.getAnonymousSubmissions();
+    const sub = subs[0];
+    expect(sub.cards[0].text).toBe('My custom text');
+    expect(sub.cards[0].isBlank).toBe(true);
+  });
+
+  it('submitCards fails if blank card used without text', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    const result = engine.submitCards(nonCzar.id, [BLANK_CARD_ID]);
+    expect('error' in result).toBe(true);
+  });
+
+  it('blank card disappears from hand after use (next round too)', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    engine.submitCards(nonCzar.id, [BLANK_CARD_ID], 'test');
+    engine.startRound();
+    expect(engine.getPlayerHand(nonCzar.id).some(c => c.isBlank)).toBe(false);
+  });
+
+  it('blank card is preserved after tradeHand', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    nonCzar.score = 5;
+    engine.tradeHand(nonCzar.id);
+    const hand = engine.getPlayerHand(nonCzar.id);
+    expect(hand.filter(c => !c.isBlank)).toHaveLength(10);
+    expect(hand.some(c => c.isBlank)).toBe(true);
+  });
+
+  it('blank card returns to hand on retractCards', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    engine.submitCards(nonCzar.id, [BLANK_CARD_ID], 'test');
+    expect(engine.getPlayerHand(nonCzar.id).some(c => c.isBlank)).toBe(false);
+    engine.retractCards(nonCzar.id);
+    expect(engine.getPlayerHand(nonCzar.id).some(c => c.isBlank)).toBe(true);
+  });
+
+  it('blank card cannot be used twice (even after new round)', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    engine.submitCards(nonCzar.id, [BLANK_CARD_ID], 'first use');
+    engine.startRound();
+    const result = engine.submitCards(nonCzar.id, [BLANK_CARD_ID], 'second try');
+    expect('error' in result).toBe(true);
+  });
+
+  it('snapshot preserves blankCardsUsed', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    engine.submitCards(nonCzar.id, [BLANK_CARD_ID], 'test');
+    const snap = engine.toSnapshot();
+    const restored = GameEngine.fromSnapshot(snap, players);
+    expect(restored.getPlayerHand(nonCzar.id).some(c => c.isBlank)).toBe(false);
+  });
+
+  it('blank card not added to white deck used pile after round', () => {
+    engine.startRound();
+    const nonCzar = players.find(p => !p.isCardCzar)!;
+    engine.submitCards(nonCzar.id, [BLANK_CARD_ID], 'test');
+    const snapBefore = engine.toSnapshot();
+    const usedBefore = snapBefore.usedWhiteCards.length;
+    engine.startRound();
+    const snapAfter = engine.toSnapshot();
+    // usedWhiteCards should NOT have increased by blank card
+    expect(snapAfter.usedWhiteCards.every(c => !c.isBlank)).toBe(true);
   });
 });
