@@ -229,5 +229,20 @@
       "yourCards": "Ваши карты",
       "vote": "Голосовать"
     }
+  },
+  "nav": {
+    "myProfile": "Můj profil",
+    "cardEditor": "Editor karet",
+    "friends": "Přátelé",
+    "rules": "Pravidla",
+    "about": "O aplikaci"
+  },
+  "footer": {
+    "madeBy": "s ❤️ vyrobil",
+    "basedOn": "podle původní hry",
+    "sourceCode": "Zdrojový kód",
+    "license": "Vydáno pod licencí CC BY-NC-SA 4.0 — komerční využití není povoleno.",
+    "terms": "Podmínky použití",
+    "privacy": "Ochrana soukromí"
   }
 }

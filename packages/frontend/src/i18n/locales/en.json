@@ -229,5 +229,20 @@
       "yourCards": "Your cards",
       "vote": "Vote"
     }
+  },
+  "nav": {
+    "myProfile": "My Profile",
+    "cardEditor": "Card Editor",
+    "friends": "Friends",
+    "rules": "Rules",
+    "about": "About"
+  },
+  "footer": {
+    "madeBy": "made with ❤️ by",
+    "basedOn": "based on the original game",
+    "sourceCode": "Source Code",
+    "license": "Released under CC BY-NC-SA 4.0 — commercial use is not permitted.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
   }
 }
