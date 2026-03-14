@@ -40,6 +40,21 @@ const router = createRouter({
       component: () => import('../views/TermsView.vue'),
       meta: { public: true },
     },
+    {
+      path: '/rules',
+      component: () => import('../views/RulesView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/about',
+      component: () => import('../views/AboutView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/friends',
+      component: () => import('../views/FriendsView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
