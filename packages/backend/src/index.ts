@@ -2,6 +2,8 @@ import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import fastifyStatic from '@fastify/static';
+import { AVATARS_DIR } from './utils/avatarCache.js';
 import { roomManager } from './game/RoomManager.js';
 import type { ManagerSnapshot } from './game/RoomManager.js';
 import Fastify from 'fastify';
@@ -36,6 +38,13 @@ await app.register(cors, {
 });
 
 await app.register(cookie);
+
+if (!fs.existsSync(AVATARS_DIR)) fs.mkdirSync(AVATARS_DIR, { recursive: true });
+await app.register(fastifyStatic, {
+  root: AVATARS_DIR,
+  prefix: '/uploads/avatars/',
+  decorateReply: false,
+});
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   await app.register(oauth2Plugin, {

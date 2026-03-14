@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { buildDiceBearUrl } from '../stores/profileStore';
 
 const props = withDefaults(defineProps<{
@@ -8,9 +8,12 @@ const props = withDefaults(defineProps<{
   size?: number;
 }>(), { size: 40 });
 
-const avatarUrl = computed(() =>
-  props.avatarUrl || buildDiceBearUrl('bottts', props.nickname)
-);
+const failed = ref(false);
+
+const src = computed(() => {
+  if (!failed.value && props.avatarUrl) return props.avatarUrl;
+  return buildDiceBearUrl('bottts', props.nickname);
+});
 </script>
 
 <template>
@@ -19,9 +22,10 @@ const avatarUrl = computed(() =>
     :style="{ width: `${size}px`, height: `${size}px` }"
   >
     <img
-      :src="avatarUrl"
+      :src="src"
       :alt="nickname"
       class="w-full h-full object-cover"
+      @error="failed = true"
     />
   </div>
 </template>

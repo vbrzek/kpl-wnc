@@ -3,6 +3,7 @@ import { z } from 'zod';
 import db from '../db/db.js';
 import { signToken } from '../auth/jwt.js';
 import { verifyJwt } from '../auth/middleware.js';
+import { isExternalAvatarUrl, cacheAvatar } from '../utils/avatarCache.js';
 
 // #7 — single FRONTEND_URL constant
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';
@@ -60,6 +61,27 @@ function formatUser(user: UserRow) {
  * or insert a new record. Returns userId and whether it was newly created.
  */
 async function findOrCreateUser(params: {
+  email: string | null;
+  provider: 'google' | 'discord';
+  providerId: string;
+  avatarUrl: string | null;
+}): Promise<{ userId: number; isNew: boolean }> {
+  const { email, provider, providerId, avatarUrl } = params;
+
+  const result = await upsertUser({ email, provider, providerId, avatarUrl });
+
+  // Cache external avatar locally to avoid provider CDN rate limits
+  if (isExternalAvatarUrl(avatarUrl)) {
+    const localUrl = await cacheAvatar(avatarUrl!, result.userId);
+    if (localUrl) {
+      await db('users').where({ id: result.userId }).update({ avatar_url: localUrl });
+    }
+  }
+
+  return result;
+}
+
+async function upsertUser(params: {
   email: string | null;
   provider: 'google' | 'discord';
   providerId: string;
