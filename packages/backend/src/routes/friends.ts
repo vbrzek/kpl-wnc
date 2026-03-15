@@ -1,11 +1,18 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { Server } from 'socket.io';
+import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { z } from 'zod';
 import db from '../db/db.js';
 import { verifyJwt } from '../auth/middleware.js';
 
 const SendRequestSchema = z.object({ addresseeId: z.number().int().positive() });
 
-const friendsRoutes: FastifyPluginAsync = async (fastify) => {
+interface FriendsRouteOpts {
+  io?: Server<ClientToServerEvents, ServerToClientEvents>;
+}
+
+const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts) => {
+  const io = opts.io;
   fastify.decorateRequest('jwtUser', undefined);
 
   // GET /friends — accepted friends
@@ -60,6 +67,17 @@ const friendsRoutes: FastifyPluginAsync = async (fastify) => {
     if (existing) return reply.status(409).send({ error: 'Already friends or request pending' });
 
     const [friendshipId] = await db('friendships').insert({ requester_id: userId, addressee_id: addresseeId });
+
+    // Notify addressee in real-time if online
+    if (io) {
+      const requester = await db('users').where({ id: userId }).select('nickname', 'avatar_url').first().catch(() => null);
+      io.to(`user:${addresseeId}`).emit('friend:request_received', {
+        friendshipId,
+        fromNick: requester?.nickname ?? 'Někdo',
+        fromAvatarUrl: requester?.avatar_url ?? null,
+      });
+    }
+
     return reply.status(201).send({ friendshipId });
   });
 
@@ -74,6 +92,16 @@ const friendsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!row) return reply.status(404).send({ error: 'Request not found' });
 
     await db('friendships').where({ id }).update({ status: 'accepted' });
+
+    if (io) {
+      const accepter = await db('users').where({ id: userId }).select('nickname', 'avatar_url').first().catch(() => null);
+      io.to(`user:${row.requester_id}`).emit('friend:request_accepted', {
+        friendshipId: id,
+        byNick: accepter?.nickname ?? 'Někdo',
+        byAvatarUrl: accepter?.avatar_url ?? null,
+      });
+    }
+
     return { ok: true };
   });
 
