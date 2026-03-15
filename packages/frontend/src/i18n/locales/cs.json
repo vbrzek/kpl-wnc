@@ -369,5 +369,11 @@
     "cantAddSelf": "To jsi ty!",
     "loginToAdd": "Přihlas se, abys mohl(a) posílat žádosti o přátelství.",
     "goLogin": "Přihlásit se"
+  },
+  "playerCard": {
+    "guestInfo": "Hraje jen na návštěvě",
+    "addFriend": "+ Přidat do přátel",
+    "requestSent": "Žádost odeslána",
+    "alreadyFriends": "Již přátelé"
   }
 }

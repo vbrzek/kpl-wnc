@@ -25,6 +25,7 @@ export interface Player {
   hasPlayed: boolean;
   tradedThisRound: boolean;
   isAfk: boolean;
+  oauthUserId?: number | null;
 }
 
 // Karty

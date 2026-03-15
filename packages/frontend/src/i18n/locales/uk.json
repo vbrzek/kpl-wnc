@@ -369,5 +369,11 @@
     "cantAddSelf": "Це ти!",
     "loginToAdd": "Увійдіть, щоб надсилати запити в друзі.",
     "goLogin": "Увійти"
+  },
+  "playerCard": {
+    "guestInfo": "Просто заглянув",
+    "addFriend": "+ Додати до друзів",
+    "requestSent": "Запит надіслано",
+    "alreadyFriends": "Вже друзі"
   }
 }

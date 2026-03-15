@@ -8,7 +8,15 @@ vi.mock('../game/RoomManager.js', () => ({
   },
 }));
 
+vi.mock('../db/db.js', () => {
+  const fn = vi.fn();
+  (fn as any).raw = vi.fn();
+  return { default: fn };
+});
+
 import { roomManager } from '../game/RoomManager.js';
+import db from '../db/db.js';
+const mockDb = db as unknown as ReturnType<typeof vi.fn>;
 
 describe('GET /api/rooms/:code/preview', () => {
   let app: ReturnType<typeof Fastify>;
@@ -60,5 +68,55 @@ describe('GET /api/rooms/:code/preview', () => {
     (roomManager.getRoom as ReturnType<typeof vi.fn>).mockReturnValue(null);
     await app.inject({ method: 'GET', url: '/api/rooms/abc123/preview' });
     expect(roomManager.getRoom).toHaveBeenCalledWith('ABC123');
+  });
+});
+
+describe('GET /api/users/:userId/public-profile', () => {
+  let app: ReturnType<typeof Fastify>;
+
+  beforeEach(async () => {
+    vi.resetAllMocks();
+    app = Fastify({ logger: false });
+    await app.register(roomsRoutes, { prefix: '/api' });
+    await app.ready();
+  });
+
+  it('returns 404 for unknown user', async () => {
+    mockDb.mockReturnValue({
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      first: vi.fn().mockResolvedValue(undefined),
+    });
+    const res = await app.inject({ method: 'GET', url: '/api/users/99999/public-profile' });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('returns 400 for non-numeric userId', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/users/abc/public-profile' });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('returns public profile with trophies for known user', async () => {
+    mockDb.mockReturnValue({
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      first: vi.fn().mockResolvedValue({
+        id: 5,
+        nickname: 'TestUser',
+        avatar_url: 'https://example.com/avatar.png',
+        trophies: 13,
+      }),
+    });
+    const res = await app.inject({ method: 'GET', url: '/api/users/5/public-profile' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toEqual({
+      userId: 5,
+      nickname: 'TestUser',
+      avatarUrl: 'https://example.com/avatar.png',
+      trophies: 13,
+    });
   });
 });
