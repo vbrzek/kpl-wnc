@@ -21,6 +21,7 @@ import roomsRoutes from './routes/rooms.js';
 import authRoutes from './routes/auth.js';
 import editorSetsRoutes from './routes/editorSets.js';
 import editorCardsRoutes from './routes/editorCards.js';
+import friendsRoutes from './routes/friends.js';
 
 config({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') });
 
@@ -106,6 +107,7 @@ await app.register(cardTranslationsRoute, { prefix: '/api' });
 await app.register(roomsRoutes, { prefix: '/api' });
 await app.register(editorSetsRoutes, { prefix: '/api' });
 await app.register(editorCardsRoutes, { prefix: '/api' });
+await app.register(friendsRoutes, { prefix: '/api' });
 
 io.on('connection', (socket) => {
   socket.emit('server:hello', STARTUP_ID);
