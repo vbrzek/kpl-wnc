@@ -5,7 +5,9 @@
     "join": "Join",
     "loading": "Loading...",
     "copied": "Copied!",
-    "copyLink": "Copy link"
+    "copyLink": "Copy link",
+    "back": "Back",
+    "backToHome": "Back to home"
   },
   "home": {
     "title": "Cards Against Humanity",
@@ -341,5 +343,26 @@
     "license": "Released under CC BY-NC-SA 4.0 — commercial use is not permitted.",
     "terms": "Terms of Service",
     "privacy": "Privacy Policy"
+  },
+  "friends": {
+    "title": "Friends",
+    "myFriends": "My friends",
+    "noFriends": "No friends yet.",
+    "pendingRequests": "Friend requests",
+    "addFriend": "Add friend",
+    "addFriendHint": "Share your link — your friend clicks it and sends you a request.",
+    "copyProfileLink": "Copy link",
+    "showQR": "Show QR code",
+    "hideQR": "Hide QR code",
+    "invite": "Invite to game",
+    "remove": "Remove",
+    "accept": "Accept",
+    "reject": "Decline",
+    "sendRequest": "Send friend request",
+    "requestSent": "Request sent",
+    "userNotFound": "User not found.",
+    "cantAddSelf": "That's you!",
+    "loginToAdd": "Log in to send friend requests.",
+    "goLogin": "Log in"
   }
 }

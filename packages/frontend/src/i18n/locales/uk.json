@@ -5,7 +5,9 @@
     "join": "Увійти",
     "loading": "Завантаження...",
     "copied": "Скопійовано!",
-    "copyLink": "Копіювати посилання"
+    "copyLink": "Копіювати посилання",
+    "back": "Назад",
+    "backToHome": "На головну"
   },
   "home": {
     "title": "Карти проти людства",
@@ -341,5 +343,26 @@
     "license": "Vydáno pod licencí CC BY-NC-SA 4.0 — komerční využití není povoleno.",
     "terms": "Podmínky použití",
     "privacy": "Ochrana soukromí"
+  },
+  "friends": {
+    "title": "Друзі",
+    "myFriends": "Мої друзі",
+    "noFriends": "Поки немає друзів.",
+    "pendingRequests": "Запити в друзі",
+    "addFriend": "Додати друга",
+    "addFriendHint": "Поділись посиланням — друг перейде по ньому і надішле запит.",
+    "copyProfileLink": "Копіювати посилання",
+    "showQR": "Показати QR-код",
+    "hideQR": "Сховати QR-код",
+    "invite": "Запросити до гри",
+    "remove": "Видалити",
+    "accept": "Прийняти",
+    "reject": "Відхилити",
+    "sendRequest": "Надіслати запит у друзі",
+    "requestSent": "Запит надіслано",
+    "userNotFound": "Користувача не знайдено.",
+    "cantAddSelf": "Це ти!",
+    "loginToAdd": "Увійдіть, щоб надсилати запити в друзі.",
+    "goLogin": "Увійти"
   }
 }
