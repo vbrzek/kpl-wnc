@@ -99,6 +99,7 @@ export interface GameOverPayload {
     rank: number;      // 1 = vítěz
   }>;
   roomCode: string;
+  trophiesAwarded?: Record<string, number>; // playerId → pohárky získané v této hře
 }
 
 // Herní místnost
@@ -150,6 +151,7 @@ export interface ServerToClientEvents {
   'game:stateSync': (data: GameStateSync) => void;
   'game:roundSkipped': () => void;  // kolo přeskočeno bez bodu (timeout)
   'game:gameOver': (payload: GameOverPayload) => void;
+  'game:trophiesAwarded': (trophiesAwarded: Record<string, number>) => void;
   'game:blackCardCandidates': (cards: BlackCard[]) => void;
   'game:voteUpdate': (data: { votedCount: number; totalVoters: number }) => void;
   'game:mySubmissionId': (submissionId: string) => void;

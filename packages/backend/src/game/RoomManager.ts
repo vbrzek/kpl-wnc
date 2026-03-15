@@ -66,6 +66,8 @@ export interface FinishGameResult {
   room: GameRoom;
   payload: GameOverPayload;
   kickedTokens: string[];
+  roundNumber: number;
+  playerTokenMap: Map<string, string>;
 }
 
 export interface UpdateSettingsData {
@@ -567,6 +569,15 @@ export class RoomManager {
     this.clearAllGameTimers(code);
     this.engines.delete(code);
 
+    // Zachyť roundNumber a playerTokenMap PŘED resetem
+    const roundNumber = room.roundNumber;
+    const playerTokenMap = new Map<string, string>();
+    for (const [token, pid] of this.tokenToPlayerId.entries()) {
+      if (this.playerRooms.get(token) === code) {
+        playerTokenMap.set(pid, token);
+      }
+    }
+
     // Sestav payload PŘED resetem skóre
     const sorted = [...room.players].sort((a, b) => b.score - a.score);
     const payload: GameOverPayload = {
@@ -615,7 +626,7 @@ export class RoomManager {
       if (this._playerSocketIds.has(p.id)) p.isAfk = false;
     }
 
-    return { room, payload, kickedTokens };
+    return { room, payload, kickedTokens, roundNumber, playerTokenMap };
   }
 
   // ------------------------------------------------------------------ updateActivity

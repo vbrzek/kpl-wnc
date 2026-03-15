@@ -118,6 +118,12 @@ export const useRoomStore = defineStore('room', () => {
       finishedState.value = payload;
     });
 
+    socket.on('game:trophiesAwarded', (trophiesAwarded) => {
+      if (finishedState.value) {
+        finishedState.value = { ...finishedState.value, trophiesAwarded };
+      }
+    });
+
     socket.on('room:deleted', () => {
       finishedState.value = null;
       room.value = null;

@@ -2,7 +2,7 @@
 import Avatar from '../../Avatar.vue';
 
 defineProps<{
-  entries: { id: string; nickname: string; avatarUrl?: string | null; score: number }[]
+  entries: { id: string; nickname: string; avatarUrl?: string | null; score: number; trophies?: number }[]
 }>()
 </script>
 
@@ -16,6 +16,7 @@ defineProps<{
         </div>
         <p class="font-bold truncate">{{ entries[1].nickname }}</p>
         <p class="text-2xl font-bold text-gray-300">{{ entries[1].score }}</p>
+        <p v-if="entries[1].trophies" class="text-xs font-bold text-amber-400 mt-1">+{{ entries[1].trophies }}</p>
       </div>
       <div class="bg-gray-500 text-center py-1 rounded-b-sm text-sm">2.</div>
     </div>
@@ -28,6 +29,7 @@ defineProps<{
         </div>
         <p class="font-bold truncate">{{ entries[0].nickname }}</p>
         <p class="text-2xl font-bold text-yellow-300">{{ entries[0].score }}</p>
+        <p v-if="entries[0].trophies" class="text-xs font-bold text-amber-400 mt-1">+{{ entries[0].trophies }}</p>
       </div>
       <div class="bg-yellow-600 text-center py-1 rounded-b-sm text-sm font-bold">1.</div>
     </div>
@@ -40,6 +42,7 @@ defineProps<{
         </div>
         <p class="font-bold truncate">{{ entries[2].nickname }}</p>
         <p class="text-2xl font-bold text-gray-400">{{ entries[2].score }}</p>
+        <p v-if="entries[2].trophies" class="text-xs font-bold text-amber-400 mt-1">+{{ entries[2].trophies }}</p>
       </div>
       <div class="bg-gray-600 text-center py-1 rounded-b-sm text-sm">3.</div>
     </div>
