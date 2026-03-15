@@ -7,6 +7,23 @@ import { verifyJwt } from '../auth/middleware.js';
 
 const SendRequestSchema = z.object({ addresseeId: z.number().int().positive() });
 
+interface UserRow {
+  avatar_type?: string | null;
+  avatar_url?: string | null;
+  dicebear_style?: string | null;
+  dicebear_seed?: string | null;
+  nickname?: string;
+}
+
+function resolveAvatarUrl(user: UserRow): string | null {
+  if (user.avatar_type === 'dicebear') {
+    const style = user.dicebear_style ?? 'bottts';
+    const seed = user.dicebear_seed ?? user.nickname ?? 'default';
+    return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
+  }
+  return user.avatar_url ?? null;
+}
+
 interface FriendsRouteOpts {
   io?: Server<ClientToServerEvents, ServerToClientEvents>;
 }
@@ -18,7 +35,7 @@ const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts
   // GET /friends — accepted friends
   fastify.get('/friends', { preHandler: verifyJwt }, async (request) => {
     const { userId } = request.jwtUser!;
-    return db('friendships as f')
+    const rows = await db('friendships as f')
       .join('users as u', function () {
         this.on(db.raw('CASE WHEN f.requester_id = ? THEN f.addressee_id ELSE f.requester_id END = u.id', [userId]));
       })
@@ -26,27 +43,45 @@ const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts
       .andWhere(function () {
         this.where('f.requester_id', userId).orWhere('f.addressee_id', userId);
       })
-      .select<Array<{ friendshipId: number; userId: number; nickname: string; avatarUrl: string | null }>>(
+      .select(
         'f.id as friendshipId',
         'u.id as userId',
         'u.nickname',
-        'u.avatar_url as avatarUrl',
+        'u.avatar_url',
+        'u.avatar_type',
+        'u.dicebear_style',
+        'u.dicebear_seed',
       );
+    return rows.map((r: any) => ({
+      friendshipId: r.friendshipId,
+      userId: r.userId,
+      nickname: r.nickname,
+      avatarUrl: resolveAvatarUrl(r),
+    }));
   });
 
   // GET /friends/requests — incoming pending requests
   fastify.get('/friends/requests', { preHandler: verifyJwt }, async (request) => {
     const { userId } = request.jwtUser!;
-    return db('friendships as f')
+    const rows = await db('friendships as f')
       .join('users as u', 'u.id', 'f.requester_id')
       .where('f.status', 'pending')
       .andWhere('f.addressee_id', userId)
-      .select<Array<{ friendshipId: number; fromUserId: number; fromNick: string; fromAvatarUrl: string | null }>>(
+      .select(
         'f.id as friendshipId',
         'u.id as fromUserId',
         'u.nickname as fromNick',
-        'u.avatar_url as fromAvatarUrl',
+        'u.avatar_url',
+        'u.avatar_type',
+        'u.dicebear_style',
+        'u.dicebear_seed',
       );
+    return rows.map((r: any) => ({
+      friendshipId: r.friendshipId,
+      fromUserId: r.fromUserId,
+      fromNick: r.fromNick,
+      fromAvatarUrl: resolveAvatarUrl(r),
+    }));
   });
 
   // POST /friends/request
@@ -70,11 +105,11 @@ const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts
 
     // Notify addressee in real-time if online
     if (io) {
-      const requester = await db('users').where({ id: userId }).select('nickname', 'avatar_url').first().catch(() => null);
+      const requester = await db('users').where({ id: userId }).select('nickname', 'avatar_url', 'avatar_type', 'dicebear_style', 'dicebear_seed').first().catch(() => null);
       io.to(`user:${addresseeId}`).emit('friend:request_received', {
         friendshipId,
         fromNick: requester?.nickname ?? 'Někdo',
-        fromAvatarUrl: requester?.avatar_url ?? null,
+        fromAvatarUrl: requester ? resolveAvatarUrl(requester) : null,
       });
     }
 
@@ -94,11 +129,11 @@ const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts
     await db('friendships').where({ id }).update({ status: 'accepted' });
 
     if (io) {
-      const accepter = await db('users').where({ id: userId }).select('nickname', 'avatar_url').first().catch(() => null);
+      const accepter = await db('users').where({ id: userId }).select('nickname', 'avatar_url', 'avatar_type', 'dicebear_style', 'dicebear_seed').first().catch(() => null);
       io.to(`user:${row.requester_id}`).emit('friend:request_accepted', {
         friendshipId: id,
         byNick: accepter?.nickname ?? 'Někdo',
-        byAvatarUrl: accepter?.avatar_url ?? null,
+        byAvatarUrl: accepter ? resolveAvatarUrl(accepter) : null,
       });
     }
 
@@ -126,10 +161,10 @@ const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts
     const id = Number(request.params.id);
     const user = await db('users')
       .where({ id })
-      .select('id', 'nickname', 'avatar_url')
+      .select('id', 'nickname', 'avatar_url', 'avatar_type', 'dicebear_style', 'dicebear_seed')
       .first();
     if (!user) return reply.status(404).send({ error: 'User not found' });
-    return { id: user.id, nickname: user.nickname, avatarUrl: user.avatar_url };
+    return { id: user.id, nickname: user.nickname, avatarUrl: resolveAvatarUrl(user) };
   });
 };
 
