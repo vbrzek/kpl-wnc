@@ -5,16 +5,21 @@ import { socketToToken } from './socketState.js';
 import db from '../db/db.js';
 import { extractUserIdFromCookieHeader } from '../auth/jwt.js';
 
-async function linkPlayerToken(cookieHeader: string, playerToken: string, roomCode: string) {
+async function linkPlayerToken(
+  cookieHeader: string,
+  playerToken: string,
+  roomCode: string,
+): Promise<number | null> {
   const userId = extractUserIdFromCookieHeader(cookieHeader);
-  if (!userId) return;
+  if (!userId) return null;
   try {
     await db('user_player_tokens')
       .insert({ user_id: userId, player_token: playerToken, room_code: roomCode })
       .onConflict(['player_token', 'room_code'])
       .merge({ last_seen: db.fn.now() });
+    return userId;
   } catch {
-    // non-critical — ignore errors
+    return null;
   }
 }
 import { GameEngine } from '../game/GameEngine.js';
@@ -64,7 +69,15 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     socket.leave('lobby');
 
     const cookieHeader = socket.handshake.headers.cookie ?? '';
-    linkPlayerToken(cookieHeader, playerToken, room.code).catch(() => {});
+    linkPlayerToken(cookieHeader, playerToken, room.code).then((userId) => {
+      if (userId) {
+        roomManager.setPlayerOAuthUserId(playerToken, userId);
+        const updatedRoom = roomManager.getRoom(room.code);
+        if (updatedRoom) {
+          io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(updatedRoom));
+        }
+      }
+    }).catch(() => {});
 
     broadcastPublicRooms(io);
     eventLogger.logRoomCreated(room, data.nickname);
@@ -97,7 +110,15 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     socket.leave('lobby');
 
     const cookieHeaderJoin = socket.handshake.headers.cookie ?? '';
-    linkPlayerToken(cookieHeaderJoin, playerToken, room.code).catch(() => {});
+    linkPlayerToken(cookieHeaderJoin, playerToken, room.code).then((userId) => {
+      if (userId) {
+        roomManager.setPlayerOAuthUserId(playerToken, userId);
+        const updatedRoom = roomManager.getRoom(room.code);
+        if (updatedRoom) {
+          io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(updatedRoom));
+        }
+      }
+    }).catch(() => {});
 
     // Po reconnectu do rozjeté hry pošli hráči jeho aktuální herní stav
     if (result.wasReconnect && (room.status === 'SELECTION' || room.status === 'JUDGING')) {
