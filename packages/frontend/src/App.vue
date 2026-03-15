@@ -6,6 +6,8 @@ import GameLayout from './layouts/GameLayout.vue';
 import { useProfileStore } from './stores/profileStore';
 import PlayerProfileModal from './components/PlayerProfileModal.vue';
 import ToastContainer from './components/ToastContainer.vue';
+import { useFriendsStore } from './stores/friendsStore';
+import { useToast } from './composables/useToast';
 
 const profileStore = useProfileStore();
 const route = useRoute();
@@ -37,6 +39,34 @@ onMounted(async () => {
     }
   }
 
+  // Friend socket event listeners
+  const friendsStore = useFriendsStore();
+  const { show } = useToast();
+
+  socket.on('friend:request_received', (data) => {
+    friendsStore.addIncomingRequest({
+      friendshipId: data.friendshipId,
+      fromUserId: 0,
+      fromNick: data.fromNick,
+      fromAvatarUrl: data.fromAvatarUrl,
+    });
+    show(`${data.fromNick} tě chce přidat mezi přátele`, {
+      action: { label: 'Zobrazit', fn: () => router.push('/friends') },
+    });
+  });
+
+  socket.on('friend:request_accepted', (data) => {
+    show(`${data.byNick} přijal(a) tvou žádost o přátelství`, { type: 'success' });
+    friendsStore.fetchFriends();
+  });
+
+  socket.on('friend:invite_received', (data) => {
+    show(`${data.fromNick} tě zve ke stolu`, {
+      action: { label: 'Připojit se', fn: () => router.push(`/room/${data.roomCode}`) },
+      duration: 15000,
+    });
+  });
+
   if (!profileStore.hasProfile && !isPublicPage.value) {
     // Authenticated user without nickname → skip to nickname setup (don't show OAuth buttons)
     if (profileStore.isAuthenticated) oauthSetup.value = true;
@@ -44,7 +74,12 @@ onMounted(async () => {
   }
 });
 
-onUnmounted(() => socket.disconnect());
+onUnmounted(() => {
+  socket.off('friend:request_received');
+  socket.off('friend:request_accepted');
+  socket.off('friend:invite_received');
+  socket.disconnect();
+});
 </script>
 
 <template>
