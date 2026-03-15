@@ -6,6 +6,7 @@ import { socketToToken } from './socketState.js';
 import { startNewRound, startJudgingPhase, finalizeRoundStart, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
 import { PlayCardsSchema, JudgeSelectSchema, VoteSchema, ChooseBlackCardSchema, PlaceBetSchema, validate } from './validation.js';
 import { checkRateLimit } from './rateLimiter.js';
+import { awardTrophies } from '../game/trophyService.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -33,6 +34,9 @@ function handlePostRound(room: GameRoom, engine: GameEngine, result: RoundResult
     const finishResult = roomManager.finishGame(room.code);
     if (!('error' in finishResult)) {
       io.to(`room:${room.code}`).emit('game:gameOver', finishResult.payload);
+      awardTrophies(finishResult.payload, finishResult.roundNumber, finishResult.playerTokenMap)
+        .then(ta => { if (Object.keys(ta).length) io.to(`room:${room.code}`).emit('game:trophiesAwarded', ta); })
+        .catch(() => {});
       for (const [sid, token] of socketToToken.entries()) {
         if (finishResult.kickedTokens.includes(token)) {
           const kickedSocket = io.sockets.sockets.get(sid);
@@ -322,6 +326,9 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
 
     // Emituj game:gameOver všem hráčům (včetně kicknutých — jsou stále v room:${code})
     io.to(`room:${room.code}`).emit('game:gameOver', result.payload);
+    awardTrophies(result.payload, result.roundNumber, result.playerTokenMap)
+      .then(ta => { if (Object.keys(ta).length) io.to(`room:${room.code}`).emit('game:trophiesAwarded', ta); })
+      .catch(() => {});
 
     // Odstraň sockety kicknutých hráčů z room channel
     for (const [sid, token] of socketToToken.entries()) {
@@ -388,6 +395,9 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
           const finishResult = roomManager.finishGame(roomCode);
           if (!('error' in finishResult)) {
             io.to(`room:${roomCode}`).emit('game:gameOver', finishResult.payload);
+            awardTrophies(finishResult.payload, finishResult.roundNumber, finishResult.playerTokenMap)
+              .then(ta => { if (Object.keys(ta).length) io.to(`room:${roomCode}`).emit('game:trophiesAwarded', ta); })
+              .catch(() => {});
             for (const [sid, token] of socketToToken.entries()) {
               if (finishResult.kickedTokens.includes(token)) {
                 const kickedSocket = io.sockets.sockets.get(sid);
@@ -498,6 +508,9 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
         const finishResult = roomManager.finishGame(roomCode);
         if (!('error' in finishResult)) {
           io.to(`room:${roomCode}`).emit('game:gameOver', finishResult.payload);
+          awardTrophies(finishResult.payload, finishResult.roundNumber, finishResult.playerTokenMap)
+            .then(ta => { if (Object.keys(ta).length) io.to(`room:${roomCode}`).emit('game:trophiesAwarded', ta); })
+            .catch(() => {});
           for (const [sid, token] of socketToToken.entries()) {
             if (finishResult.kickedTokens.includes(token)) {
               const kickedSocket = io.sockets.sockets.get(sid);

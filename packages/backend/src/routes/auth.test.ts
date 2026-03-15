@@ -43,10 +43,14 @@ describe('Auth routes', () => {
 
     it('returns 200 with user when valid JWT cookie', async () => {
       const token = signToken({ userId: 1, provider: 'google' });
-      mockDb.mockReturnValue({
+      const chain = {
+        leftJoin: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
-        first: vi.fn().mockResolvedValue(TEST_USER),
-      });
+        select: vi.fn().mockReturnThis(),
+        first: vi.fn().mockResolvedValue({ ...TEST_USER, total_trophies: 42 }),
+      };
+      mockDb.mockReturnValue(chain);
+      (mockDb as any).raw = vi.fn().mockReturnValue('COALESCE(user_trophies.trophies, 0) as total_trophies');
       const res = await app.inject({
         method: 'GET',
         url: '/api/me',
@@ -57,6 +61,7 @@ describe('Auth routes', () => {
       expect(body.id).toBe(1);
       expect(body.nickname).toBe('Testík');
       expect(body.provider).toBe('google');
+      expect(body.trophies).toBe(42);
     });
 
     it('returns 401 when JWT is tampered', async () => {

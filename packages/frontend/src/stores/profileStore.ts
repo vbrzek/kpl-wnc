@@ -16,6 +16,7 @@ export interface OAuthUser {
   dicebearStyle: string | null;
   dicebearSeed: string | null;
   role: string;
+  trophies?: number;
 }
 
 interface PlayerProfile {

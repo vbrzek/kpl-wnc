@@ -153,9 +153,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/api/me', { preHandler: verifyJwt }, async (request, reply) => {
     const { userId } = request.jwtUser!;
-    const user = await db<UserRow>('users').where({ id: userId }).first();
-    if (!user) return reply.status(404).send({ error: 'User not found' });
-    return formatUser(user);
+    const row = await db('users')
+      .leftJoin('user_trophies', 'users.id', 'user_trophies.user_id')
+      .where('users.id', userId)
+      .select('users.*', db.raw('COALESCE(user_trophies.trophies, 0) as total_trophies'))
+      .first();
+    if (!row) return reply.status(404).send({ error: 'User not found' });
+    return { ...formatUser(row as UserRow), trophies: row.total_trophies };
   });
 
   fastify.patch('/api/me', { preHandler: verifyJwt }, async (request, reply) => {

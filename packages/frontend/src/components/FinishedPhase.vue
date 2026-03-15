@@ -21,6 +21,7 @@ const joiningNew = ref(false);
 const joinError = ref('');
 
 // Data bereme z finishedState (cached payload), NE z živého room
+const trophiesAwarded = computed(() => roomStore.finishedState?.trophiesAwarded ?? {});
 const scoreboard = computed(() =>
   (roomStore.finishedState?.finalScores ?? []).map(p => ({
     id: p.playerId,
@@ -28,6 +29,7 @@ const scoreboard = computed(() =>
     avatarUrl: p.avatarUrl,
     score: p.score,
     rank: p.rank,
+    trophies: trophiesAwarded.value[p.playerId],
   }))
 );
 

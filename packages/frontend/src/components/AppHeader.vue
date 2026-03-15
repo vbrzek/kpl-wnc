@@ -70,6 +70,16 @@ function onEditProfile() {
           </span>
         </div>
 
+        <div v-if="!isInGame && profileStore.isAuthenticated && (profileStore.oauthUser?.trophies ?? 0) > 0"
+             class="flex items-center gap-1.5 bg-white/5 px-2.5 py-1.5 rounded-full border border-white/10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 3h14l-1.5 5H6.5L5 3Zm1.5 5v1a5.5 5.5 0 0 0 11 0V8h2v1a7.5 7.5 0 0 1-5 7.07V19h3v2H7.5v-2h3v-2.93A7.5 7.5 0 0 1 5.5 9V8h1Z"/>
+          </svg>
+          <span class="text-sm font-black text-amber-400 leading-none">
+            {{ profileStore.oauthUser!.trophies }}
+          </span>
+        </div>
+
         <!-- Avatar + dropdown -->
         <div class="relative">
           <button @click="toggleMenu" class="relative group">
