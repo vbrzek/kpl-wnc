@@ -331,6 +331,11 @@
         "icon": "🎲",
         "name": "High Stakes",
         "desc": "Before submitting cards, a player may wager points. If they win the round, they gain the wagered amount as a bonus. If they lose, they forfeit those points. You can only bet what you have."
+      },
+      {
+        "icon": "✏️",
+        "name": "Carte Blanche",
+        "desc": "At the start of the game, each player receives one extra special blank card in their hand. They can play it at any time — just before submitting, they write whatever they want on it. The card is theirs only once per game and cannot be obtained again."
       }
     ]
   },

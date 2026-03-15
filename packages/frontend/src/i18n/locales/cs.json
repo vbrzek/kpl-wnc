@@ -331,6 +331,11 @@
         "icon": "🎲",
         "name": "High Stakes",
         "desc": "Před odevzdáním karet si hráč může vsadit body. Pokud vyhraje kolo, získá vsazené body navíc. Pokud prohraje, přijde o ně. Sázet lze jen tolik, kolik hráč má."
+      },
+      {
+        "icon": "✏️",
+        "name": "Carte Blanche",
+        "desc": "Na začátku hry dostane každý hráč do ruky jednu speciální prázdnou kartu navíc. Kdykoli během hry ji může zahrát — těsně před odesláním napíše vlastní text. Kartu má jen jednou za celou hru a nelze ji žádným způsobem získat znovu."
       }
     ]
   },

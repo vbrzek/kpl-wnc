@@ -331,6 +331,11 @@
         "icon": "🎲",
         "name": "High Stakes",
         "desc": "Antes de enviar las cartas, un jugador puede apostar puntos. Si gana la ronda, recibe los puntos apostados como bonus. Si pierde, los pierde. Solo se puede apostar lo que se tiene."
+      },
+      {
+        "icon": "✏️",
+        "name": "Carte Blanche",
+        "desc": "Al inicio de la partida, cada jugador recibe una carta en blanco especial adicional en su mano. Puede jugarla en cualquier momento — justo antes de enviar, escribe en ella lo que quiera. La carta solo se tiene una vez por partida y no puede obtenerse de nuevo."
       }
     ]
   },
