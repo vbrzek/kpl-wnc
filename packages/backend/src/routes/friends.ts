@@ -39,6 +39,7 @@ const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts
       .join('users as u', function () {
         this.on(db.raw('CASE WHEN f.requester_id = ? THEN f.addressee_id ELSE f.requester_id END = u.id', [userId]));
       })
+      .leftJoin('user_trophies as ut', 'u.id', 'ut.user_id')
       .where('f.status', 'accepted')
       .andWhere(function () {
         this.where('f.requester_id', userId).orWhere('f.addressee_id', userId);
@@ -51,12 +52,14 @@ const friendsRoutes: FastifyPluginAsync<FriendsRouteOpts> = async (fastify, opts
         'u.avatar_type',
         'u.dicebear_style',
         'u.dicebear_seed',
+        db.raw('COALESCE(ut.trophies, 0) as trophies'),
       );
     return rows.map((r: any) => ({
       friendshipId: r.friendshipId,
       userId: r.userId,
       nickname: r.nickname,
       avatarUrl: resolveAvatarUrl(r),
+      trophies: r.trophies,
     }));
   });
 

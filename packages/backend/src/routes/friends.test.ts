@@ -4,7 +4,11 @@ import cookie from '@fastify/cookie';
 import friendsRoutes from './friends.js';
 import { signToken } from '../auth/jwt.js';
 
-vi.mock('../db/db.js', () => ({ default: vi.fn() }));
+vi.mock('../db/db.js', () => {
+  const fn = vi.fn() as any;
+  fn.raw = vi.fn((...args: any[]) => args[0]);
+  return { default: fn };
+});
 import db from '../db/db.js';
 const mockDb = db as unknown as ReturnType<typeof vi.fn>;
 
@@ -30,10 +34,11 @@ describe('GET /api/friends', () => {
     const app = await buildApp();
     mockDb.mockReturnValue({
       join: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       andWhere: vi.fn().mockReturnThis(),
       select: vi.fn().mockResolvedValue([
-        { friendshipId: 1, userId: 2, nickname: 'Alice', avatarUrl: null },
+        { friendshipId: 1, userId: 2, nickname: 'Alice', avatarUrl: null, trophies: 5 },
       ]),
     });
     const res = await app.inject({

@@ -146,9 +146,13 @@ function onBackdropClick() {
           </template>
 
           <!-- Avatar preview -->
-          <div class="flex justify-center">
+          <div class="flex flex-col items-center gap-2">
             <div class="w-20 h-20 rounded-full overflow-hidden bg-slate-900 border border-white/10">
               <img :src="previewAvatarUrl" alt="avatar" class="w-full h-full object-cover" />
+            </div>
+            <div v-if="profileStore.isAuthenticated && profileStore.oauthUser?.trophies != null" class="flex items-center gap-1.5 text-yellow-400 font-black text-lg">
+              <span>🏆</span>
+              <span>{{ profileStore.oauthUser.trophies }}</span>
             </div>
           </div>
 

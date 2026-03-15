@@ -254,6 +254,7 @@ export interface FriendEntry {
   userId: number;
   nickname: string;
   avatarUrl: string | null;
+  trophies: number;
 }
 
 export interface FriendRequest {

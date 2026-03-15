@@ -32,6 +32,7 @@ function invite() {
       class="w-10 h-10 rounded-full bg-gray-700 object-cover"
     />
     <span class="flex-1 text-sm font-semibold text-white truncate">{{ friend.nickname }}</span>
+    <span class="text-xs font-bold text-yellow-400 shrink-0">🏆 {{ friend.trophies }}</span>
     <button
       v-if="canInvite"
       @click="invite"

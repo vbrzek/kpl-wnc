@@ -8,6 +8,7 @@ export interface FriendEntry {
   userId: number;
   nickname: string;
   avatarUrl: string | null;
+  trophies: number;
 }
 
 export interface FriendRequest {
@@ -70,6 +71,7 @@ export const useFriendsStore = defineStore('friends', () => {
           userId: req.fromUserId,
           nickname: req.fromNick,
           avatarUrl: req.fromAvatarUrl,
+          trophies: 0,
         });
       }
     }
