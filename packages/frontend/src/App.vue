@@ -5,6 +5,7 @@ import { socket } from './socket';
 import GameLayout from './layouts/GameLayout.vue';
 import { useProfileStore } from './stores/profileStore';
 import PlayerProfileModal from './components/PlayerProfileModal.vue';
+import ToastContainer from './components/ToastContainer.vue';
 
 const profileStore = useProfileStore();
 const route = useRoute();
@@ -64,4 +65,5 @@ onUnmounted(() => socket.disconnect());
       @close="showProfileModal = false; oauthSetup = false; authError = false"
     />
   </template>
+  <ToastContainer />
 </template>
