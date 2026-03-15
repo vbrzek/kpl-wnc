@@ -154,6 +154,9 @@ export interface ServerToClientEvents {
   'game:voteUpdate': (data: { votedCount: number; totalVoters: number }) => void;
   'game:mySubmissionId': (submissionId: string) => void;
   'room:deleted': () => void;
+  'friend:request_received': (data: { friendshipId: number; fromNick: string; fromAvatarUrl: string | null }) => void;
+  'friend:request_accepted': (data: { friendshipId: number; byNick: string; byAvatarUrl: string | null }) => void;
+  'friend:invite_received': (data: { roomCode: string; roomName: string; fromNick: string }) => void;
 }
 
 // Socket.io eventy — klient → server
@@ -212,6 +215,7 @@ export interface ClientToServerEvents {
   'game:placeBet': (amount: number, callback: (result: { ok: true } | { error: string }) => void) => void;
   'game:vote': (submissionId: string) => void;
   'game:skipVoting': () => void;
+  'friend:invite': (data: { friendUserId: number; roomCode: string }) => void;
 }
 
 // ── Editor types ──────────────────────────────────────────────────────────────
@@ -238,4 +242,20 @@ export interface EditorCardsPage {
   cards: EditorCard[];
   total: number;
   page: number;
+}
+
+// ── Friends ───────────────────────────────────────────────────────────────────
+
+export interface FriendEntry {
+  friendshipId: number;
+  userId: number;
+  nickname: string;
+  avatarUrl: string | null;
+}
+
+export interface FriendRequest {
+  friendshipId: number;
+  fromUserId: number;
+  fromNick: string;
+  fromAvatarUrl: string | null;
 }
