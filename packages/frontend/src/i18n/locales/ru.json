@@ -369,5 +369,11 @@
     "cantAddSelf": "Это ты!",
     "loginToAdd": "Войдите, чтобы отправлять запросы в друзья.",
     "goLogin": "Войти"
+  },
+  "playerCard": {
+    "guestInfo": "Просто проходит мимо",
+    "addFriend": "+ Добавить в друзья",
+    "requestSent": "Запрос отправлен",
+    "alreadyFriends": "Уже друзья"
   }
 }

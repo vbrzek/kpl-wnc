@@ -369,5 +369,11 @@
     "cantAddSelf": "¡Eres tú!",
     "loginToAdd": "Inicia sesión para enviar solicitudes de amistad.",
     "goLogin": "Iniciar sesión"
+  },
+  "playerCard": {
+    "guestInfo": "Solo de paso",
+    "addFriend": "+ Agregar amigo",
+    "requestSent": "Solicitud enviada",
+    "alreadyFriends": "Ya son amigos"
   }
 }

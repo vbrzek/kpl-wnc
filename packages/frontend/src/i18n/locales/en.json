@@ -369,5 +369,11 @@
     "cantAddSelf": "That's you!",
     "loginToAdd": "Log in to send friend requests.",
     "goLogin": "Log in"
+  },
+  "playerCard": {
+    "guestInfo": "Just passing through",
+    "addFriend": "+ Add friend",
+    "requestSent": "Request sent",
+    "alreadyFriends": "Already friends"
   }
 }
