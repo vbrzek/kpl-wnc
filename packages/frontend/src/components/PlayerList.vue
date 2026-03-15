@@ -11,7 +11,10 @@ defineProps<{
   hasRando?: boolean;
 }>();
 
-const emit = defineEmits<{ kick: [playerId: string] }>();
+const emit = defineEmits<{
+  kick: [playerId: string];
+  'player-click': [player: Player];
+}>();
 const { t } = useI18n();
 </script>
 
@@ -20,7 +23,11 @@ const { t } = useI18n();
     <li
       v-for="player in players"
       :key="player.id"
-      class="flex items-center justify-between bg-gray-700 px-4 py-2 rounded"
+      @click="player.id !== myPlayerId && emit('player-click', player)"
+      :class="[
+        'flex items-center justify-between bg-gray-700 px-4 py-2 rounded transition-colors',
+        player.id !== myPlayerId ? 'cursor-pointer hover:bg-gray-600' : ''
+      ]"
     >
       <span class="flex items-center gap-2">
         <Avatar :nickname="player.nickname" :avatar-url="player.avatarUrl" :size="32" />
