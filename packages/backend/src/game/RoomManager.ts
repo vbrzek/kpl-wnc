@@ -403,6 +403,19 @@ export class RoomManager {
     return { room };
   }
 
+  // ------------------------------------------------------------------ setPlayerOAuthUserId
+
+  setPlayerOAuthUserId(playerToken: string, userId: number): void {
+    const code = this.playerRooms.get(playerToken);
+    if (!code) return;
+    const room = this.rooms.get(code);
+    if (!room) return;
+    const playerId = this.tokenToPlayerId.get(playerToken);
+    if (!playerId) return;
+    const player = room.players.find(p => p.id === playerId);
+    if (player) player.oauthUserId = userId;
+  }
+
   // ------------------------------------------------------------------ startGame
 
   startGame(hostToken: string): ActionResult {

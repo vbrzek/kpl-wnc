@@ -586,4 +586,34 @@ describe('specialRules', () => {
     expect('error' in result).toBe(false);
     expect(room.specialRules).toEqual(['high_stakes']);
   });
+
+  // --- setPlayerOAuthUserId ---
+
+  describe('setPlayerOAuthUserId', () => {
+    it('sets oauthUserId on the player matching the given token', () => {
+      const rm = new RoomManager();
+      const { room, playerToken } = rm.createRoom({
+        nickname: 'Alice',
+        name: 'TestRoom',
+        isPublic: false,
+        selectedSetIds: [1],
+        maxPlayers: 6,
+        specialRules: [],
+        czarMode: 'classic',
+        winCondition: 'score',
+        targetScore: 8,
+        targetRounds: 20,
+        gameTimeLimit: 15,
+        avatarUrl: null,
+      });
+      rm.setPlayerOAuthUserId(playerToken, 42);
+      const player = rm.getRoom(room.code)!.players[0];
+      expect(player.oauthUserId).toBe(42);
+    });
+
+    it('is a no-op for unknown token', () => {
+      const rm = new RoomManager();
+      expect(() => rm.setPlayerOAuthUserId('unknown-token', 1)).not.toThrow();
+    });
+  });
 });
