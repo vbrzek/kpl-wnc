@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { GameRoom, SpecialRule, CzarMode } from '@kpl/shared';
+import type { GameRoom, SpecialRule, CzarMode, Player } from '@kpl/shared';
 import { useRoomStore } from '../stores/roomStore';
 import PlayerList from './PlayerList.vue';
+import PlayerCardModal from './PlayerCardModal.vue';
 import InviteLink from './InviteLink.vue';
 import RoomSettingsModal from './RoomSettingsModal.vue';
 
@@ -27,6 +28,7 @@ const { t } = useI18n();
 const roomStore = useRoomStore();
 const errorMsg = ref('');
 const showSettings = ref(false);
+const selectedPlayer = ref<Player | null>(null);
 
 const winConditionLabel = computed(() => {
   const room = props.room;
@@ -115,6 +117,7 @@ async function startGame() {
           :is-host="roomStore.isHost"
           :has-rando="roomStore.hasRule('rando_cardrissian')"
           @kick="kick"
+          @player-click="selectedPlayer = $event"
         />
       </div>
     </section>
@@ -149,5 +152,12 @@ async function startGame() {
       v-if="showSettings"
       :room="props.room"
       @close="showSettings = false"
+    />
+
+    <PlayerCardModal
+      v-if="selectedPlayer"
+      :player="selectedPlayer"
+      :my-player-id="roomStore.myPlayerId"
+      @close="selectedPlayer = null"
     />
 </template>
