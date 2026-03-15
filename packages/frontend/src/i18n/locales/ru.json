@@ -5,7 +5,9 @@
     "join": "Войти",
     "loading": "Загрузка...",
     "copied": "Скопировано!",
-    "copyLink": "Копировать ссылку"
+    "copyLink": "Копировать ссылку",
+    "back": "Назад",
+    "backToHome": "На главную"
   },
   "home": {
     "title": "Карты против человечества",
@@ -346,5 +348,26 @@
     "license": "Vydáno pod licencí CC BY-NC-SA 4.0 — komerční využití není povoleno.",
     "terms": "Podmínky použití",
     "privacy": "Ochrana soukromí"
+  },
+  "friends": {
+    "title": "Друзья",
+    "myFriends": "Мои друзья",
+    "noFriends": "Пока нет друзей.",
+    "pendingRequests": "Запросы в друзья",
+    "addFriend": "Добавить друга",
+    "addFriendHint": "Поделись ссылкой — друг перейдёт по ней и отправит запрос.",
+    "copyProfileLink": "Копировать ссылку",
+    "showQR": "Показать QR-код",
+    "hideQR": "Скрыть QR-код",
+    "invite": "Пригласить в игру",
+    "remove": "Удалить",
+    "accept": "Принять",
+    "reject": "Отклонить",
+    "sendRequest": "Отправить запрос в друзья",
+    "requestSent": "Запрос отправлен",
+    "userNotFound": "Пользователь не найден.",
+    "cantAddSelf": "Это ты!",
+    "loginToAdd": "Войдите, чтобы отправлять запросы в друзья.",
+    "goLogin": "Войти"
   }
 }

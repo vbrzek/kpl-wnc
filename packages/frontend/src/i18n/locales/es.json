@@ -5,7 +5,9 @@
     "join": "Unirse",
     "loading": "Cargando...",
     "copied": "¡Copiado!",
-    "copyLink": "Copiar enlace"
+    "copyLink": "Copiar enlace",
+    "back": "Volver",
+    "backToHome": "Volver al inicio"
   },
   "home": {
     "title": "Cartas contra la humanidad",
@@ -346,5 +348,26 @@
     "license": "Vydáno pod licencí CC BY-NC-SA 4.0 — komerční využití není povoleno.",
     "terms": "Podmínky použití",
     "privacy": "Ochrana soukromí"
+  },
+  "friends": {
+    "title": "Amigos",
+    "myFriends": "Mis amigos",
+    "noFriends": "Aún no tienes amigos.",
+    "pendingRequests": "Solicitudes de amistad",
+    "addFriend": "Añadir amigo",
+    "addFriendHint": "Comparte tu enlace — tu amigo lo abre y te envía una solicitud.",
+    "copyProfileLink": "Copiar enlace",
+    "showQR": "Mostrar código QR",
+    "hideQR": "Ocultar código QR",
+    "invite": "Invitar a jugar",
+    "remove": "Eliminar",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "sendRequest": "Enviar solicitud de amistad",
+    "requestSent": "Solicitud enviada",
+    "userNotFound": "Usuario no encontrado.",
+    "cantAddSelf": "¡Eres tú!",
+    "loginToAdd": "Inicia sesión para enviar solicitudes de amistad.",
+    "goLogin": "Iniciar sesión"
   }
 }

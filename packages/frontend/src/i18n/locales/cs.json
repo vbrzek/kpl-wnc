@@ -5,7 +5,9 @@
     "join": "Připojit",
     "loading": "Načítání...",
     "copied": "Zkopírováno!",
-    "copyLink": "Kopírovat odkaz"
+    "copyLink": "Kopírovat odkaz",
+    "back": "Zpět",
+    "backToHome": "Zpět na hlavní stránku"
   },
   "home": {
     "title": "Karty proti lidskosti",
@@ -346,5 +348,26 @@
     "license": "Vydáno pod licencí CC BY-NC-SA 4.0 — komerční využití není povoleno.",
     "terms": "Podmínky použití",
     "privacy": "Ochrana soukromí"
+  },
+  "friends": {
+    "title": "Přátelé",
+    "myFriends": "Moji přátelé",
+    "noFriends": "Zatím žádní přátelé.",
+    "pendingRequests": "Žádosti o přátelství",
+    "addFriend": "Přidat přítele",
+    "addFriendHint": "Sdílej svůj odkaz — přítel na něj klikne a pošle ti žádost.",
+    "copyProfileLink": "Kopírovat odkaz",
+    "showQR": "Zobrazit QR kód",
+    "hideQR": "Skrýt QR kód",
+    "invite": "Pozvat do hry",
+    "remove": "Odebrat",
+    "accept": "Přijmout",
+    "reject": "Odmítnout",
+    "sendRequest": "Poslat žádost o přátelství",
+    "requestSent": "Žádost odeslána",
+    "userNotFound": "Uživatel nenalezen.",
+    "cantAddSelf": "To jsi ty!",
+    "loginToAdd": "Přihlas se, abys mohl(a) posílat žádosti o přátelství.",
+    "goLogin": "Přihlásit se"
   }
 }
