@@ -4,4 +4,5 @@ dist/
 *.local
 .worktrees/
 .DS_Store
-packages/backend/uploads/.worktrees/
+packages/backend/uploads/
+.worktrees/
