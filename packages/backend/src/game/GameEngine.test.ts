@@ -625,6 +625,47 @@ describe('high_stakes', () => {
     expect(result.scores[loserId]).toBe(Math.max(0, loserInitial - loserBet));
   });
 
+  it('the exact player whose submission is picked wins and gains the bet', () => {
+    eng.placeBet(nonCzar1.id, 2); // Alice/Bob bets 2, score 3
+    eng.placeBet(nonCzar2.id, 1); // bets 1, score 2
+    eng.submitCards(nonCzar1.id, [eng.getPlayerHand(nonCzar1.id)[0].id]);
+    eng.submitCards(nonCzar2.id, [eng.getPlayerHand(nonCzar2.id)[0].id]);
+
+    // Pick nonCzar1's submission explicitly by id
+    const sub1Id = eng.getSubmissionId(nonCzar1.id)!;
+    const result = eng.selectWinner(czar.id, sub1Id);
+    if ('error' in result) throw new Error(result.error);
+
+    // The picked player MUST be the winner and MUST gain their bet
+    expect(result.winnerId).toBe(nonCzar1.id);
+    expect(result.scores[nonCzar1.id]).toBe(3 + 1 + 2); // 6
+    expect(result.scores[nonCzar2.id]).toBe(Math.max(0, 2 - 1)); // 1
+  });
+
+  it('previous round bets do NOT leak into the next round', () => {
+    // Round 1: nonCzar1 bets big and wins
+    eng.placeBet(nonCzar1.id, 3);
+    eng.submitCards(nonCzar1.id, [eng.getPlayerHand(nonCzar1.id)[0].id]);
+    eng.submitCards(nonCzar2.id, [eng.getPlayerHand(nonCzar2.id)[0].id]);
+    const r1 = eng.selectWinner(czar.id, eng.getSubmissionId(nonCzar1.id)!);
+    if ('error' in r1) throw new Error(r1.error);
+
+    // Round 2: new czar/non-czars. NOBODY bets this round.
+    eng.startRound();
+    const czar2 = players.find(p => p.isCardCzar)!;
+    const [a, b] = players.filter(p => !p.isCardCzar);
+    const aBefore = a.score;
+    const bBefore = b.score;
+    eng.submitCards(a.id, [eng.getPlayerHand(a.id)[0].id]);
+    eng.submitCards(b.id, [eng.getPlayerHand(b.id)[0].id]);
+    const r2 = eng.selectWinner(czar2.id, eng.getSubmissionId(a.id)!);
+    if ('error' in r2) throw new Error(r2.error);
+
+    // Winner gains exactly +1 (no bet this round), loser unchanged — no leaked bet
+    expect(r2.scores[a.id]).toBe(aBefore + 1);
+    expect(r2.scores[b.id]).toBe(bBefore);
+  });
+
   it('bets are applied when rando cardrissian wins (all bettors lose)', () => {
     // Enable rando_cardrissian + high_stakes together
     const randoPlayers = [
@@ -688,6 +729,45 @@ describe('high_stakes', () => {
     expect(result.scores[vp2.id]).toBe(1);
     // vp3: 4 (initial, no bet) = 4
     expect(result.scores[vp3.id]).toBe(4);
+  });
+
+  it('bets are refunded when nobody votes in czar_is_dead (round void, no winner)', () => {
+    const votePlayers = [
+      makePlayer('v1', 'Alice'),
+      makePlayer('v2', 'Bob'),
+      makePlayer('v3', 'Charlie'),
+    ];
+    const voteEng = new GameEngine(votePlayers, makeBlackCards(10), makeWhiteCards(50), ['high_stakes'], 'v1', 'czar_is_dead');
+    voteEng.startRound();
+    const [vp1, vp2] = votePlayers;
+    vp1.score = 3;
+    vp2.score = 2;
+
+    voteEng.placeBet(vp1.id, 2);
+    voteEng.placeBet(vp2.id, 1);
+    for (const vp of votePlayers) {
+      voteEng.submitCards(vp.id, [voteEng.getPlayerHand(vp.id)[0].id]);
+    }
+
+    // Nobody votes — the round is void, bets must be returned untouched
+    const result = voteEng.resolveVotes();
+    expect(result.winnerId).toBeNull();
+    expect(result.scores[vp1.id]).toBe(3);
+    expect(result.scores[vp2.id]).toBe(2);
+  });
+
+  it('bets are refunded when the round is skipped without resolution (e.g. AFK czar)', () => {
+    nonCzar1.score = 3;
+    nonCzar2.score = 2;
+    eng.placeBet(nonCzar1.id, 2);
+    eng.placeBet(nonCzar2.id, 1);
+    eng.submitCards(nonCzar1.id, [eng.getPlayerHand(nonCzar1.id)[0].id]);
+    eng.submitCards(nonCzar2.id, [eng.getPlayerHand(nonCzar2.id)[0].id]);
+
+    // Round is skipped: no selectWinner call, next round begins
+    eng.startRound();
+    expect(nonCzar1.score).toBe(3);
+    expect(nonCzar2.score).toBe(2);
   });
 });
 

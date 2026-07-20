@@ -476,6 +476,14 @@ export function registerGameHandlers(io: IO, socket: AppSocket) {
     const room = roomManager.getRoomByPlayerToken(playerToken);
     if (!room || room.status !== 'JUDGING') return;
 
+    // czar_is_dead: hodnocení se přeskakuje přes game:skipVoting, které hlasy
+    // vyhodnotí — tudy by šlo zrušit celé odhlasované kolo (včetně sázek)
+    const skipEngine = roomManager.getGameEngine(room.code);
+    if (skipEngine?.getCzarMode() === 'czar_is_dead') {
+      socket.emit('game:error', 'V tomto módu se hlasování přeskakuje jinak.');
+      return;
+    }
+
     const playerId = roomManager.getPlayerIdByToken(playerToken)!;
     const player = room.players.find(p => p.id === playerId);
     if (player?.isCardCzar) {
