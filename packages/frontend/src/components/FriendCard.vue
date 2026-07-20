@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoomStore } from '../stores/roomStore';
 import { socket } from '../socket';
 import type { FriendEntry } from '../stores/friendsStore';
+import Avatar from './Avatar.vue';
 
 const props = defineProps<{ friend: FriendEntry }>();
 const emit = defineEmits<{ (e: 'remove', id: number): void }>();
@@ -26,11 +27,7 @@ function invite() {
 
 <template>
   <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4">
-    <img
-      :src="friend.avatarUrl ?? `https://api.dicebear.com/9.x/bottts/svg?seed=${friend.nickname}`"
-      :alt="friend.nickname"
-      class="w-10 h-10 rounded-full bg-gray-700 object-cover"
-    />
+    <Avatar :nickname="friend.nickname" :avatar-url="friend.avatarUrl" :size="40" />
     <span class="flex-1 text-sm font-semibold text-white truncate">{{ friend.nickname }}</span>
     <span class="text-xs font-bold text-yellow-400 shrink-0">🏆 {{ friend.trophies }}</span>
     <button

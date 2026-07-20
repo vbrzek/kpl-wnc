@@ -24,7 +24,7 @@ export interface UserRow {
 
 // #8 — Zod schema for PATCH /api/me (#9 — nickname max 24)
 const UpdateMeSchema = z.object({
-  nickname: z.string().max(24).trim().optional(),
+  nickname: z.string().trim().max(24).optional(),
   locale: z.string().max(5).optional(),
   avatarType: z.enum(['oauth', 'dicebear']).optional(),
   dicebearStyle: z.string().max(50).nullable().optional(),
@@ -59,22 +59,26 @@ function formatUser(user: UserRow) {
 /**
  * Find an existing user by email (cross-provider) or by provider+provider_id,
  * or insert a new record. Returns userId and whether it was newly created.
+ * Exported for tests.
  */
-async function findOrCreateUser(params: {
+export async function findOrCreateUser(params: {
   email: string | null;
   provider: 'google' | 'discord';
   providerId: string;
   avatarUrl: string | null;
 }): Promise<{ userId: number; isNew: boolean }> {
-  const { email, provider, providerId, avatarUrl } = params;
+  const { avatarUrl } = params;
 
-  const result = await upsertUser({ email, provider, providerId, avatarUrl });
+  const result = await upsertUser(params);
 
   // Cache external avatar locally to avoid provider CDN rate limits
   if (isExternalAvatarUrl(avatarUrl)) {
     const localUrl = await cacheAvatar(avatarUrl!, result.userId);
     if (localUrl) {
       await db('users').where({ id: result.userId }).update({ avatar_url: localUrl });
+    } else {
+      // Stažení selhalo — funkční lokální kopii nechat, externí URL jen jako výplň prázdna
+      await db('users').where({ id: result.userId }).whereNull('avatar_url').update({ avatar_url: avatarUrl });
     }
   }
 
@@ -89,17 +93,11 @@ async function upsertUser(params: {
 }): Promise<{ userId: number; isNew: boolean }> {
   const { email, provider, providerId, avatarUrl } = params;
 
-  // 1. Cross-provider linking by email
+  // 1. Cross-provider login by email — původní provider/provider_id zůstává,
+  //    jinak by se identita účtu přepínala při každém přihlášení druhým providerem
   if (email) {
     const byEmail = await db<UserRow>('users').where({ email }).first();
-    if (byEmail) {
-      await db('users').where({ id: byEmail.id }).update({
-        provider,
-        provider_id: providerId,
-        avatar_url: avatarUrl,
-      });
-      return { userId: byEmail.id, isNew: false };
-    }
+    if (byEmail) return { userId: byEmail.id, isNew: false };
   }
 
   // 2. Same-provider re-login
@@ -107,10 +105,9 @@ async function upsertUser(params: {
     .where({ provider, provider_id: providerId })
     .first();
   if (byProvider) {
-    await db('users').where({ id: byProvider.id }).update({
-      avatar_url: avatarUrl,
-      ...(email && !byProvider.email ? { email } : {}),
-    });
+    if (email && !byProvider.email) {
+      await db('users').where({ id: byProvider.id }).update({ email });
+    }
     return { userId: byProvider.id, isNew: false };
   }
 
@@ -151,15 +148,20 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   // #6 — decorateRequest for type-safe jwtUser
   fastify.decorateRequest('jwtUser', undefined);
 
-  fastify.get('/api/me', { preHandler: verifyJwt }, async (request, reply) => {
-    const { userId } = request.jwtUser!;
+  async function fetchUserWithTrophies(userId: number) {
     const row = await db('users')
       .leftJoin('user_trophies', 'users.id', 'user_trophies.user_id')
       .where('users.id', userId)
       .select('users.*', db.raw('COALESCE(user_trophies.trophies, 0) as total_trophies'))
       .first();
-    if (!row) return reply.status(404).send({ error: 'User not found' });
+    if (!row) return null;
     return { ...formatUser(row as UserRow), trophies: row.total_trophies };
+  }
+
+  fastify.get('/api/me', { preHandler: verifyJwt }, async (request, reply) => {
+    const user = await fetchUserWithTrophies(request.jwtUser!.userId);
+    if (!user) return reply.status(404).send({ error: 'User not found' });
+    return user;
   });
 
   fastify.patch('/api/me', { preHandler: verifyJwt }, async (request, reply) => {
@@ -178,9 +180,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     if (body.avatarType !== undefined) updates.avatar_type = body.avatarType;
     if (body.dicebearStyle !== undefined) updates.dicebear_style = body.dicebearStyle ?? null;
     if (body.dicebearSeed !== undefined) updates.dicebear_seed = body.dicebearSeed ?? null;
-    await db('users').where({ id: userId }).update(updates);
-    const user = await db<UserRow>('users').where({ id: userId }).first();
-    return formatUser(user!);
+    if (Object.keys(updates).length > 0) {
+      await db('users').where({ id: userId }).update(updates);
+    }
+    const user = await fetchUserWithTrophies(userId);
+    if (!user) return reply.status(404).send({ error: 'User not found' });
+    return user;
   });
 
   fastify.post('/auth/logout', async (_request, reply) => {

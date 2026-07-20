@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { buildDiceBearUrl } from '@kpl/shared';
 import { i18n } from '../i18n';
 import { useRoomStore } from './roomStore';
+
+export { buildDiceBearUrl };
 
 const SUPPORTED_LOCALES = ['cs', 'en', 'ru', 'uk', 'es'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
@@ -26,9 +29,20 @@ interface PlayerProfile {
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
 
-/** Build a DiceBear avatar URL. Exported for reuse in components. */
-export function buildDiceBearUrl(style: string, seed: string): string {
-  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed || 'default')}`;
+/**
+ * Cachované avatary ukládá backend jako relativní cesty (`/uploads/avatars/…`),
+ * aby v DB nebyl zapečený origin. Na absolutní URL je převádí až klient tady.
+ */
+export function resolveAvatarUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith('/') ? `${BACKEND_URL}${url}` : url;
+}
+
+/** Výběr avataru z profilového modalu. */
+export interface AvatarSelection {
+  type: 'oauth' | 'dicebear';
+  dicebearStyle?: string | null;
+  dicebearSeed?: string | null;
 }
 
 export const useProfileStore = defineStore('profile', () => {
@@ -99,7 +113,7 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  async function save(newNickname: string, newLocale: SupportedLocale): Promise<string | null> {
+  async function save(newNickname: string, newLocale: SupportedLocale, avatar?: AvatarSelection): Promise<string | null> {
     const trimmed = newNickname.trim();
     loadLocale(newLocale);
 
@@ -112,10 +126,18 @@ export const useProfileStore = defineStore('profile', () => {
 
     nickname.value = trimmed;
 
-    // Sync avatar to current room (if in one) — nickname change may affect DiceBear URL
-    if (roomStore.room) roomStore.updateAvatar(avatarUrl.value);
-
-    if (isAuthenticated.value) {
+    if (isAuthenticated.value && oauthUser.value) {
+      // Optimistic local update — i při výpadku PATCHe se zobrazí nová volba
+      if (avatar) {
+        oauthUser.value = {
+          ...oauthUser.value,
+          avatarType: avatar.type,
+          ...(avatar.type === 'dicebear' && {
+            dicebearStyle: avatar.dicebearStyle ?? null,
+            dicebearSeed: avatar.dicebearSeed ?? null,
+          }),
+        };
+      }
       try {
         const res = await fetch(`${BACKEND_URL}/api/me`, {
           method: 'PATCH',
@@ -124,10 +146,14 @@ export const useProfileStore = defineStore('profile', () => {
           body: JSON.stringify({
             nickname: trimmed,
             locale: newLocale,
-            ...(oauthUser.value?.avatarType === 'dicebear' && {
-              avatarType: 'dicebear',
-              dicebearStyle: oauthUser.value.dicebearStyle,
-              dicebearSeed: oauthUser.value.dicebearSeed,
+            // Při typu 'oauth' se style/seed neposílají, aby v DB zůstala
+            // poslední dicebear volba pro případný návrat zpět
+            ...(avatar && {
+              avatarType: avatar.type,
+              ...(avatar.type === 'dicebear' && {
+                dicebearStyle: avatar.dicebearStyle ?? null,
+                dicebearSeed: avatar.dicebearSeed || null,
+              }),
             }),
           }),
         });
@@ -139,39 +165,23 @@ export const useProfileStore = defineStore('profile', () => {
       }
     }
 
+    // Sync avatar to current room (if in one) — jediný sync až po uložení,
+    // ať se spoluhráčům neblikne stará volba
+    if (roomStore.room) roomStore.updateAvatar(avatarUrl.value);
+
     // Always save to localStorage as fallback
     const profile: PlayerProfile = { nickname: trimmed, locale: newLocale };
     localStorage.setItem('playerProfile', JSON.stringify(profile));
     return null;
   }
 
-  async function saveAvatar(updates: Partial<Pick<OAuthUser, 'avatarType' | 'avatarUrl' | 'dicebearStyle' | 'dicebearSeed'>>): Promise<void> {
-    if (!isAuthenticated.value || !oauthUser.value) return;
-    oauthUser.value = { ...oauthUser.value, ...updates };
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/me`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          avatarType: oauthUser.value.avatarType,
-          dicebearStyle: oauthUser.value.dicebearStyle,
-          dicebearSeed: oauthUser.value.dicebearSeed,
-        }),
-      });
-      if (res.ok) oauthUser.value = await res.json() as OAuthUser;
-    } catch {
-      // non-critical
-    }
-    // Sync new avatarUrl to current room
-    const roomStore = useRoomStore();
-    if (roomStore.room) roomStore.updateAvatar(avatarUrl.value);
-  }
-
   async function logout(): Promise<void> {
     await fetch(`${BACKEND_URL}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
     isAuthenticated.value = false;
     oauthUser.value = null;
+    // Ostatní v místnosti musí vidět návrat na guest avatar
+    const roomStore = useRoomStore();
+    if (roomStore.room) roomStore.updateAvatar(avatarUrl.value);
   }
 
   function toggleSoundMuted() {
@@ -182,6 +192,6 @@ export const useProfileStore = defineStore('profile', () => {
   return {
     nickname, locale, soundMuted, avatarUrl, hasProfile,
     isAuthenticated, oauthUser, initPromise,
-    init, save, saveAvatar, logout, toggleSoundMuted,
+    init, save, logout, toggleSoundMuted,
   };
 });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import type { FriendRequest } from '../stores/friendsStore';
+import Avatar from './Avatar.vue';
 
 defineProps<{ request: FriendRequest }>();
 const emit = defineEmits<{
@@ -13,11 +14,7 @@ const { t } = useI18n();
 
 <template>
   <div class="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4">
-    <img
-      :src="request.fromAvatarUrl ?? `https://api.dicebear.com/9.x/bottts/svg?seed=${request.fromNick}`"
-      :alt="request.fromNick"
-      class="w-10 h-10 rounded-full bg-gray-700 object-cover"
-    />
+    <Avatar :nickname="request.fromNick" :avatar-url="request.fromAvatarUrl" :size="40" />
     <span class="flex-1 text-sm font-semibold text-white truncate">{{ request.fromNick }}</span>
     <button
       @click="emit('accept', request.friendshipId)"

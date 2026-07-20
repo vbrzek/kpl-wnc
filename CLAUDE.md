@@ -18,7 +18,8 @@ npm run dev:frontend                              # Vite dev (port 5173)
 npm run build                                     # Build všech balíčků
 npm run migrate --workspace=packages/backend      # DB migrace
 npm run seed --workspace=packages/backend         # Seed dat (destruktivní!)
-npm test --workspace=packages/backend             # Vitest — 146 testů
+npm test --workspace=packages/backend             # Vitest — 222 testů
+npm test --workspace=packages/frontend            # Vitest (happy-dom) — testy stores
 npx tsx packages/backend/scripts/generate-seeds.ts  # Regeneruje seed z DB
 ```
 

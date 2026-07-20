@@ -4,25 +4,9 @@ import type { ServerToClientEvents, ClientToServerEvents } from '@kpl/shared';
 import { z } from 'zod';
 import db from '../db/db.js';
 import { verifyJwt } from '../auth/middleware.js';
+import { resolveAvatarUrl } from '../utils/avatar.js';
 
 const SendRequestSchema = z.object({ addresseeId: z.number().int().positive() });
-
-interface UserRow {
-  avatar_type?: string | null;
-  avatar_url?: string | null;
-  dicebear_style?: string | null;
-  dicebear_seed?: string | null;
-  nickname?: string;
-}
-
-function resolveAvatarUrl(user: UserRow): string | null {
-  if (user.avatar_type === 'dicebear') {
-    const style = user.dicebear_style ?? 'bottts';
-    const seed = user.dicebear_seed ?? user.nickname ?? 'default';
-    return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}`;
-  }
-  return user.avatar_url ?? null;
-}
 
 interface FriendsRouteOpts {
   io?: Server<ClientToServerEvents, ServerToClientEvents>;

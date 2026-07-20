@@ -19,9 +19,30 @@ const czarMode = z.enum(VALID_CZAR_MODES as [CzarMode, ...CzarMode[]]).default('
 const VALID_WIN_CONDITIONS: WinCondition[] = ['score', 'time', 'rounds'];
 const winCondition = z.enum(VALID_WIN_CONDITIONS as [WinCondition, ...WinCondition[]]).default('score');
 
+// --- Avatar URL allowlist ---
+// Avatar URL od klienta se renderuje v <img> všem hráčům v místnosti —
+// bez allowlistu jde ostatním podstrčit tracking pixel nebo cizí obsah.
+
+const AVATAR_HOSTS = ['api.dicebear.com', 'cdn.discordapp.com', 'googleusercontent.com'];
+
+function isAllowedAvatarUrl(url: string): boolean {
+  if (url.startsWith('/uploads/avatars/')) return !url.includes('..');
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  const backendUrl = process.env.PUBLIC_BACKEND_URL ?? 'http://localhost:3000';
+  if (url.startsWith(`${backendUrl}/uploads/avatars/`)) return true;
+  if (parsed.protocol !== 'https:') return false;
+  return AVATAR_HOSTS.some(h => parsed.hostname === h || parsed.hostname.endsWith(`.${h}`));
+}
+
 // --- Schémata pro jednotlivé eventy ---
 
-const avatarUrl = z.string().max(500).nullable().optional();
+const avatarUrlValue = z.string().max(500).refine(isAllowedAvatarUrl, { message: 'Nepovolená avatar URL' });
+const avatarUrl = avatarUrlValue.nullable().optional();
 
 export const CreateRoomSchema = z.object({
   name: z.string().min(1).max(30).trim(),
@@ -49,7 +70,7 @@ export const JoinRoomSchema = z.object({
   playerToken: z.string().uuid().optional(),
 });
 
-export const UpdateAvatarSchema = z.string().max(500).nullable();
+export const UpdateAvatarSchema = avatarUrlValue.nullable();
 
 export const UpdateSettingsSchema = z.object({
   name: z.string().min(1).max(30).trim().optional(),

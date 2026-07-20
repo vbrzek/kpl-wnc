@@ -263,3 +263,10 @@ export interface FriendRequest {
   fromNick: string;
   fromAvatarUrl: string | null;
 }
+
+// ── Avatars ───────────────────────────────────────────────────────────────────
+
+/** Single source of truth for DiceBear avatar URLs (frontend i backend). */
+export function buildDiceBearUrl(style: string | null | undefined, seed: string | null | undefined): string {
+  return `https://api.dicebear.com/9.x/${style || 'bottts'}/svg?seed=${encodeURIComponent(seed || 'default')}`;
+}

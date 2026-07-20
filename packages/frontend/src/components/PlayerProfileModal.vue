@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useProfileStore, buildDiceBearUrl } from '../stores/profileStore';
-import type { SupportedLocale } from '../stores/profileStore';
+import { useProfileStore, buildDiceBearUrl, resolveAvatarUrl } from '../stores/profileStore';
+import type { SupportedLocale, AvatarSelection } from '../stores/profileStore';
 import czFlag from 'flag-icons/flags/4x3/cz.svg';
 import gbFlag from 'flag-icons/flags/4x3/gb.svg';
 import ruFlag from 'flag-icons/flags/4x3/ru.svg';
@@ -46,7 +46,7 @@ const DICEBEAR_STYLES = [
 const previewAvatarUrl = computed(() => {
   if (profileStore.isAuthenticated && profileStore.oauthUser) {
     if (selectedAvatarType.value === 'oauth' && profileStore.oauthUser.avatarUrl) {
-      return profileStore.oauthUser.avatarUrl;
+      return resolveAvatarUrl(profileStore.oauthUser.avatarUrl)!;
     }
     return buildDiceBearUrl(selectedDicebearStyle.value, dicebearSeedInput.value || nicknameInput.value);
   }
@@ -65,17 +65,17 @@ const languages: { code: SupportedLocale; label: string; flagSrc: string }[] = [
 
 async function submit() {
   if (!canSave.value) return;
-  const error = await profileStore.save(nicknameInput.value.trim(), selectedLocale.value);
+  const avatar: AvatarSelection | undefined = profileStore.isAuthenticated
+    ? {
+        type: selectedAvatarType.value,
+        dicebearStyle: selectedDicebearStyle.value,
+        dicebearSeed: dicebearSeedInput.value || null,
+      }
+    : undefined;
+  const error = await profileStore.save(nicknameInput.value.trim(), selectedLocale.value, avatar);
   if (error) {
     saveError.value = error;
     return;
-  }
-  if (profileStore.isAuthenticated) {
-    await profileStore.saveAvatar({
-      avatarType: selectedAvatarType.value,
-      dicebearStyle: selectedAvatarType.value === 'dicebear' ? selectedDicebearStyle.value : null,
-      dicebearSeed: selectedAvatarType.value === 'dicebear' ? (dicebearSeedInput.value || null) : null,
-    });
   }
   saveError.value = '';
   emit('close');

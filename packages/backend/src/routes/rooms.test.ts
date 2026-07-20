@@ -119,4 +119,44 @@ describe('GET /api/users/:userId/public-profile', () => {
       trophies: 13,
     });
   });
+
+  it('returns a DiceBear URL when user chose a dicebear avatar', async () => {
+    mockDb.mockReturnValue({
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      first: vi.fn().mockResolvedValue({
+        id: 5,
+        nickname: 'TestUser',
+        avatar_url: 'https://example.com/real-photo.png',
+        avatar_type: 'dicebear',
+        dicebear_style: 'avataaars',
+        dicebear_seed: 'můj seed',
+        trophies: 0,
+      }),
+    });
+    const res = await app.inject({ method: 'GET', url: '/api/users/5/public-profile' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.avatarUrl).toBe(`https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent('můj seed')}`);
+  });
+
+  it('falls back to nickname seed for dicebear avatar without seed', async () => {
+    mockDb.mockReturnValue({
+      leftJoin: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      first: vi.fn().mockResolvedValue({
+        id: 5,
+        nickname: 'TestUser',
+        avatar_url: null,
+        avatar_type: 'dicebear',
+        dicebear_style: null,
+        dicebear_seed: null,
+        trophies: 0,
+      }),
+    });
+    const res = await app.inject({ method: 'GET', url: '/api/users/5/public-profile' });
+    expect(res.json().avatarUrl).toBe('https://api.dicebear.com/9.x/bottts/svg?seed=TestUser');
+  });
 });

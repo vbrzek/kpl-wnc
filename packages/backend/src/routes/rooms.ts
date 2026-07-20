@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { roomManager } from '../game/RoomManager.js';
 import db from '../db/db.js';
+import { resolveAvatarUrl } from '../utils/avatar.js';
 
 const roomsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/rooms/:code/preview', async (request, reply) => {
@@ -28,7 +29,11 @@ const roomsRoutes: FastifyPluginAsync = async (fastify) => {
     const row = await db('users')
       .leftJoin('user_trophies', 'users.id', 'user_trophies.user_id')
       .where('users.id', id)
-      .select('users.id', 'users.nickname', 'users.avatar_url', db.raw('COALESCE(user_trophies.trophies, 0) as trophies'))
+      .select(
+        'users.id', 'users.nickname', 'users.avatar_url',
+        'users.avatar_type', 'users.dicebear_style', 'users.dicebear_seed',
+        db.raw('COALESCE(user_trophies.trophies, 0) as trophies'),
+      )
       .first();
 
     if (!row) return reply.status(404).send({ error: 'User not found' });
@@ -36,7 +41,7 @@ const roomsRoutes: FastifyPluginAsync = async (fastify) => {
     return {
       userId: row.id,
       nickname: row.nickname,
-      avatarUrl: row.avatar_url,
+      avatarUrl: resolveAvatarUrl(row),
       trophies: row.trophies,
     };
   });

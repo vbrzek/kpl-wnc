@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { buildDiceBearUrl } from '../stores/profileStore';
+import { buildDiceBearUrl, resolveAvatarUrl } from '../stores/profileStore';
 
 const props = withDefaults(defineProps<{
   nickname: string;
@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<{
 const failed = ref(false);
 
 const src = computed(() => {
-  if (!failed.value && props.avatarUrl) return props.avatarUrl;
+  if (!failed.value && props.avatarUrl) return resolveAvatarUrl(props.avatarUrl)!;
   return buildDiceBearUrl('bottts', props.nickname);
 });
 </script>

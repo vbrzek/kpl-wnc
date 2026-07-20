@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useProfileStore } from '../stores/profileStore';
 import { useFriendsStore } from '../stores/friendsStore';
+import Avatar from '../components/Avatar.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -71,11 +72,9 @@ async function sendRequest() {
       </div>
 
       <template v-else-if="profile">
-        <img
-          :src="profile.avatarUrl ?? `https://api.dicebear.com/9.x/bottts/svg?seed=${profile.nickname}`"
-          :alt="profile.nickname"
-          class="w-20 h-20 rounded-full mx-auto mb-4 object-cover bg-gray-700"
-        />
+        <div class="mx-auto mb-4 w-fit">
+          <Avatar :nickname="profile.nickname" :avatar-url="profile.avatarUrl" :size="80" />
+        </div>
         <h1 class="text-xl font-black text-white mb-6">{{ profile.nickname }}</h1>
 
         <!-- Self -->
