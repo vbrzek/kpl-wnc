@@ -3,6 +3,9 @@ import { ref } from 'vue';
 import { socket } from '../socket';
 import type { PublicRoomSummary, GameRoom, SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
 import { useProfileStore } from './profileStore';
+import { getGuestId, savePlayerToken, loadPlayerToken } from './playerIdentity';
+
+export { savePlayerToken, loadPlayerToken } from './playerIdentity';
 
 export interface CardSetSummary {
   id: number;
@@ -25,10 +28,15 @@ export interface RoomPreview {
   specialRules?: SpecialRule[];
 }
 
+/**
+ * Vrací null jen při 404 (místnost neexistuje); ostatní chyby (výpadek
+ * backendu, 5xx…) vyhazují — volající je nesmí zaměnit za „místnost zanikla“.
+ */
 export async function fetchRoomPreview(code: string): Promise<RoomPreview | null> {
   const backendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:3000';
   const res = await fetch(`${backendUrl}/api/rooms/${code}/preview`);
-  if (!res.ok) return null;
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Room preview failed: ${res.status}`);
   return res.json() as Promise<RoomPreview>;
 }
 
@@ -78,7 +86,7 @@ export const useLobbyStore = defineStore('lobby', () => {
   }): Promise<{ room: GameRoom; code: string; playerToken: string; playerId: string } | { error: string }> {
     const profileStore = useProfileStore();
     return new Promise((resolve) => {
-      socket.emit('lobby:create', { ...settings, avatarUrl: profileStore.avatarUrl }, (result) => {
+      socket.emit('lobby:create', { ...settings, avatarUrl: profileStore.avatarUrl, guestId: getGuestId() }, (result) => {
         if ('error' in result) {
           resolve(result);
         } else {
@@ -98,7 +106,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     return new Promise((resolve) => {
       socket.emit(
         'lobby:join',
-        { code, nickname, avatarUrl: profileStore.avatarUrl, playerToken },
+        { code, nickname, avatarUrl: profileStore.avatarUrl, playerToken, guestId: getGuestId() },
         (result) => {
           if ('error' in result) {
             resolve(result);
@@ -113,11 +121,3 @@ export const useLobbyStore = defineStore('lobby', () => {
 
   return { publicRooms, cardSets, cardSetsLoaded, subscribe, unsubscribe, createRoom, joinRoom, fetchCardSets };
 });
-
-export function savePlayerToken(roomCode: string, token: string) {
-  localStorage.setItem(`playerToken_${roomCode}`, token);
-}
-
-export function loadPlayerToken(roomCode: string): string | null {
-  return localStorage.getItem(`playerToken_${roomCode}`);
-}

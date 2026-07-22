@@ -19,7 +19,9 @@ const lobbyStore = useLobbyStore();
 const roomStore = useRoomStore();
 const profileStore = useProfileStore();
 
-const roomCode = route.params.token as string;
+// Kanonický kód je uppercase — URL ale může přijít i lowercase (ručně
+// přepsaný odkaz apod.) a nesmí tím vzniknout nová identita hráče
+const roomCode = (route.params.token as string).toUpperCase();
 
 const stopKickedWatch = watch(
   [() => roomStore.room, () => roomStore.finishedState],

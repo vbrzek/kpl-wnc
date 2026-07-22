@@ -17,8 +17,14 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 **Klíčové třídy:**
 - `RoomManager.ts` — in-memory správa místností (create/join/leave/kick/AFK/reconnect)
 - `GameEngine.ts` — logika kola (rozdávání karet, submissions, výsledky)
-- `GarbageCollector.ts` — mazání idle místností (5min interval, 2h/15min prahy)
+- `GarbageCollector.ts` — mazání idle místností (5min interval, 2h/15min prahy) + mrtvých instancí (offline > 10 min v LOBBY, `removeStalePlayers`)
 - `roundUtils.ts` — sdílené utility (startNextRound, finishGame…)
+
+**Identita hráče a reconnect:**
+- Klient posílá při `lobby:join`/`lobby:create` trvalé `guestId` (`localStorage['kpl_guestId']`, nikdy se nemaže) + volitelný per-room `playerToken`
+- Server reconnectuje nejdřív přes `playerToken`, pak přes guest index `(kód místnosti, guestId) → token` — ztráta per-room tokenu tak nevytvoří duplicitní instanci hráče ani nezablokuje přezdívku
+- Guest index se čistí při leave/kick/finishGame/deleteRoom a přežívá SIGTERM snapshot (`guestKeyToToken`)
+- `lobby:leave` přijímá volitelný `{ playerToken }` fallback pro případ, že po auto-reconnectu socketu ještě chybí mapování `socket.id → token`
 
 **Implementační poznámky:**
 - `CreateTableModal` podporuje výběr právě 1 sady karet (backend podporuje `selectedSetIds: number[]`)

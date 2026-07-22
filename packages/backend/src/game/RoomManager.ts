@@ -7,6 +7,8 @@ export interface ManagerSnapshot {
   rooms: Array<{ room: GameRoom; engine: EngineSnapshot | null }>;
   playerRooms: Record<string, string>;
   tokenToPlayerId: Record<string, string>;
+  // `${code}:${guestId}` → playerToken; optional kvůli starším snapshotům
+  guestKeyToToken?: Record<string, string>;
 }
 
 // --- Room code generator ---
@@ -16,6 +18,10 @@ const ROOM_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 31 chars: A-Z + 2-
 function generateRoomCode(length = 6): string {
   const bytes = randomBytes(length);
   return Array.from(bytes, b => ROOM_CODE_CHARS[b % ROOM_CODE_CHARS.length]).join('');
+}
+
+function guestKey(code: string, guestId: string): string {
+  return `${code}:${guestId}`;
 }
 
 // --- Result types ---
@@ -60,6 +66,7 @@ export interface CreateRoomSettings {
   winCondition?: WinCondition;
   targetRounds?: number;
   gameTimeLimit?: number;
+  guestId?: string;
 }
 
 export interface FinishGameResult {
@@ -93,6 +100,11 @@ export class RoomManager {
   private tokenToPlayerId: Map<string, string> = new Map();
   // playerToken → AFK timer handle
   private afkTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  // Trvalá identita klienta: `${code}:${guestId}` → playerToken (a inverz pro úklid)
+  private guestKeyToToken: Map<string, string> = new Map();
+  private tokenToGuestKey: Map<string, string> = new Map();
+  // playerToken → timestamp odpojení (pro GC mrtvých instancí v LOBBY)
+  private offlineSince: Map<string, number> = new Map();
   private readonly _playerSocketIds = new Map<string, string>(); // playerId → socket.id
   private engines = new Map<string, GameEngine>();
   private roundTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
@@ -143,32 +155,37 @@ export class RoomManager {
     this.rooms.set(code, room);
     this.playerRooms.set(playerToken, code);
     this.tokenToPlayerId.set(playerToken, playerId);
+    if (settings.guestId) this.registerGuestId(code, settings.guestId, playerToken);
 
     return { room, playerToken };
   }
 
   // ------------------------------------------------------------------ joinRoom
 
-  joinRoom(code: string, nickname: string, playerToken?: string, avatarUrl?: string | null): JoinResult {
+  joinRoom(code: string, nickname: string, playerToken?: string, avatarUrl?: string | null, guestId?: string): JoinResult {
     const room = this.rooms.get(code);
     if (!room) {
       return { error: 'Místnost nebyla nalezena.' };
     }
 
-    // Reconnect path: if playerToken provided and maps to this room
-    if (playerToken) {
-      const existingRoomCode = this.playerRooms.get(playerToken);
-      if (existingRoomCode === code) {
-        const reconnected = this.reconnect(playerToken);
-        if (reconnected) {
-          // Update avatarUrl on reconnect (player may have changed it)
-          if (avatarUrl !== undefined) {
-            const pid = this.tokenToPlayerId.get(playerToken);
-            const p = reconnected.players.find(pl => pl.id === pid);
-            if (p) p.avatarUrl = avatarUrl;
-          }
-          return { room: reconnected, playerToken, wasReconnect: true };
+    // Reconnect path 1: legacy playerToken mapovaný na tuto místnost
+    if (playerToken && this.playerRooms.get(playerToken) === code) {
+      const result = this.reconnectWithAvatar(playerToken, avatarUrl);
+      if (result) {
+        // Migrace: klient už posílá guestId → zaregistruj ho k existující instanci
+        if (guestId && !this.guestKeyToToken.has(guestKey(code, guestId))) {
+          this.registerGuestId(code, guestId, playerToken);
         }
+        return result;
+      }
+    }
+
+    // Reconnect path 2: trvalá identita klienta (guestId) — přežije ztrátu tokenu
+    if (guestId) {
+      const knownToken = this.guestKeyToToken.get(guestKey(code, guestId));
+      if (knownToken) {
+        const result = this.reconnectWithAvatar(knownToken, avatarUrl);
+        if (result) return result;
       }
     }
 
@@ -210,8 +227,35 @@ export class RoomManager {
     room.players.push(player);
     this.playerRooms.set(newToken, code);
     this.tokenToPlayerId.set(newToken, playerId);
+    if (guestId) this.registerGuestId(code, guestId, newToken);
 
     return { room, playerToken: newToken, wasReconnect: false };
+  }
+
+  /** Reconnect + aktualizace avataru; vrátí null, když token nelze připojit. */
+  private reconnectWithAvatar(playerToken: string, avatarUrl: string | null | undefined): JoinSuccess | null {
+    const reconnected = this.reconnect(playerToken);
+    if (!reconnected) return null;
+    if (avatarUrl !== undefined) {
+      const pid = this.tokenToPlayerId.get(playerToken);
+      const p = reconnected.players.find(pl => pl.id === pid);
+      if (p) p.avatarUrl = avatarUrl;
+    }
+    return { room: reconnected, playerToken, wasReconnect: true };
+  }
+
+  private registerGuestId(code: string, guestId: string, playerToken: string): void {
+    const key = guestKey(code, guestId);
+    this.guestKeyToToken.set(key, playerToken);
+    this.tokenToGuestKey.set(playerToken, key);
+  }
+
+  private clearGuestMapping(playerToken: string): void {
+    const key = this.tokenToGuestKey.get(playerToken);
+    if (key !== undefined) {
+      this.guestKeyToToken.delete(key);
+      this.tokenToGuestKey.delete(playerToken);
+    }
   }
 
   // ------------------------------------------------------------------ reconnect
@@ -238,6 +282,7 @@ export class RoomManager {
 
     player.isOnline = true;
     player.isAfk = false;
+    this.offlineSince.delete(playerToken);
 
     return room;
   }
@@ -259,6 +304,7 @@ export class RoomManager {
 
     this.clearSocketIdByToken(playerToken);
     player.isOnline = false;
+    this.offlineSince.set(playerToken, Date.now());
 
     // Clear any existing timer first
     const existing = this.afkTimers.get(playerToken);
@@ -621,6 +667,8 @@ export class RoomManager {
       }
       this.playerRooms.delete(token);
       this.tokenToPlayerId.delete(token);
+      this.clearGuestMapping(token);
+      this.offlineSince.delete(token);
     }
     room.players = room.players.filter(p => p.id === room.hostId);
 
@@ -640,6 +688,30 @@ export class RoomManager {
     }
 
     return { room, payload, kickedTokens, roundNumber, playerTokenMap };
+  }
+
+  // ------------------------------------------------------------------ removeStalePlayers
+
+  /**
+   * Odstraní z LOBBY místností hráče offline déle než maxOfflineMs (mrtvé
+   * instance po ztrátě localStorage apod.). Rozehrané hry nechává být —
+   * tam se hráč může vrátit reconnectem. Vrací dotčené místnosti.
+   */
+  removeStalePlayers(maxOfflineMs: number): GameRoom[] {
+    const now = Date.now();
+    const affected = new Map<string, GameRoom>();
+
+    for (const [token, since] of [...this.offlineSince.entries()]) {
+      if (now - since < maxOfflineMs) continue;
+      const code = this.playerRooms.get(token);
+      if (!code) { this.offlineSince.delete(token); continue; }
+      const room = this.rooms.get(code);
+      if (!room || room.status !== 'LOBBY') continue;
+      this.removePlayer(token, room);
+      affected.set(code, room);
+    }
+
+    return [...affected.values()];
   }
 
   // ------------------------------------------------------------------ updateActivity
@@ -670,6 +742,8 @@ export class RoomManager {
         }
         this.playerRooms.delete(token);
         this.tokenToPlayerId.delete(token);
+        this.clearGuestMapping(token);
+        this.offlineSince.delete(token);
       }
     }
     this.clearAllGameTimers(code);
@@ -693,6 +767,7 @@ export class RoomManager {
       rooms,
       playerRooms: Object.fromEntries(this.playerRooms),
       tokenToPlayerId: Object.fromEntries(this.tokenToPlayerId),
+      guestKeyToToken: Object.fromEntries(this.guestKeyToToken),
     };
   }
 
@@ -720,6 +795,10 @@ export class RoomManager {
 
     this.playerRooms = new Map(Object.entries(snapshot.playerRooms));
     this.tokenToPlayerId = new Map(Object.entries(snapshot.tokenToPlayerId));
+    this.guestKeyToToken = new Map(Object.entries(snapshot.guestKeyToToken ?? {}));
+    this.tokenToGuestKey = new Map(
+      [...this.guestKeyToToken.entries()].map(([key, token]) => [token, key]),
+    );
   }
 
   // ------------------------------------------------------------------ private helpers
@@ -742,6 +821,8 @@ export class RoomManager {
     // Clean up maps
     this.playerRooms.delete(playerToken);
     this.tokenToPlayerId.delete(playerToken);
+    this.clearGuestMapping(playerToken);
+    this.offlineSince.delete(playerToken);
 
     // If room is now empty, delete it
     if (room.players.length === 0) {

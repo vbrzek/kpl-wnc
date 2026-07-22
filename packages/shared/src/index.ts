@@ -178,17 +178,20 @@ export interface ClientToServerEvents {
       winCondition?: WinCondition;
       targetRounds?: number;
       gameTimeLimit?: number;
+      guestId?: string;
     },
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
   'lobby:join': (
-    data: { code: string; nickname: string; avatarUrl?: string | null; playerToken?: string },
+    data: { code: string; nickname: string; avatarUrl?: string | null; playerToken?: string; guestId?: string },
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
   'lobby:updateAvatar': (avatarUrl: string | null) => void;
   'lobby:subscribePublic': () => void;
   'lobby:unsubscribePublic': () => void;
-  'lobby:leave': () => void;
+  // playerToken slouží jako fallback identifikace, když socket ještě nemá
+  // obnovené mapování (např. leave hned po auto-reconnectu)
+  'lobby:leave': (data?: { playerToken?: string }) => void;
   'lobby:updateSettings': (
     settings: { name?: string; isPublic?: boolean; selectedSetIds?: number[]; maxPlayers?: number; specialRules?: SpecialRule[]; czarMode?: CzarMode; winCondition?: WinCondition; targetScore?: number; targetRounds?: number; gameTimeLimit?: number },
     callback: (result: { room: GameRoom } | { error: string }) => void

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { socket } from '../socket';
 import type { GameRoom, GameOverPayload, BlackCard, WhiteCard, AnonymousSubmission, RoundResult, SpecialRule, WinCondition, CzarMode } from '@kpl/shared';
+import { loadPlayerToken, removePlayerToken } from './playerIdentity';
 
 export const useRoomStore = defineStore('room', () => {
   const room = ref<GameRoom | null>(null);
@@ -66,7 +67,7 @@ export const useRoomStore = defineStore('room', () => {
 
     socket.on('lobby:kicked', () => {
       if (room.value?.code) {
-        localStorage.removeItem(`playerToken_${room.value.code}`);
+        removePlayerToken(room.value.code);
       }
       room.value = null;
       myPlayerId.value = null;
@@ -152,7 +153,10 @@ export const useRoomStore = defineStore('room', () => {
   }
 
   function leave() {
-    socket.emit('lobby:leave');
+    // Token v payloadu je fallback pro případ, že server po auto-reconnectu
+    // socketu ještě nemá obnovené mapování socket.id → token
+    const token = room.value?.code ? loadPlayerToken(room.value.code) : null;
+    socket.emit('lobby:leave', token ? { playerToken: token } : undefined);
     cleanup();
   }
 

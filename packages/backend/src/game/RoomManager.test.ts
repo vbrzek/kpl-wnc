@@ -549,6 +549,252 @@ describe('serialize / restore', () => {
   });
 });
 
+// --- guestId identity ---
+
+describe('guestId identity', () => {
+  let rm: RoomManager;
+  const GUEST_A = '11111111-1111-4111-8111-111111111111';
+  const GUEST_B = '22222222-2222-4222-8222-222222222222';
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    rm = new RoomManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function createHostedRoom(guestId?: string) {
+    return rm.createRoom({
+      name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6,
+      nickname: 'Alice', targetScore: 8, specialRules: [], guestId,
+    });
+  }
+
+  it('joinRoom with guestId but no token reconnects to the existing instance', () => {
+    const { room } = createHostedRoom();
+    const first = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    expect('error' in first).toBe(false);
+    if ('error' in first) return;
+
+    // Token ztracen (jiné localStorage klíče apod.) — pošle se jen guestId
+    const second = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    expect('error' in second).toBe(false);
+    if ('error' in second) return;
+    expect(second.wasReconnect).toBe(true);
+    expect(second.playerToken).toBe(first.playerToken);
+    expect(second.room.players).toHaveLength(2);
+  });
+
+  it('guestId reconnect works even when the nickname changed meanwhile', () => {
+    const { room } = createHostedRoom();
+    const first = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    if ('error' in first) throw new Error('join failed');
+
+    const second = rm.joinRoom(room.code, 'Bobik', undefined, null, GUEST_A);
+    expect('error' in second).toBe(false);
+    if ('error' in second) return;
+    expect(second.wasReconnect).toBe(true);
+    expect(second.room.players).toHaveLength(2);
+    // Přezdívka instance se reconnectem nemění
+    const playerId = rm.getPlayerIdByToken(second.playerToken)!;
+    expect(second.room.players.find(p => p.id === playerId)!.nickname).toBe('Bob');
+  });
+
+  it('guestId reconnect is not blocked by the duplicate-nickname check', () => {
+    const { room } = createHostedRoom();
+    const first = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    if ('error' in first) throw new Error('join failed');
+    rm.handleDisconnect(first.playerToken);
+    vi.advanceTimersByTime(31_000); // mrtvá instance je AFK
+
+    const second = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    expect('error' in second).toBe(false);
+    if ('error' in second) return;
+    expect(second.wasReconnect).toBe(true);
+    expect(second.room.players).toHaveLength(2);
+  });
+
+  it('different guestId with a taken nickname is still rejected', () => {
+    const { room } = createHostedRoom();
+    rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    const result = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_B);
+    expect('error' in result).toBe(true);
+  });
+
+  it('same guestId can be in two different rooms at once', () => {
+    const { room: room1 } = createHostedRoom();
+    const { room: room2 } = rm.createRoom({
+      name: 'Other', isPublic: true, selectedSetIds: [1], maxPlayers: 6,
+      nickname: 'Cecil', targetScore: 8, specialRules: [],
+    });
+    const j1 = rm.joinRoom(room1.code, 'Bob', undefined, null, GUEST_A);
+    const j2 = rm.joinRoom(room2.code, 'Bob', undefined, null, GUEST_A);
+    expect('error' in j1).toBe(false);
+    expect('error' in j2).toBe(false);
+    if ('error' in j1 || 'error' in j2) return;
+    expect(j1.wasReconnect).toBe(false);
+    expect(j2.wasReconnect).toBe(false);
+    // Reconnect v room1 najde instanci v room1, ne v room2
+    const again = rm.joinRoom(room1.code, '', undefined, null, GUEST_A);
+    if ('error' in again) throw new Error('reconnect failed');
+    expect(again.playerToken).toBe(j1.playerToken);
+  });
+
+  it('createRoom registers host guestId for later reconnect', () => {
+    const { room, playerToken } = createHostedRoom(GUEST_A);
+    const rejoin = rm.joinRoom(room.code, '', undefined, null, GUEST_A);
+    expect('error' in rejoin).toBe(false);
+    if ('error' in rejoin) return;
+    expect(rejoin.wasReconnect).toBe(true);
+    expect(rejoin.playerToken).toBe(playerToken);
+  });
+
+  it('leaveRoom clears the guestId mapping — rejoin is a fresh join', () => {
+    const { room } = createHostedRoom();
+    const first = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    if ('error' in first) throw new Error('join failed');
+    rm.leaveRoom(first.playerToken);
+
+    const second = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    expect('error' in second).toBe(false);
+    if ('error' in second) return;
+    expect(second.wasReconnect).toBe(false);
+    expect(second.playerToken).not.toBe(first.playerToken);
+  });
+
+  it('finishGame clears guestId mappings of kicked non-host players', () => {
+    const { room, playerToken: hostToken } = createHostedRoom(GUEST_A);
+    const bob = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_B);
+    rm.joinRoom(room.code, 'Charlie');
+    if ('error' in bob) throw new Error('join failed');
+    rm.finishGame(room.code);
+
+    // Bob je vyhozen — guestId reconnect nesmí najít mrtvou mapu
+    const rejoin = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_B);
+    expect('error' in rejoin).toBe(false);
+    if ('error' in rejoin) return;
+    expect(rejoin.wasReconnect).toBe(false);
+
+    // Host mapping přežívá
+    const hostRejoin = rm.joinRoom(room.code, '', undefined, null, GUEST_A);
+    if ('error' in hostRejoin) throw new Error('host reconnect failed');
+    expect(hostRejoin.wasReconnect).toBe(true);
+    expect(hostRejoin.playerToken).toBe(hostToken);
+  });
+
+  it('legacy playerToken still reconnects when guestId is unknown', () => {
+    const { room } = createHostedRoom();
+    const first = rm.joinRoom(room.code, 'Bob'); // starý klient bez guestId
+    if ('error' in first) throw new Error('join failed');
+    const second = rm.joinRoom(room.code, '', first.playerToken, null, GUEST_A);
+    expect('error' in second).toBe(false);
+    if ('error' in second) return;
+    expect(second.wasReconnect).toBe(true);
+    // Migrace: příště stačí samotné guestId
+    const third = rm.joinRoom(room.code, '', undefined, null, GUEST_A);
+    if ('error' in third) throw new Error('guestId reconnect failed');
+    expect(third.wasReconnect).toBe(true);
+    expect(third.playerToken).toBe(first.playerToken);
+  });
+
+  it('serialize/restore preserves guestId mappings', () => {
+    const { room } = createHostedRoom();
+    const first = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    if ('error' in first) throw new Error('join failed');
+
+    const rm2 = new RoomManager();
+    rm2.restore(rm.serialize());
+
+    const rejoin = rm2.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    expect('error' in rejoin).toBe(false);
+    if ('error' in rejoin) return;
+    expect(rejoin.wasReconnect).toBe(true);
+    expect(rejoin.playerToken).toBe(first.playerToken);
+  });
+});
+
+// --- removeStalePlayers (GC offline hráčů v LOBBY) ---
+
+describe('removeStalePlayers', () => {
+  let rm: RoomManager;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    rm = new RoomManager();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function setup() {
+    const { room, playerToken: hostToken } = rm.createRoom({
+      name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6,
+      nickname: 'Alice', targetScore: 8, specialRules: [],
+    });
+    const bob = rm.joinRoom(room.code, 'Bob');
+    if ('error' in bob) throw new Error('join failed');
+    return { room, hostToken, bobToken: bob.playerToken };
+  }
+
+  it('removes players offline longer than the threshold from LOBBY rooms', () => {
+    const { room, bobToken } = setup();
+    rm.handleDisconnect(bobToken);
+    vi.advanceTimersByTime(10 * 60 * 1000);
+
+    const affected = rm.removeStalePlayers(10 * 60 * 1000);
+    expect(affected.map(r => r.code)).toContain(room.code);
+    expect(rm.getRoom(room.code)!.players).toHaveLength(1);
+    expect(rm.getRoomByPlayerToken(bobToken)).toBeNull();
+  });
+
+  it('keeps players offline for less than the threshold', () => {
+    const { room, bobToken } = setup();
+    rm.handleDisconnect(bobToken);
+    vi.advanceTimersByTime(5 * 60 * 1000);
+
+    const affected = rm.removeStalePlayers(10 * 60 * 1000);
+    expect(affected).toHaveLength(0);
+    expect(rm.getRoom(room.code)!.players).toHaveLength(2);
+  });
+
+  it('does not touch offline players while a game is running', () => {
+    const { room, bobToken } = setup();
+    rm.getRoom(room.code)!.status = 'SELECTION';
+    rm.handleDisconnect(bobToken);
+    vi.advanceTimersByTime(30 * 60 * 1000);
+
+    const affected = rm.removeStalePlayers(10 * 60 * 1000);
+    expect(affected).toHaveLength(0);
+    expect(rm.getRoom(room.code)!.players).toHaveLength(2);
+  });
+
+  it('reconnect resets the offline clock', () => {
+    const { room, bobToken } = setup();
+    rm.handleDisconnect(bobToken);
+    vi.advanceTimersByTime(9 * 60 * 1000);
+    rm.reconnect(bobToken);
+    rm.handleDisconnect(bobToken);
+    vi.advanceTimersByTime(2 * 60 * 1000);
+
+    const affected = rm.removeStalePlayers(10 * 60 * 1000);
+    expect(affected).toHaveLength(0);
+    expect(rm.getRoom(room.code)!.players).toHaveLength(2);
+  });
+
+  it('deletes the room when the last player is stale', () => {
+    const { room, hostToken, bobToken } = setup();
+    rm.handleDisconnect(hostToken);
+    rm.handleDisconnect(bobToken);
+    vi.advanceTimersByTime(15 * 60 * 1000);
+
+    rm.removeStalePlayers(10 * 60 * 1000);
+    expect(rm.getRoom(room.code)).toBeNull();
+  });
+});
+
 // --- specialRules ---
 
 describe('specialRules', () => {

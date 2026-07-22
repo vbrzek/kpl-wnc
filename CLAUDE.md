@@ -26,7 +26,7 @@ npx tsx packages/backend/scripts/generate-seeds.ts  # Regeneruje seed z DB
 ## Klíčové konvence
 
 - **Herní stav:** `LOBBY` → `SELECTION` → `JUDGING` → `RESULTS` → `FINISHED` (in-memory, `RoomManager`)
-- **Player token:** UUID v `localStorage[playerToken_<code>]`, slouží pro reconnect bez ztráty stavu
+- **Identita hráče:** trvalé `localStorage[kpl_guestId]` (UUID, nikdy se nemaže) — server podle něj reconnectne i po ztrátě per-room tokenu; `localStorage[playerToken_<CODE>]` zůstává jako rychlá cesta reconnectu a pro výpis aktivních stolů (`stores/playerIdentity.ts`)
 - **Profil:** `profileStore.ts` — init() zkusí `/api/me` (OAuth), pak fallback na `localStorage`
 - **Karty:** M:N schéma (junction tabulky), COALESCE fallback na češtinu pro překlady
 - **Vite .env:** čte z kořene monorepa (`envDir: '../../'`) — pro LAN/mobil použij IP místo localhost

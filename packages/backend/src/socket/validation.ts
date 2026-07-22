@@ -61,6 +61,7 @@ export const CreateRoomSchema = z.object({
   gameTimeLimit: z.number().int().refine(v => v >= 5 && v <= 60 && v % 5 === 0, {
     message: 'Časový limit musí být 5–60 minut v krocích 5.',
   }).default(15),
+  guestId: z.string().uuid().optional(),
 });
 
 export const JoinRoomSchema = z.object({
@@ -68,7 +69,12 @@ export const JoinRoomSchema = z.object({
   nickname: z.string().max(24).trim(),
   avatarUrl,
   playerToken: z.string().uuid().optional(),
+  guestId: z.string().uuid().optional(),
 });
+
+export const LeaveRoomSchema = z.object({
+  playerToken: z.string().uuid().optional(),
+}).optional();
 
 export const UpdateAvatarSchema = avatarUrlValue.nullable();
 

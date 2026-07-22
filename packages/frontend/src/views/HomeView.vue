@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useLobbyStore, fetchRoomPreview, type RoomPreview } from '../stores/lobbyStore';
+import { removePlayerToken } from '../stores/playerIdentity';
 import { useRoomStore } from '../stores/roomStore';
 import { useProfileStore } from '../stores/profileStore';
 import PublicRoomsList from '../components/PublicRoomsList.vue';
@@ -75,18 +76,22 @@ async function loadActiveRooms() {
     }
   }
   if (!codes.length) return;
-  const results = await Promise.all(codes.map(code => fetchRoomPreview(code)));
+  // undefined = dočasná chyba (výpadek backendu apod.) — token NEmazat,
+  // jinak by hráč přišel o identitu u živého stolu
+  const results = await Promise.all(
+    codes.map(code => fetchRoomPreview(code).catch(() => undefined))
+  );
   results.forEach((preview, i) => {
     if (preview === null) {
-      localStorage.removeItem(`playerToken_${codes[i]}`);
+      removePlayerToken(codes[i]);
     }
   });
-  activeRooms.value = results.filter((r): r is RoomPreview => r !== null);
+  activeRooms.value = results.filter((r): r is RoomPreview => r != null);
 }
 
 async function openPreview(code: string) {
   previewLoading.value = true;
-  const preview = await fetchRoomPreview(code);
+  const preview = await fetchRoomPreview(code).catch(() => null);
   previewLoading.value = false;
   if (!preview) {
     errorMsg.value = t('home.roomNotFound');

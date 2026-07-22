@@ -17,7 +17,7 @@ async function submit() {
   }
   errorMsg.value = '';
   loading.value = true;
-  const preview = await fetchRoomPreview(normalized);
+  const preview = await fetchRoomPreview(normalized).catch(() => null);
   loading.value = false;
   if (!preview) {
     errorMsg.value = t('home.roomNotFound');

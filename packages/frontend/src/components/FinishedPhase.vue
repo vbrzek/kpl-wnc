@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import { useRoomStore } from '../stores/roomStore';
 import { useLobbyStore } from '../stores/lobbyStore';
 import { useProfileStore } from '../stores/profileStore';
+import { removePlayerToken } from '../stores/playerIdentity';
 import { useSound } from '../composables/useSound';
 import Podium from './game/atoms/Podium.vue';
 import Scoreboard from './game/atoms/Scoreboard.vue';
@@ -66,7 +67,7 @@ function onLeaveRoom() {
   // Non-host token byl invalidován serverem při finishGame — vymazat z localStorage,
   // aby příští příchod do místnosti neposílal prázdnou přezdívku.
   if (!roomStore.isHost && roomCode.value) {
-    localStorage.removeItem(`playerToken_${roomCode.value}`);
+    removePlayerToken(roomCode.value);
   }
   roomStore.clearFinishedState();
   router.push('/');

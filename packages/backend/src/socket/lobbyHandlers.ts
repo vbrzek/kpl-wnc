@@ -24,7 +24,7 @@ async function linkPlayerToken(
 }
 import { GameEngine } from '../game/GameEngine.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
-import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, UpdateAvatarSchema, validate } from './validation.js';
+import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, UpdateAvatarSchema, LeaveRoomSchema, validate } from './validation.js';
 import { checkRateLimit, cleanupSocket } from './rateLimiter.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 import { eventLogger } from '../analytics/EventLogger.js';
@@ -92,7 +92,7 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     }
     const data = validate(JoinRoomSchema, input, callback);
     if (!data) return;
-    const result = roomManager.joinRoom(data.code, data.nickname, data.playerToken, data.avatarUrl ?? null);
+    const result = roomManager.joinRoom(data.code, data.nickname, data.playerToken, data.avatarUrl ?? null, data.guestId);
 
     if ('error' in result) {
       callback(result);
@@ -146,8 +146,11 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
   });
 
   // Leave room
-  socket.on('lobby:leave', () => {
-    const playerToken = socketToToken.get(socket.id);
+  socket.on('lobby:leave', (data) => {
+    // Fallback na playerToken z payloadu: po auto-reconnectu socketu může
+    // mapování socket.id → token chybět a leave by se jinak tiše zahodil
+    const validated = validate(LeaveRoomSchema, data);
+    const playerToken = socketToToken.get(socket.id) ?? validated?.playerToken;
     if (!playerToken) return;
 
     const roomCode = roomManager.getRoomByPlayerToken(playerToken)?.code;
