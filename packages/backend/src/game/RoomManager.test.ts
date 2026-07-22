@@ -597,9 +597,9 @@ describe('guestId identity', () => {
     if ('error' in second) return;
     expect(second.wasReconnect).toBe(true);
     expect(second.room.players).toHaveLength(2);
-    // Přezdívka instance se reconnectem nemění
+    // Přezdívka změněná v mezičase se při reconnectu propíše do místnosti
     const playerId = rm.getPlayerIdByToken(second.playerToken)!;
-    expect(second.room.players.find(p => p.id === playerId)!.nickname).toBe('Bob');
+    expect(second.room.players.find(p => p.id === playerId)!.nickname).toBe('Bobik');
   });
 
   it('guestId reconnect is not blocked by the duplicate-nickname check', () => {
@@ -712,6 +712,132 @@ describe('guestId identity', () => {
     if ('error' in rejoin) return;
     expect(rejoin.wasReconnect).toBe(true);
     expect(rejoin.playerToken).toBe(first.playerToken);
+  });
+});
+
+// --- syncProfileByGuestId ---
+
+describe('syncProfileByGuestId', () => {
+  let rm: RoomManager;
+  const GUEST_A = '11111111-1111-4111-8111-111111111111';
+  const GUEST_B = '22222222-2222-4222-8222-222222222222';
+
+  beforeEach(() => {
+    rm = new RoomManager();
+  });
+
+  function createRoomWithHost(name = 'Test') {
+    return rm.createRoom({
+      name, isPublic: true, selectedSetIds: [1], maxPlayers: 6,
+      nickname: 'Alice', targetScore: 8, specialRules: [],
+    });
+  }
+
+  it('renames the player instance in the room where the guest sits', () => {
+    const { room } = createRoomWithHost();
+    rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+
+    const result = rm.syncProfileByGuestId(GUEST_A, 'Bobik');
+    expect('error' in result).toBe(false);
+    if ('error' in result) return;
+    expect(result.rooms.map(r => r.code)).toEqual([room.code]);
+    expect(room.players.find(p => p.nickname === 'Bobik')).toBeTruthy();
+    expect(room.players.find(p => p.nickname === 'Bob')).toBeUndefined();
+  });
+
+  it('renames instances in all rooms the guest sits in', () => {
+    const { room: r1 } = createRoomWithHost('One');
+    const { room: r2 } = createRoomWithHost('Two');
+    rm.joinRoom(r1.code, 'Bob', undefined, null, GUEST_A);
+    rm.joinRoom(r2.code, 'Bob', undefined, null, GUEST_A);
+
+    const result = rm.syncProfileByGuestId(GUEST_A, 'Bobik');
+    if ('error' in result) throw new Error('sync failed');
+    expect(result.rooms).toHaveLength(2);
+    expect(r1.players.some(p => p.nickname === 'Bobik')).toBe(true);
+    expect(r2.players.some(p => p.nickname === 'Bobik')).toBe(true);
+  });
+
+  it('rejects atomically when the new nickname collides in any room', () => {
+    const { room: r1 } = createRoomWithHost('One');
+    const { room: r2 } = createRoomWithHost('Two');
+    rm.joinRoom(r1.code, 'Bob', undefined, null, GUEST_A);
+    rm.joinRoom(r2.code, 'Bob', undefined, null, GUEST_A);
+    rm.joinRoom(r2.code, 'Cyril', undefined, null, GUEST_B);
+
+    const result = rm.syncProfileByGuestId(GUEST_A, 'cyril'); // case-insensitive
+    expect('error' in result).toBe(true);
+    // Nic se nesmí změnit — ani v místnosti bez kolize
+    expect(r1.players.some(p => p.nickname === 'Bob')).toBe(true);
+    expect(r2.players.some(p => p.nickname === 'Bob')).toBe(true);
+  });
+
+  it('returns empty rooms for a guest sitting nowhere', () => {
+    const result = rm.syncProfileByGuestId(GUEST_A, 'Bobik');
+    expect('error' in result).toBe(false);
+    if ('error' in result) return;
+    expect(result.rooms).toHaveLength(0);
+  });
+
+  it('renaming to own current nickname is a no-op success', () => {
+    const { room } = createRoomWithHost();
+    rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    const result = rm.syncProfileByGuestId(GUEST_A, 'Bob');
+    expect('error' in result).toBe(false);
+  });
+});
+
+// --- rename při reconnectu ---
+
+describe('reconnect nickname sync', () => {
+  let rm: RoomManager;
+  const GUEST_A = '11111111-1111-4111-8111-111111111111';
+
+  beforeEach(() => {
+    rm = new RoomManager();
+  });
+
+  function setup() {
+    const { room } = rm.createRoom({
+      name: 'Test', isPublic: true, selectedSetIds: [1], maxPlayers: 6,
+      nickname: 'Alice', targetScore: 8, specialRules: [],
+    });
+    const bob = rm.joinRoom(room.code, 'Bob', undefined, null, GUEST_A);
+    if ('error' in bob) throw new Error('join failed');
+    return { room, bobToken: bob.playerToken };
+  }
+
+  it('applies the changed nickname on token reconnect', () => {
+    const { room, bobToken } = setup();
+    const result = rm.joinRoom(room.code, 'Bobik', bobToken);
+    if ('error' in result) throw new Error('reconnect failed');
+    expect(result.wasReconnect).toBe(true);
+    expect(room.players.some(p => p.nickname === 'Bobik')).toBe(true);
+    expect(room.players.some(p => p.nickname === 'Bob')).toBe(false);
+  });
+
+  it('applies the changed nickname on guestId reconnect', () => {
+    const { room } = setup();
+    const result = rm.joinRoom(room.code, 'Bobik', undefined, null, GUEST_A);
+    if ('error' in result) throw new Error('reconnect failed');
+    expect(result.wasReconnect).toBe(true);
+    expect(room.players.some(p => p.nickname === 'Bobik')).toBe(true);
+  });
+
+  it('keeps the old nickname when the new one collides in the room', () => {
+    const { room, bobToken } = setup();
+    const result = rm.joinRoom(room.code, 'Alice', bobToken); // kolize s hostem
+    if ('error' in result) throw new Error('reconnect failed');
+    expect(result.wasReconnect).toBe(true);
+    expect(room.players.filter(p => p.nickname.toLowerCase() === 'alice')).toHaveLength(1);
+    expect(room.players.some(p => p.nickname === 'Bob')).toBe(true);
+  });
+
+  it('empty nickname on reconnect keeps the current one', () => {
+    const { room, bobToken } = setup();
+    const result = rm.joinRoom(room.code, '', bobToken);
+    if ('error' in result) throw new Error('reconnect failed');
+    expect(room.players.some(p => p.nickname === 'Bob')).toBe(true);
   });
 });
 

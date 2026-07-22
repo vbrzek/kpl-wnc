@@ -170,7 +170,7 @@ export class RoomManager {
 
     // Reconnect path 1: legacy playerToken mapovaný na tuto místnost
     if (playerToken && this.playerRooms.get(playerToken) === code) {
-      const result = this.reconnectWithAvatar(playerToken, avatarUrl);
+      const result = this.reconnectWithProfile(playerToken, nickname, avatarUrl);
       if (result) {
         // Migrace: klient už posílá guestId → zaregistruj ho k existující instanci
         if (guestId && !this.guestKeyToToken.has(guestKey(code, guestId))) {
@@ -184,7 +184,7 @@ export class RoomManager {
     if (guestId) {
       const knownToken = this.guestKeyToToken.get(guestKey(code, guestId));
       if (knownToken) {
-        const result = this.reconnectWithAvatar(knownToken, avatarUrl);
+        const result = this.reconnectWithProfile(knownToken, nickname, avatarUrl);
         if (result) return result;
       }
     }
@@ -232,16 +232,30 @@ export class RoomManager {
     return { room, playerToken: newToken, wasReconnect: false };
   }
 
-  /** Reconnect + aktualizace avataru; vrátí null, když token nelze připojit. */
-  private reconnectWithAvatar(playerToken: string, avatarUrl: string | null | undefined): JoinSuccess | null {
+  /**
+   * Reconnect + synchronizace profilu (avatar, přezdívka změněná v mezičase).
+   * Kolidující přezdívku tiše ponechá — reconnect nesmí selhat.
+   * Vrátí null, když token nelze připojit.
+   */
+  private reconnectWithProfile(playerToken: string, nickname: string, avatarUrl: string | null | undefined): JoinSuccess | null {
     const reconnected = this.reconnect(playerToken);
     if (!reconnected) return null;
-    if (avatarUrl !== undefined) {
-      const pid = this.tokenToPlayerId.get(playerToken);
-      const p = reconnected.players.find(pl => pl.id === pid);
-      if (p) p.avatarUrl = avatarUrl;
+    const pid = this.tokenToPlayerId.get(playerToken);
+    const p = reconnected.players.find(pl => pl.id === pid);
+    if (p) {
+      if (avatarUrl !== undefined) p.avatarUrl = avatarUrl;
+      const trimmed = nickname.trim();
+      if (trimmed && trimmed !== p.nickname && this.isNicknameFree(reconnected, p.id, trimmed)) {
+        p.nickname = trimmed;
+      }
     }
     return { room: reconnected, playerToken, wasReconnect: true };
+  }
+
+  private isNicknameFree(room: GameRoom, playerId: string, nickname: string): boolean {
+    return !room.players.some(
+      p => p.id !== playerId && p.nickname.toLowerCase() === nickname.toLowerCase()
+    );
   }
 
   private registerGuestId(code: string, guestId: string, playerToken: string): void {
@@ -421,13 +435,51 @@ export class RoomManager {
     const trimmed = newNickname.trim();
     if (trimmed === player.nickname) return { room }; // no change
 
-    const duplicate = room.players.some(
-      p => p.id !== playerId && p.nickname.toLowerCase() === trimmed.toLowerCase()
-    );
-    if (duplicate) return { error: 'Přezdívka je již obsazena.' };
+    if (!this.isNicknameFree(room, playerId, trimmed)) {
+      return { error: 'Přezdívka je již obsazena.' };
+    }
 
     player.nickname = trimmed;
     return { room };
+  }
+
+  // ------------------------------------------------------------------ syncProfileByGuestId
+
+  /**
+   * Propíše novou přezdívku do všech místností, kde má klient (guestId)
+   * instanci hráče. Atomické: koliduje-li jméno byť v jediné místnosti,
+   * nezmění se nic a vrátí se chyba. Vrací dotčené místnosti.
+   */
+  syncProfileByGuestId(guestId: string, newNickname: string): { rooms: GameRoom[] } | ErrorResult {
+    const trimmed = newNickname.trim();
+    if (!trimmed) return { error: 'Přezdívka nesmí být prázdná.' };
+
+    // Najdi všechny instance tohoto klienta
+    const instances: Array<{ room: GameRoom; player: Player }> = [];
+    const suffix = `:${guestId}`;
+    for (const [key, token] of this.guestKeyToToken.entries()) {
+      if (!key.endsWith(suffix)) continue;
+      const code = this.playerRooms.get(token);
+      const room = code ? this.rooms.get(code) : undefined;
+      const playerId = this.tokenToPlayerId.get(token);
+      const player = room?.players.find(p => p.id === playerId);
+      if (room && player) instances.push({ room, player });
+    }
+
+    // Nejdřív zkontroluj kolize všude, pak teprve aplikuj
+    for (const { room, player } of instances) {
+      if (!this.isNicknameFree(room, player.id, trimmed)) {
+        return { error: 'Přezdívka je již obsazena.' };
+      }
+    }
+    const affected: GameRoom[] = [];
+    for (const { room, player } of instances) {
+      if (player.nickname !== trimmed) {
+        player.nickname = trimmed;
+        affected.push(room);
+      }
+    }
+    return { rooms: affected };
   }
 
   // ------------------------------------------------------------------ updateAvatar

@@ -203,14 +203,6 @@ export const useRoomStore = defineStore('room', () => {
     });
   }
 
-  async function updateNickname(newNickname: string): Promise<{ error: string } | null> {
-    return new Promise((resolve) => {
-      socket.emit('lobby:updateNickname', newNickname, (result) => {
-        resolve('error' in result ? result : null);
-      });
-    });
-  }
-
   function updateAvatar(avatarUrl: string | null) {
     if (!room.value) return;
     socket.emit('lobby:updateAvatar', avatarUrl);
@@ -325,7 +317,7 @@ export const useRoomStore = defineStore('room', () => {
     czarMode, specialRules, hasRule, hasBlankCard, blackCardCandidates, myBet, setMyBet,
     voteProgress, myVotedSubmissionId, mySubmissionId,
     init, setRoom, setMyPlayerId, leave,
-    updateSettings, kickPlayer, startGame, endGame, updateNickname, updateAvatar, clearFinishedState, cleanup,
+    updateSettings, kickPlayer, startGame, endGame, updateAvatar, clearFinishedState, cleanup,
     playCards, judgeSelect, toggleCardSelection, retractCards, tradeCards, czarForceAdvance, skipCzarJudging,
     chooseBlackCard, placeBet, castVote, skipVoting,
   };

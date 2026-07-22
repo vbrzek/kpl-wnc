@@ -25,6 +25,7 @@ Server drží stav her v paměti (`RoomManager`) — bez latence DB.
 - Server reconnectuje nejdřív přes `playerToken`, pak přes guest index `(kód místnosti, guestId) → token` — ztráta per-room tokenu tak nevytvoří duplicitní instanci hráče ani nezablokuje přezdívku
 - Guest index se čistí při leave/kick/finishGame/deleteRoom a přežívá SIGTERM snapshot (`guestKeyToToken`)
 - `lobby:leave` přijímá volitelný `{ playerToken }` fallback pro případ, že po auto-reconnectu socketu ještě chybí mapování `socket.id → token`
+- Změna přezdívky v profilu se propisuje eventem `profile:updateNickname` (guestId) do všech místností, kde hráč sedí — atomicky s kontrolou kolizí (`syncProfileByGuestId`); offline změny dorovná reconnect (`joinRoom` při reconnectu aplikuje novou přezdívku, kolidující tiše ponechá starou)
 
 **Implementační poznámky:**
 - `CreateTableModal` podporuje výběr právě 1 sady karet (backend podporuje `selectedSetIds: number[]`)

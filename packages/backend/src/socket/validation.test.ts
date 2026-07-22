@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { UpdateAvatarSchema, JoinRoomSchema, CreateRoomSchema, LeaveRoomSchema } from './validation.js';
+import { UpdateAvatarSchema, JoinRoomSchema, CreateRoomSchema, LeaveRoomSchema, ProfileUpdateNicknameSchema } from './validation.js';
 
 describe('UpdateAvatarSchema (avatar URL allowlist)', () => {
   it('accepts null', () => {
@@ -97,5 +97,27 @@ describe('LeaveRoomSchema', () => {
 
   it('rejects a non-UUID playerToken', () => {
     expect(LeaveRoomSchema.safeParse({ playerToken: 'x' }).success).toBe(false);
+  });
+});
+
+describe('ProfileUpdateNicknameSchema', () => {
+  const GUEST = '11111111-1111-4111-8111-111111111111';
+
+  it('accepts guestId + nickname', () => {
+    expect(ProfileUpdateNicknameSchema.safeParse({ guestId: GUEST, nickname: 'Pepa' }).success).toBe(true);
+  });
+
+  it('trims the nickname', () => {
+    const parsed = ProfileUpdateNicknameSchema.safeParse({ guestId: GUEST, nickname: '  Pepa  ' });
+    expect(parsed.success && parsed.data.nickname).toBe('Pepa');
+  });
+
+  it('rejects a missing guestId', () => {
+    expect(ProfileUpdateNicknameSchema.safeParse({ nickname: 'Pepa' }).success).toBe(false);
+  });
+
+  it('rejects an empty or too long nickname', () => {
+    expect(ProfileUpdateNicknameSchema.safeParse({ guestId: GUEST, nickname: '' }).success).toBe(false);
+    expect(ProfileUpdateNicknameSchema.safeParse({ guestId: GUEST, nickname: 'x'.repeat(25) }).success).toBe(false);
   });
 });

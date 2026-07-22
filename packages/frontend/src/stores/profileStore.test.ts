@@ -3,7 +3,6 @@ import { setActivePinia, createPinia } from 'pinia';
 
 const mockRoomStore = {
   room: null as unknown,
-  updateNickname: vi.fn(),
   updateAvatar: vi.fn(),
 };
 
@@ -13,6 +12,17 @@ vi.mock('./roomStore', () => ({
 
 vi.mock('../i18n', () => ({
   i18n: { global: { locale: { value: 'cs' } } },
+}));
+
+const mockSocket = vi.hoisted(() => ({
+  connected: true,
+  emit: vi.fn((_event: string, _data: unknown, cb?: (result: unknown) => void) => {
+    cb?.({ ok: true });
+  }),
+}));
+
+vi.mock('../socket', () => ({
+  socket: mockSocket,
 }));
 
 import { useProfileStore, resolveAvatarUrl } from './profileStore';
@@ -90,6 +100,58 @@ describe('profileStore', () => {
 
       expect(mockRoomStore.updateAvatar).toHaveBeenCalledTimes(1);
       expect(mockRoomStore.updateAvatar).toHaveBeenCalledWith(expect.stringContaining('croodles'));
+    });
+
+    it('propagates a nickname change via profile:updateNickname even outside a room view', async () => {
+      const store = useProfileStore();
+      store.nickname = 'Pepa';
+      mockRoomStore.room = null; // hráč edituje profil mimo pohled na místnost
+
+      const result = await store.save('Pepik', 'cs');
+
+      expect(result).toBeNull();
+      expect(mockSocket.emit).toHaveBeenCalledWith(
+        'profile:updateNickname',
+        expect.objectContaining({ nickname: 'Pepik', guestId: expect.any(String) }),
+        expect.any(Function),
+      );
+      expect(store.nickname).toBe('Pepik');
+    });
+
+    it('does not emit the sync event when the nickname is unchanged', async () => {
+      const store = useProfileStore();
+      store.nickname = 'Pepa';
+
+      await store.save('Pepa', 'cs');
+
+      expect(mockSocket.emit).not.toHaveBeenCalledWith(
+        'profile:updateNickname', expect.anything(), expect.anything(),
+      );
+    });
+
+    it('aborts the save when the server reports a nickname collision', async () => {
+      const store = useProfileStore();
+      store.nickname = 'Pepa';
+      mockSocket.emit.mockImplementationOnce((_e, _d, cb) => cb?.({ error: 'Přezdívka je již obsazena.' }));
+
+      const result = await store.save('Cyril', 'cs');
+
+      expect(result).toBe('Přezdívka je již obsazena.');
+      expect(store.nickname).toBe('Pepa');
+      expect(localStorage.getItem('playerProfile')).toBeNull();
+    });
+
+    it('skips the server sync when the socket is disconnected (syncs on next reconnect)', async () => {
+      const store = useProfileStore();
+      store.nickname = 'Pepa';
+      mockSocket.connected = false;
+
+      const result = await store.save('Pepik', 'cs');
+
+      expect(result).toBeNull();
+      expect(store.nickname).toBe('Pepik');
+      expect(mockSocket.emit).not.toHaveBeenCalled();
+      mockSocket.connected = true;
     });
 
     it('keeps trophies visible after save (PATCH response includes them)', async () => {

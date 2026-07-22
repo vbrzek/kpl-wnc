@@ -187,6 +187,12 @@ export interface ClientToServerEvents {
     callback: (result: { room: GameRoom; playerToken: string; playerId: string } | { error: string }) => void
   ) => void;
   'lobby:updateAvatar': (avatarUrl: string | null) => void;
+  // Propíše novou přezdívku do všech místností, kde má klient (guestId)
+  // instanci hráče — funguje i mimo pohled na místnost
+  'profile:updateNickname': (
+    data: { guestId: string; nickname: string },
+    callback: (result: { ok: true } | { error: string }) => void
+  ) => void;
   'lobby:subscribePublic': () => void;
   'lobby:unsubscribePublic': () => void;
   // playerToken slouží jako fallback identifikace, když socket ještě nemá

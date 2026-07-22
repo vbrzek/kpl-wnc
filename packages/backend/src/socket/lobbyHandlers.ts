@@ -24,7 +24,7 @@ async function linkPlayerToken(
 }
 import { GameEngine } from '../game/GameEngine.js';
 import { startNewRound, startJudgingPhase, broadcastPublicRooms, toPublicRoom } from './roundUtils.js';
-import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, UpdateAvatarSchema, LeaveRoomSchema, validate } from './validation.js';
+import { CreateRoomSchema, JoinRoomSchema, UpdateSettingsSchema, KickPlayerSchema, UpdateNicknameSchema, UpdateAvatarSchema, LeaveRoomSchema, ProfileUpdateNicknameSchema, validate } from './validation.js';
 import { checkRateLimit, cleanupSocket } from './rateLimiter.js';
 import type { BlackCard, WhiteCard } from '@kpl/shared';
 import { eventLogger } from '../analytics/EventLogger.js';
@@ -289,6 +289,26 @@ export function registerLobbyHandlers(io: IO, socket: AppSocket) {
     if ('error' in result) { callback(result); return; }
 
     io.to(`room:${result.room.code}`).emit('lobby:stateUpdate', toPublicRoom(result.room));
+    callback({ ok: true });
+  });
+
+  // Globální změna přezdívky podle guestId — propíše se do všech místností,
+  // kde klient sedí (profil lze editovat i mimo pohled na místnost)
+  socket.on('profile:updateNickname', (input, callback) => {
+    if (!checkRateLimit(socket.id, 'lobby:updateNickname')) {
+      callback({ error: 'Příliš mnoho požadavků. Zkus to za chvíli.' });
+      return;
+    }
+    const data = validate(ProfileUpdateNicknameSchema, input, callback);
+    if (!data) return;
+
+    const result = roomManager.syncProfileByGuestId(data.guestId, data.nickname);
+    if ('error' in result) { callback(result); return; }
+
+    for (const room of result.rooms) {
+      io.to(`room:${room.code}`).emit('lobby:stateUpdate', toPublicRoom(room));
+    }
+    if (result.rooms.length > 0) broadcastPublicRooms(io);
     callback({ ok: true });
   });
 

@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { buildDiceBearUrl } from '@kpl/shared';
 import { i18n } from '../i18n';
 import { useRoomStore } from './roomStore';
+import { socket } from '../socket';
+import { getGuestId } from './playerIdentity';
 
 export { buildDiceBearUrl };
 
@@ -117,11 +119,17 @@ export const useProfileStore = defineStore('profile', () => {
     const trimmed = newNickname.trim();
     loadLocale(newLocale);
 
-    // Sync nickname to room if currently in one and nickname changed
+    // Globální sync přezdívky podle guestId — server ji propíše do všech
+    // místností, kde hráč sedí, i když zrovna nemá otevřený pohled na místnost.
+    // Při odpojeném socketu se přeskočí — propíše se při příštím reconnectu.
     const roomStore = useRoomStore();
-    if (roomStore.room && trimmed !== nickname.value) {
-      const error = await roomStore.updateNickname(trimmed);
-      if (error) return error.error;
+    if (trimmed !== nickname.value && socket.connected) {
+      const error = await new Promise<string | null>((resolve) => {
+        socket.emit('profile:updateNickname', { guestId: getGuestId(), nickname: trimmed }, (result) => {
+          resolve('error' in result ? result.error : null);
+        });
+      });
+      if (error) return error;
     }
 
     nickname.value = trimmed;

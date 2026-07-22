@@ -76,6 +76,11 @@ export const LeaveRoomSchema = z.object({
   playerToken: z.string().uuid().optional(),
 }).optional();
 
+export const ProfileUpdateNicknameSchema = z.object({
+  guestId: z.string().uuid(),
+  nickname,
+});
+
 export const UpdateAvatarSchema = avatarUrlValue.nullable();
 
 export const UpdateSettingsSchema = z.object({
